@@ -41,8 +41,8 @@ func TestStat(t *testing.T) {
 	numOps := uint32(5)
 	expectedAllocations := numOps * 2
 
-	if config.Configuration().RestServer.PreAllocBuffers > numOps {
-		expectedAllocations = config.Configuration().RestServer.PreAllocBuffers
+	if config.Configuration().RestServer.PreAllocatedBuffers > numOps {
+		expectedAllocations = config.Configuration().RestServer.PreAllocatedBuffers
 	}
 
 	tu.WithDBs(t, [][][]string{common.Database(db)},

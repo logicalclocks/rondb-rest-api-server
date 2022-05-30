@@ -4,7 +4,7 @@
                 "Port": 8080,
                 "APIVersion": "0.1.0",
                 "BufferSize": 327680,
-                "PreAllocBuffers": 1024,
+                "PreAllocatedBuffers": 1024,
                 "GOMAXPROCS": -1
         },
         "RonDBConfig": {

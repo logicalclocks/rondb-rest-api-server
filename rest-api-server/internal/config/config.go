@@ -45,12 +45,12 @@ func (config RSConfiguration) String() string {
 }
 
 type RestServer struct {
-	IP              string
-	Port            uint16
-	APIVersion      string
-	BufferSize      int
-	PreAllocBuffers uint32
-	GOMAXPROCS      int
+	IP                  string
+	Port                uint16
+	APIVersion          string
+	BufferSize          int
+	PreAllocatedBuffers uint32
+	GOMAXPROCS          int
 }
 
 type MySQLServer struct {
@@ -67,12 +67,12 @@ type RonDB struct {
 
 func init() {
 	restServer := RestServer{
-		IP:              "localhost",
-		Port:            8080,
-		APIVersion:      version.VERSION,
-		BufferSize:      320 * 1024,
-		GOMAXPROCS:      -1,
-		PreAllocBuffers: 1024,
+		IP:                  "localhost",
+		Port:                8080,
+		APIVersion:          version.VERSION,
+		BufferSize:          320 * 1024,
+		GOMAXPROCS:          -1,
+		PreAllocatedBuffers: 1024,
 	}
 
 	ronDBConfig := RonDB{

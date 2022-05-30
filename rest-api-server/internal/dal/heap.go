@@ -64,11 +64,11 @@ func InitializeBuffers() {
 		panic(fmt.Sprintf("Buffer size must be multiple of %d", C.ADDRESS_SIZE))
 	}
 
-	for i := uint32(0); i < config.Configuration().RestServer.PreAllocBuffers; i++ {
+	for i := uint32(0); i < config.Configuration().RestServer.PreAllocatedBuffers; i++ {
 		buffers = append(buffers, __allocateBuffer())
 	}
 
-	buffersStats.AllocationsCount = uint64(config.Configuration().RestServer.PreAllocBuffers)
+	buffersStats.AllocationsCount = uint64(config.Configuration().RestServer.PreAllocatedBuffers)
 	buffersStats.BuffersCount = buffersStats.AllocationsCount
 	buffersStats.DeallocationsCount = 0
 
