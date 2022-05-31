@@ -1,6 +1,6 @@
 # RonDB REST API Server 
 
-Currently, the REST API server only supports (non-)batched  primary key operations. Default mapping of MySQL data types to JSON data types are as follows
+Currently, the REST API server only supports batched and non-batched  primary key operations. Default mappings of MySQL data types to JSON data types are as follows
 
 
 | MySQL Data Type | JSON Data Type |
