@@ -35,6 +35,20 @@ func init() {
 		},
 	}
 
+	db = "DB000"
+	databases[db] = [][]string{
+		{
+			// setup commands
+			"DROP DATABASE IF EXISTS " + db,
+			"CREATE DATABASE " + db,
+			"USE " + db,
+		},
+
+		{ // clean up commands
+			"DROP DATABASE " + db,
+		},
+	}
+
 	db = "DB001"
 	databases[db] = [][]string{
 		{

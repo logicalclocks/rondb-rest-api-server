@@ -18,12 +18,12 @@ package batchops
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/gin-gonic/gin"
+	"hopsworks.ai/rdrs/internal/common"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/router/handler"
 	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
 )
 
@@ -427,42 +427,41 @@ func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBi
 }
 
 func TestBatchMissingReqField(t *testing.T) {
-	router := gin.Default()
-	group := router.Group(ds.DBS_OPS_EP_GROUP)
-	group.POST(ds.BATCH_OPERATION, BatchOpsHandler)
-	url := BatchURL()
+	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+		[]handler.RegisterTestHandler{RegisterBatchTestHandler}, func() {
+			url := tu.NewBatchReadURL()
+			// Test missing method
+			operations := NewOperationsTBD(t, 3)
+			operations[1].Method = nil
+			operationsWrapper := ds.BatchOperation{Operations: &operations}
+			body, _ := json.Marshal(operationsWrapper)
+			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Error:Field validation for 'Method' failed ")
 
-	// Test missing method
-	operations := NewOperationsTBD(t, 3)
-	operations[1].Method = nil
-	operationsWrapper := ds.BatchOperation{Operations: &operations}
-	body, _ := json.Marshal(operationsWrapper)
-	tu.ProcessRequest(t, router, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Error:Field validation for 'Method' failed ")
+			// Test missing relative URL
+			operations = NewOperationsTBD(t, 3)
+			operations[1].RelativeURL = nil
+			operationsWrapper = ds.BatchOperation{Operations: &operations}
+			body, _ = json.Marshal(operationsWrapper)
+			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Error:Field validation for 'RelativeURL' failed ")
 
-	// Test missing relative URL
-	operations = NewOperationsTBD(t, 3)
-	operations[1].RelativeURL = nil
-	operationsWrapper = ds.BatchOperation{Operations: &operations}
-	body, _ = json.Marshal(operationsWrapper)
-	tu.ProcessRequest(t, router, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Error:Field validation for 'RelativeURL' failed ")
+			// Test missing body
+			operations = NewOperationsTBD(t, 3)
+			operations[1].Body = nil
+			operationsWrapper = ds.BatchOperation{Operations: &operations}
+			body, _ = json.Marshal(operationsWrapper)
+			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Error:Field validation for 'Body' failed ")
 
-	// Test missing body
-	operations = NewOperationsTBD(t, 3)
-	operations[1].Body = nil
-	operationsWrapper = ds.BatchOperation{Operations: &operations}
-	body, _ = json.Marshal(operationsWrapper)
-	tu.ProcessRequest(t, router, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Error:Field validation for 'Body' failed ")
-
-	// Test missing filter in an operation
-	operations = NewOperationsTBD(t, 3)
-	*&operations[1].Body.Filters = nil
-	operationsWrapper = ds.BatchOperation{Operations: &operations}
-	body, _ = json.Marshal(operationsWrapper)
-	tu.ProcessRequest(t, router, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Error:Field validation for 'Filters' failed")
+			// Test missing filter in an operation
+			operations = NewOperationsTBD(t, 3)
+			*&operations[1].Body.Filters = nil
+			operationsWrapper = ds.BatchOperation{Operations: &operations}
+			body, _ = json.Marshal(operationsWrapper)
+			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Error:Field validation for 'Filters' failed")
+		})
 }
 
 func NewOperationsTBD(t *testing.T, numOps int) []ds.BatchSubOperation {
@@ -485,8 +484,4 @@ func NewOperationTBD(t *testing.T) ds.BatchSubOperation {
 	}
 
 	return op
-}
-
-func BatchURL() string {
-	return fmt.Sprintf("%s%s", ds.DBS_OPS_EP_GROUP, ds.BATCH_OPERATION)
 }

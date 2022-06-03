@@ -37,6 +37,13 @@ class NdbObjectPool {
 
  public:
   /**
+   * Static method for initializing instance pool 
+   *
+   * @return ObjectPool instance.
+   */
+  static void InitPool();
+
+  /**
    * Static method for accessing class instance.
    *
    * @return ObjectPool instance.

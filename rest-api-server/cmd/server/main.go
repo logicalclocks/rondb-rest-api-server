@@ -20,10 +20,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/log"
+	"hopsworks.ai/rdrs/internal/router/handler"
+	"hopsworks.ai/rdrs/internal/router/handler/batchops"
+	"hopsworks.ai/rdrs/internal/router/handler/pkread"
+	"hopsworks.ai/rdrs/internal/router/handler/stat"
 	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
@@ -46,7 +53,12 @@ func main() {
 	runtime.GOMAXPROCS(config.Configuration().RestServer.GOMAXPROCS)
 
 	router := router.CreateRouterContext()
-	err := router.SetupRouter()
+
+	handlers := []handler.RegisterTestHandler{pkread.RegisterPKTestHandler,
+		stat.RegisterStatTestHandler,
+		batchops.RegisterBatchTestHandler}
+
+	err := router.SetupRouter(handlers)
 	if err != nil {
 		log.Panic(fmt.Sprintf("Unable to setup router: Error: %v", err))
 	}
@@ -55,5 +67,15 @@ func main() {
 		log.Panic(fmt.Sprintf("Unable to start router: Error: %v", err))
 	}
 
-	log.Info("Shutting down REST server")
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal)
+	// kill (no param) default send syscall.SIGTERM
+	// kill -2 is syscall.SIGINT
+	// kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Info("Shutting down server...")
+
+	router.StopRouter()
 }

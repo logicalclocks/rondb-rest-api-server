@@ -17,7 +17,15 @@
 
 package router
 
+import (
+	"net/http"
+
+	"hopsworks.ai/rdrs/internal/router/handler"
+)
+
 type Router interface {
-	SetupRouter() error
+	SetupRouter(registerHandlers []handler.RegisterTestHandler) error
 	StartRouter() error
+	StopRouter() error
+	GetServer() *http.Server
 }

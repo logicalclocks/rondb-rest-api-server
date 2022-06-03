@@ -23,199 +23,195 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"hopsworks.ai/rdrs/internal/common"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/router/handler"
 	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
 )
 
 func TestPKReadOmitRequired(t *testing.T) {
-	router, err := tu.InitRouter(t, []tu.RegisterTestHandler{RegisterPKTestHandler})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
 
-	// Test. Omitting filter should result in 400 error
-	param := ds.PKReadBody{
-		Filters:     nil,
-		ReadColumns: tu.NewReadColumns("read_col_", 5),
-		OperationID: tu.NewOperationID(64),
-	}
+	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
 
-	url := tu.NewPKReadURL("db", "table")
+			// Test. Omitting filter should result in 400 error
+			param := ds.PKReadBody{
+				Filters:     nil,
+				ReadColumns: tu.NewReadColumns("read_col_", 5),
+				OperationID: tu.NewOperationID(64),
+			}
 
-	body, _ := json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Error:Field validation for 'Filters'")
+			url := tu.NewPKReadURL("db", "table")
 
-	// Test. unset filter values should result in 400 error
-	col := "col"
-	filter := tu.NewFilter(&col, nil)
-	param.Filters = filter
-	body, _ = json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Field validation for 'Value' failed on the 'required' tag")
+			body, _ := json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Error:Field validation for 'Filters'")
 
-	val := "val"
-	filter = tu.NewFilter(nil, val)
-	param.Filters = filter
-	body, _ = json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"Field validation for 'Column' failed on the 'required' tag")
+			// Test. unset filter values should result in 400 error
+			col := "col"
+			filter := tu.NewFilter(&col, nil)
+			param.Filters = filter
+			body, _ = json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Field validation for 'Value' failed on the 'required' tag")
+
+			val := "val"
+			filter = tu.NewFilter(nil, val)
+			param.Filters = filter
+			body, _ = json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"Field validation for 'Column' failed on the 'required' tag")
+		})
 }
 
 func TestPKReadLargeColumns(t *testing.T) {
-	router, err := tu.InitRouter(t, []tu.RegisterTestHandler{RegisterPKTestHandler})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
 
-	// Test. Large filter column names.
-	col := tu.RandString(65)
-	val := "val"
-	param := ds.PKReadBody{
-		Filters:     tu.NewFilter(&col, val),
-		ReadColumns: tu.NewReadColumns("read_col_", 5),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ := json.MarshalIndent(param, "", "\t")
-	url := tu.NewPKReadURL("db", "table")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body),
-		http.StatusBadRequest, "Field validation for 'Column' failed on the 'max' tag")
+			// Test. Large filter column names.
+			col := tu.RandString(65)
+			val := "val"
+			param := ds.PKReadBody{
+				Filters:     tu.NewFilter(&col, val),
+				ReadColumns: tu.NewReadColumns("read_col_", 5),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ := json.MarshalIndent(param, "", "\t")
+			url := tu.NewPKReadURL("db", "table")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body),
+				http.StatusBadRequest, "Field validation for 'Column' failed on the 'max' tag")
 
-	// Test. Large read column names.
-	param = ds.PKReadBody{
-		Filters:     tu.NewFilters("filter_col_", 3),
-		ReadColumns: tu.NewReadColumns(tu.RandString(65), 5),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ = json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB,
-		url, string(body), http.StatusBadRequest, "field length validation failed")
+			// Test. Large read column names.
+			param = ds.PKReadBody{
+				Filters:     tu.NewFilters("filter_col_", 3),
+				ReadColumns: tu.NewReadColumns(tu.RandString(65), 5),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ = json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB,
+				url, string(body), http.StatusBadRequest, "field length validation failed")
 
-	// Test. Large db and table names
-	param = ds.PKReadBody{
-		Filters:     tu.NewFilters("filter_col_", 3),
-		ReadColumns: tu.NewReadColumns("read_col_", 5),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ = json.MarshalIndent(param, "", "\t")
-	url1 := tu.NewPKReadURL(tu.RandString(65), "table")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url1, string(body),
-		http.StatusBadRequest, "Field validation for 'DB' failed on the 'max' tag")
-	url2 := tu.NewPKReadURL("db", tu.RandString(65))
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url2, string(body),
-		http.StatusBadRequest, "Field validation for 'Table' failed on the 'max' tag")
-	url3 := tu.NewPKReadURL("", "table")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url3, string(body),
-		http.StatusBadRequest, "Field validation for 'DB' failed on the 'min' tag")
-	url4 := tu.NewPKReadURL("db", "")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url4, string(body), http.StatusBadRequest,
-		"Field validation for 'Table' failed on the 'min' tag")
+			// Test. Large db and table names
+			param = ds.PKReadBody{
+				Filters:     tu.NewFilters("filter_col_", 3),
+				ReadColumns: tu.NewReadColumns("read_col_", 5),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ = json.MarshalIndent(param, "", "\t")
+			url1 := tu.NewPKReadURL(tu.RandString(65), "table")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url1, string(body),
+				http.StatusBadRequest, "Field validation for 'DB' failed on the 'max' tag")
+			url2 := tu.NewPKReadURL("db", tu.RandString(65))
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url2, string(body),
+				http.StatusBadRequest, "Field validation for 'Table' failed on the 'max' tag")
+			url3 := tu.NewPKReadURL("", "table")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url3, string(body),
+				http.StatusBadRequest, "Field validation for 'DB' failed on the 'min' tag")
+			url4 := tu.NewPKReadURL("db", "")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url4, string(body), http.StatusBadRequest,
+				"Field validation for 'Table' failed on the 'min' tag")
+		})
 }
 
 func TestPKInvalidIdentifier(t *testing.T) {
-	router, err := tu.InitRouter(t, []tu.RegisterTestHandler{RegisterPKTestHandler})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
 
-	//Valid chars [ U+0001 .. U+007F] and [ U+0080 .. U+FFFF]
+	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
+			//Valid chars [ U+0001 .. U+007F] and [ U+0080 .. U+FFFF]
+			// Test. invalid filter
+			col := "col" + string(rune(0x0000))
+			val := "val"
+			param := ds.PKReadBody{
+				Filters:     tu.NewFilter(&col, val),
+				ReadColumns: tu.NewReadColumn("read_col"),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ := json.MarshalIndent(param, "", "\t")
+			url := tu.NewPKReadURL("db", "table")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				fmt.Sprintf("field validation failed. Invalid character '%U' ", rune(0x0000)))
 
-	// Test. invalid filter
-	col := "col" + string(rune(0x0000))
-	val := "val"
-	param := ds.PKReadBody{
-		Filters:     tu.NewFilter(&col, val),
-		ReadColumns: tu.NewReadColumn("read_col"),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ := json.MarshalIndent(param, "", "\t")
-	url := tu.NewPKReadURL("db", "table")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		fmt.Sprintf("field validation failed. Invalid character '%U' ", rune(0x0000)))
+			// Test. invalid read col
+			col = "col"
+			val = "val"
+			param = ds.PKReadBody{
+				Filters:     tu.NewFilter(&col, val),
+				ReadColumns: tu.NewReadColumn("col" + string(rune(0x10000))),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ = json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
 
-	// Test. invalid read col
-	col = "col"
-	val = "val"
-	param = ds.PKReadBody{
-		Filters:     tu.NewFilter(&col, val),
-		ReadColumns: tu.NewReadColumn("col" + string(rune(0x10000))),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ = json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
-
-	// Test. Invalid path parameteres
-	param = ds.PKReadBody{
-		Filters:     tu.NewFilter(&col, val),
-		ReadColumns: tu.NewReadColumn("col"),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ = json.MarshalIndent(param, "", "\t")
-	url1 := tu.NewPKReadURL("db"+string(rune(0x10000)), "table")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url1, string(body), http.StatusBadRequest,
-		fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
-	url2 := tu.NewPKReadURL("db", "table"+string(rune(0x10000)))
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url2, string(body), http.StatusBadRequest,
-		fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
+			// Test. Invalid path parameteres
+			param = ds.PKReadBody{
+				Filters:     tu.NewFilter(&col, val),
+				ReadColumns: tu.NewReadColumn("col"),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ = json.MarshalIndent(param, "", "\t")
+			url1 := tu.NewPKReadURL("db"+string(rune(0x10000)), "table")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url1, string(body), http.StatusBadRequest,
+				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
+			url2 := tu.NewPKReadURL("db", "table"+string(rune(0x10000)))
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url2, string(body), http.StatusBadRequest,
+				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
+		})
 }
 
 func TestPKUniqueParams(t *testing.T) {
-	router, err := tu.InitRouter(t, []tu.RegisterTestHandler{RegisterPKTestHandler})
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
 
-	// Test. unique read columns
-	readColumns := make([]ds.ReadColumn, 2)
-	col := "col1"
-	readColumns[0].Column = &col
-	readColumns[1].Column = &col
-	param := ds.PKReadBody{
-		Filters:     tu.NewFilters("col", 1),
-		ReadColumns: &readColumns,
-		OperationID: tu.NewOperationID(64),
-	}
-	url := tu.NewPKReadURL("db", "table")
-	body, _ := json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"field validation for 'ReadColumns' failed on the 'unique' tag")
+	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
+			// Test. unique read columns
+			readColumns := make([]ds.ReadColumn, 2)
+			col := "col1"
+			readColumns[0].Column = &col
+			readColumns[1].Column = &col
+			param := ds.PKReadBody{
+				Filters:     tu.NewFilters("col", 1),
+				ReadColumns: &readColumns,
+				OperationID: tu.NewOperationID(64),
+			}
+			url := tu.NewPKReadURL("db", "table")
+			body, _ := json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"field validation for 'ReadColumns' failed on the 'unique' tag")
 
-	// Test. unique filter columns
-	col = "col"
-	val := "val"
-	filters := make([]ds.Filter, 2)
-	filters[0] = (*(tu.NewFilter(&col, val)))[0]
-	filters[1] = (*(tu.NewFilter(&col, val)))[0]
+			// Test. unique filter columns
+			col = "col"
+			val := "val"
+			filters := make([]ds.Filter, 2)
+			filters[0] = (*(tu.NewFilter(&col, val)))[0]
+			filters[1] = (*(tu.NewFilter(&col, val)))[0]
 
-	param = ds.PKReadBody{
-		Filters:     &filters,
-		ReadColumns: tu.NewReadColumns("read_col_", 5),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ = json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		"field validation for filter failed on the 'unique' tag")
+			param = ds.PKReadBody{
+				Filters:     &filters,
+				ReadColumns: tu.NewReadColumns("read_col_", 5),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ = json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				"field validation for filter failed on the 'unique' tag")
 
-	//Test that filter and read columns do not contain overlapping columns
-	param = ds.PKReadBody{
-		Filters:     tu.NewFilter(&col, val),
-		ReadColumns: tu.NewReadColumn(col),
-		OperationID: tu.NewOperationID(64),
-	}
-	body, _ = json.MarshalIndent(param, "", "\t")
-	tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
-		fmt.Sprintf("field validation for read columns faild. '%s' already included in filter", col))
+			//Test that filter and read columns do not contain overlapping columns
+			param = ds.PKReadBody{
+				Filters:     tu.NewFilter(&col, val),
+				ReadColumns: tu.NewReadColumn(col),
+				OperationID: tu.NewOperationID(64),
+			}
+			body, _ = json.MarshalIndent(param, "", "\t")
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+				fmt.Sprintf("field validation for read columns faild. '%s' already included in filter", col))
+		})
 }
 
 // DB/Table does not exist
 func TestPKERROR_011(t *testing.T) {
 
 	tu.WithDBs(t, [][][]string{common.Database("DB001")},
-		[]tu.RegisterTestHandler{RegisterPKTestHandler}, func(router *gin.Engine) {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
 			pkCol := "id0"
 			pkVal := "1"
 			param := ds.PKReadBody{
@@ -227,10 +223,10 @@ func TestPKERROR_011(t *testing.T) {
 			body, _ := json.MarshalIndent(param, "", "\t")
 
 			url := tu.NewPKReadURL("DB001_XXX", "table_1")
-			tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
 
 			url = tu.NewPKReadURL("DB001", "table_1_XXX")
-			tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
 		})
 }
 
@@ -238,7 +234,7 @@ func TestPKERROR_011(t *testing.T) {
 func TestPKERROR_012(t *testing.T) {
 
 	tu.WithDBs(t, [][][]string{common.Database("DB001")},
-		[]tu.RegisterTestHandler{RegisterPKTestHandler}, func(router *gin.Engine) {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
 			pkCol := "id0"
 			pkVal := "1"
 			param := ds.PKReadBody{
@@ -250,7 +246,7 @@ func TestPKERROR_012(t *testing.T) {
 			body, _ := json.MarshalIndent(param, "", "\t")
 
 			url := tu.NewPKReadURL("DB001", "table_1")
-			tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_012())
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_012())
 		})
 }
 
@@ -258,7 +254,7 @@ func TestPKERROR_012(t *testing.T) {
 func TestPKERROR_013_ERROR_014(t *testing.T) {
 
 	tu.WithDBs(t, [][][]string{common.Database("DB002")},
-		[]tu.RegisterTestHandler{RegisterPKTestHandler}, func(router *gin.Engine) {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func() {
 			// send an other request with one column missing from def
 			// //		// one PK col is missing
 			param := ds.PKReadBody{
@@ -268,7 +264,7 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 			}
 			body, _ := json.MarshalIndent(param, "", "\t")
 			url := tu.NewPKReadURL("DB002", "table_1")
-			tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_013())
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_013())
 
 			// send an other request with two pk cols but wrong names
 			param = ds.PKReadBody{
@@ -278,7 +274,7 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
 			url = tu.NewPKReadURL("DB002", "table_1")
-			tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_014())
+			tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_014())
 
 			// no of pk cols matches but the column names are different
 		})

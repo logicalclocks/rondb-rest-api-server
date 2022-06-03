@@ -24,14 +24,15 @@
 
 NdbObjectPool *NdbObjectPool::__instance = nullptr;
 
+void NdbObjectPool::InitPool() {
+  __instance                              = new NdbObjectPool();
+  __instance->stats.ndb_objects_available = 0;
+  __instance->stats.ndb_objects_count     = 0;
+  __instance->stats.ndb_objects_created   = 0;
+  __instance->stats.ndb_objects_deleted   = 0;
+}
+
 NdbObjectPool *NdbObjectPool::GetInstance() {
-  if (__instance == nullptr) {
-    __instance                              = new NdbObjectPool();
-    __instance->stats.ndb_objects_available = 0;
-    __instance->stats.ndb_objects_count     = 0;
-    __instance->stats.ndb_objects_created   = 0;
-    __instance->stats.ndb_objects_deleted   = 0;
-  }
   return __instance;
 }
 

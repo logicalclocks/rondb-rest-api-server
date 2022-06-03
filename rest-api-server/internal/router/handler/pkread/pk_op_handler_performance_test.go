@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"hopsworks.ai/rdrs/internal/common"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
+	"hopsworks.ai/rdrs/internal/router/handler"
 	"hopsworks.ai/rdrs/internal/router/handler/stat"
 	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
 )
@@ -45,7 +45,7 @@ func BenchmarkSimple(t *testing.B) {
 	opCount := 0
 	threadId := 0
 	tu.WithDBs(t, [][][]string{common.Database(db)},
-		[]tu.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(router *gin.Engine) {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func() {
 
 			t.ResetTimer()
 			start := time.Now()
@@ -60,7 +60,7 @@ func BenchmarkSimple(t *testing.B) {
 				reqBody := createReq(maxRows, opCount, operationId)
 
 				for bp.Next() {
-					tu.ProcessRequest(t, router, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
+					tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
 				}
 			})
 			t.StopTimer()
@@ -94,7 +94,7 @@ func BenchmarkMT(b *testing.B) {
 	table := "table_1"
 	maxRows := 1000
 	tu.WithDBs(b, [][][]string{common.Database(db)},
-		[]tu.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(router *gin.Engine) {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func() {
 
 			b.ResetTimer()
 			threads := 1
@@ -105,10 +105,10 @@ func BenchmarkMT(b *testing.B) {
 			}
 			numOps := b.N
 
-			go producer1(b, router, numOps, link)
+			go producer1(b, numOps, link)
 
 			for i := 0; i < threads; i++ {
-				go consumer1(b, router, i, db, table, maxRows, link, donearr[i])
+				go consumer1(b, i, db, table, maxRows, link, donearr[i])
 			}
 
 			for i := 0; i < threads; i++ {
@@ -124,14 +124,14 @@ func BenchmarkMT(b *testing.B) {
 		})
 }
 
-func producer1(b testing.TB, router *gin.Engine, numOps int, link chan int) {
+func producer1(b testing.TB, numOps int, link chan int) {
 	for i := 0; i < numOps; i++ {
 		link <- i
 	}
 	close(link)
 }
 
-func consumer1(b testing.TB, router *gin.Engine, id int, db string, table string, maxRowID int, link chan int, done chan bool) {
+func consumer1(b testing.TB, id int, db string, table string, maxRowID int, link chan int, done chan bool) {
 	for opId := range link {
 		rowId := opId % maxRowID
 		url := tu.NewPKReadURL(db, table)
@@ -143,7 +143,7 @@ func consumer1(b testing.TB, router *gin.Engine, id int, db string, table string
 		}
 		body, _ := json.Marshal(param)
 
-		tu.ProcessRequest(b, router, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+		tu.ProcessRequest(b, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 		// stats, _ := stat.Stats()
 		// fmt.Printf("Thread %d, Stats: %v\n", id, *stats)
 	}

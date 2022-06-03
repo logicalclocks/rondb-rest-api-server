@@ -46,7 +46,7 @@ Ndb_cluster_connection *ndb_connection;
 RS_Status Init(const char *connection_string, _Bool find_available_node_id) {
 
   int retCode = 0;
-  INFO(std::string("Connecting to ") + connection_string );
+  DEBUG(std::string("Connecting to ") + connection_string);
 
   retCode = ndb_init();
   if (retCode != 0) {
@@ -76,7 +76,10 @@ RS_Status Init(const char *connection_string, _Bool find_available_node_id) {
     return RS_SERVER_ERROR(ERROR_003 + std::string(" RetCode: ") + std::to_string(retCode));
   }
 
-  INFO("Connected.");
+  // Initialize NDB Object Pool
+  NdbObjectPool::InitPool();
+
+  DEBUG("Connected.");
   return RS_OK;
 }
 
@@ -86,7 +89,7 @@ RS_Status Shutdown() {
     NdbObjectPool::GetInstance()->Close();
     delete ndb_connection;
   } catch (...) {
-    WARN("Exception in Shutdown"); 
+    WARN("Exception in Shutdown");
   }
   return RS_OK;
 }
@@ -221,7 +224,6 @@ int GetAvailableAPINode(const char *connection_string) {
 void register_callbacks(Callbacks cbs) {
   set_log_call_back_fns(cbs);
 }
-
 
 /**
  * only for testing

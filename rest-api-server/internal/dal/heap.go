@@ -21,6 +21,7 @@ package dal
 /*
 #include "./../../../data-access-rondb/src/rdrs-const.h"
 #include "./../../../data-access-rondb/src/rdrs-dal.h"
+#include <stdlib.h>
 */
 import "C"
 import (
@@ -73,6 +74,22 @@ func InitializeBuffers() {
 	buffersStats.DeallocationsCount = 0
 
 	initialized = true
+}
+
+func ReleaseAllBuffers() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if !initialized {
+		panic(fmt.Sprintf("Native buffers are not initialized"))
+	}
+
+	for _, buffer := range buffers {
+		C.free(buffer.Buffer)
+	}
+	buffers = make([]*NativeBuffer, 0)
+	buffersStats = NativeBufferStats{}
+	initialized = false
 }
 
 func __allocateBuffer() *NativeBuffer {

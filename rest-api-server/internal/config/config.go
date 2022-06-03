@@ -36,6 +36,7 @@ type RSConfiguration struct {
 	RestServer  RestServer
 	RonDBConfig RonDB
 	MySQLServer MySQLServer
+	Security    Security
 	Log         log.LogConfig
 }
 
@@ -63,6 +64,13 @@ type MySQLServer struct {
 type RonDB struct {
 	IP   string
 	Port uint16
+}
+
+type Security struct {
+	EnableTLS                  bool
+	RequireAndVerifyClientCert bool
+	CertificateFile            string
+	PrivateKeyFile             string
 }
 
 func init() {
@@ -95,10 +103,18 @@ func init() {
 		MaxAge:     30,
 	}
 
+	security := Security{
+		EnableTLS:                  false,
+		RequireAndVerifyClientCert: false,
+		CertificateFile:            "",
+		PrivateKeyFile:             "",
+	}
+
 	_config = RSConfiguration{
 		RestServer:  restServer,
 		MySQLServer: mySQLServer,
 		RonDBConfig: ronDBConfig,
+		Security:    security,
 		Log:         log,
 	}
 
@@ -132,6 +148,6 @@ func PrintConfig() {
 	log.Infof("Configuration loaded from file: %s\n", string(b))
 }
 
-func Configuration() RSConfiguration {
-	return _config
+func Configuration() *RSConfiguration {
+	return &_config
 }

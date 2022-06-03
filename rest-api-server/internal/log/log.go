@@ -33,13 +33,7 @@ func NewLogConfig() LogConfig {
 var currentLevel log.Level
 
 func InitLogger(logConfig LogConfig) {
-	lvl, err := log.ParseLevel(logConfig.Level)
-	if err != nil {
-		log.Errorf("Invlid log level %s ", logConfig.Level)
-		lvl = log.ErrorLevel
-	}
-
-	currentLevel = lvl
+	SetLevel(logConfig.Level)
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: true,
@@ -60,6 +54,16 @@ func InitLogger(logConfig LogConfig) {
 	}
 
 	RegisterLogCallBack()
+}
+
+func SetLevel(levelStr string) {
+	lvl, err := log.ParseLevel(levelStr)
+	if err != nil {
+		log.Errorf("Invlid log level %s ", levelStr)
+		lvl = log.ErrorLevel
+	}
+
+	currentLevel = lvl
 }
 
 func Tracef(format string, v ...interface{}) {

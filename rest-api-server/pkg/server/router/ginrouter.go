@@ -18,16 +18,16 @@
 package router
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
-	"hopsworks.ai/rdrs/internal/router/handler/batchops"
-	"hopsworks.ai/rdrs/internal/router/handler/pkread"
-	"hopsworks.ai/rdrs/internal/router/handler/stat"
+	"hopsworks.ai/rdrs/internal/router/handler"
 	// _ "github.com/ianlancetaylor/cgosymbolizer" // enable this for stack trace for c layer
 )
 
@@ -41,23 +41,32 @@ type RouterConext struct {
 	// RonDB
 	DBIP   string
 	DBPort uint16
+
+	//server
+	Server *http.Server
 }
 
 var _ Router = (*RouterConext)(nil)
 
-func (rc *RouterConext) SetupRouter() error {
+func (rc *RouterConext) SetupRouter(handlers []handler.RegisterTestHandler) error {
 	gin.SetMode(gin.ReleaseMode)
 	rc.Engine = gin.New()
 
-	rc.Engine.GET("/"+rc.APIVersion+"/"+ds.STAT_OPERATION, stat.StatHandler)
-	rc.Engine.POST("/"+rc.APIVersion+"/:db/:table/"+ds.PK_DB_OPERATION, pkread.PkReadHandler)
-	rc.Engine.POST("/"+rc.APIVersion+"/"+ds.BATCH_OPERATION, batchops.BatchOpsHandler)
+	for _, handler := range handlers {
+		handler(rc.Engine)
+	}
 
 	// connect to RonDB
 	dal.InitializeBuffers()
-	err := dal.InitRonDBConnection(fmt.Sprintf("%s:%d", rc.DBIP, rc.DBPort), false)
+	err := dal.InitRonDBConnection(fmt.Sprintf("%s:%d", rc.DBIP, rc.DBPort), true)
 	if err != nil {
 		return err
+	}
+
+	address := fmt.Sprintf("%s:%d", rc.ServerIP, rc.ServerPort)
+	rc.Server = &http.Server{
+		Addr:    address,
+		Handler: rc.Engine,
 	}
 
 	return nil
@@ -65,11 +74,31 @@ func (rc *RouterConext) SetupRouter() error {
 
 func (rc *RouterConext) StartRouter() error {
 
-	address := fmt.Sprintf("%s:%d", rc.ServerIP, rc.ServerPort)
-	log.Infof("Listening on %s\n", address)
-	err := rc.Engine.Run(address)
-	if err != nil {
-		return err
+	log.Infof("Listening on %s", rc.Server.Addr)
+
+	go func() {
+		err := rc.Server.ListenAndServe()
+		if err != nil {
+			log.Infof("Server returned. Error: %v", err)
+		}
+	}()
+
+	return nil
+}
+
+func (rc *RouterConext) StopRouter() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := rc.Server.Shutdown(ctx); err != nil {
+		log.Errorf("Server forced to shutdown: %v", err)
+	}
+
+	dalErr := dal.ShutdownConnection()
+	dal.ReleaseAllBuffers()
+
+	if dalErr != nil {
+		log.Errorf("Failed to stop RonDB API. Error %v", dalErr)
 	}
 
 	return nil
@@ -82,6 +111,11 @@ func CreateRouterContext() Router {
 		APIVersion: config.Configuration().RestServer.APIVersion,
 		DBIP:       config.Configuration().RonDBConfig.IP,
 		DBPort:     config.Configuration().RonDBConfig.Port,
+		Server:     &http.Server{},
 	}
 	return &router
+}
+
+func (rc *RouterConext) GetServer() *http.Server {
+	return rc.Server
 }

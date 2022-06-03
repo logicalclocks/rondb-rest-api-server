@@ -21,9 +21,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"strings"
@@ -37,18 +37,39 @@ import (
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
+	"hopsworks.ai/rdrs/internal/router/handler"
+	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
 
-type RegisterTestHandler func(*gin.Engine)
-
-func ProcessRequest(t testing.TB, router *gin.Engine, httpVerb string,
+func ProcessRequest(t testing.TB, httpVerb string,
 	url string, body string, expectedStatus int, expectedMsg string) (int, string) {
-
 	t.Helper()
-	req, _ := http.NewRequest(httpVerb, url, strings.NewReader(body))
-	resp := httptest.NewRecorder()
-	router.ServeHTTP(resp, req)
+
+	client := http.Client{}
+	var resp *http.Response
+	var err error
+	switch httpVerb {
+	case "POST":
+		resp, err = client.Post(url, "application/json", strings.NewReader(body))
+
+	case "GET":
+		resp, err = client.Get(url)
+
+	default:
+		t.Fatalf("Http verb not yet implemented. Verb %s", httpVerb)
+	}
+
+	if err != nil {
+		t.Fatalf("Test failed to make request. Error: %v", err)
+	}
+
+	respCode := resp.StatusCode
+	respBodyBtyes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Test failed to read response body. Error: %v", err)
+	}
+	respBody := string(respBodyBtyes)
 
 	// var prettyJSON bytes.Buffer
 	// err := json.Indent(&prettyJSON, resp.Body.Bytes(), "", "\t")
@@ -57,16 +78,16 @@ func ProcessRequest(t testing.TB, router *gin.Engine, httpVerb string,
 	// }
 	// log.Infof("Response Body. %s\n", string(prettyJSON.Bytes()))
 
-	if resp.Code != expectedStatus || !strings.Contains(resp.Body.String(), expectedMsg) {
-		if resp.Code != expectedStatus {
-			t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, resp.Code, resp.Body)
+	if respCode != expectedStatus || !strings.Contains(respBody, expectedMsg) {
+		if respCode != expectedStatus {
+			t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, respCode, respBody)
 		}
-		if !strings.Contains(resp.Body.String(), expectedMsg) {
-			t.Fatalf("Test failed. Response body does not contain %s. Body: %s", expectedMsg, resp.Body)
+		if !strings.Contains(respBody, expectedMsg) {
+			t.Fatalf("Test failed. Response body does not contain %s. Body: %s", expectedMsg, respBody)
 		}
 	}
 
-	return resp.Code, string(resp.Body.Bytes())
+	return respCode, respBody
 }
 
 func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isBinaryData bool) {
@@ -241,18 +262,38 @@ func NewReadColumn(col string) *[]ds.ReadColumn {
 }
 
 func NewPKReadURL(db string, table string) string {
-	url := fmt.Sprintf("%s%s", ds.DB_OPS_EP_GROUP, ds.PK_DB_OPERATION)
+
+	url := fmt.Sprintf("%s:%d%s%s", config.Configuration().RestServer.IP,
+		config.Configuration().RestServer.Port,
+		ds.DB_OPS_EP_GROUP, ds.PK_DB_OPERATION)
 	url = strings.Replace(url, ":"+ds.DB_PP, db, 1)
 	url = strings.Replace(url, ":"+ds.TABLE_PP, table, 1)
+	appendURLProtocol(&url)
 	return url
 }
 
 func NewBatchReadURL() string {
-	return "/" + version.API_VERSION + "/" + ds.BATCH_OPERATION
+	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.IP,
+		config.Configuration().RestServer.Port,
+		version.API_VERSION, ds.BATCH_OPERATION)
+	appendURLProtocol(&url)
+	return url
 }
 
 func NewStatURL() string {
-	return "/" + version.API_VERSION + "/" + ds.STAT_OPERATION
+	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.IP,
+		config.Configuration().RestServer.Port,
+		version.API_VERSION, ds.STAT_OPERATION)
+	appendURLProtocol(&url)
+	return url
+}
+
+func appendURLProtocol(url *string) {
+	if config.Configuration().Security.EnableTLS {
+		*url = fmt.Sprintf("https://%s", *url)
+	} else {
+		*url = fmt.Sprintf("http://%s", *url)
+	}
 }
 
 func NewOperationID(size int) *string {
@@ -317,9 +358,12 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []RegisterTestHandler,
-	fn func(router *gin.Engine)) {
+func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.RegisterTestHandler,
+	fn func()) {
 	t.Helper()
+
+	// set log level to warn for testing
+	log.SetLevel("WARN")
 
 	rand.Seed(int64(time.Now().Nanosecond()))
 
@@ -345,14 +389,18 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []RegisterTestHand
 		runSQLQueries(t, dbConnection, db[0])
 	}
 
-	router, err := InitRouter(t, registerHandlers)
-
+	routerCtx := router.CreateRouterContext()
+	routerCtx.SetupRouter(registerHandlers)
+	err = routerCtx.StartRouter()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	defer shutDownRouter(t, router)
+	defer shutDownRouter(t, routerCtx)
 
-	fn(router)
+	time.Sleep(250 * time.Millisecond)
+
+	fn()
+
 	stats := dal.GetNativeBuffersStats()
 	if stats.BuffersCount != stats.FreeBuffers {
 		t.Fatalf("Number of free buffers do not match. Expecting: %d, Got: %d",
@@ -370,24 +418,21 @@ func runSQLQueries(t testing.TB, db *sql.DB, setup []string) {
 	}
 }
 
-func InitRouter(t testing.TB, registerHandlers []RegisterTestHandler) (*gin.Engine, error) {
-	t.Helper()
-	router := gin.New()
-	router.Use(loggerMiddleware())
-	connStr := fmt.Sprintf("%s:%d", config.Configuration().RonDBConfig.IP, config.Configuration().RonDBConfig.Port)
-	err := dal.InitRonDBConnection(connStr, true)
-	if err != nil {
-		return nil, err
-	}
+func startServer(t testing.TB, server *http.Server, router *gin.Engine, registerHandlers []handler.RegisterTestHandler) {
 
+	router.Use(loggerMiddleware())
 	for _, handler := range registerHandlers {
 		handler(router)
 	}
-	if !dal.BuffersInitialized() {
-		dal.InitializeBuffers()
-	}
 
-	return router, nil
+	addr := fmt.Sprintf("%s:%d", config.Configuration().RestServer.IP, config.Configuration().RestServer.Port)
+	server.Handler = router
+	server.Addr = addr
+	//err := server.ListenAndServeTLS(serverCertFile, serverKeyFile)
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Infof("%v", err)
+	}
 }
 
 func loggerMiddleware() gin.HandlerFunc {
@@ -397,22 +442,18 @@ func loggerMiddleware() gin.HandlerFunc {
 	}
 }
 
-func shutDownRouter(t testing.TB, router *gin.Engine) error {
+func shutDownRouter(t testing.TB, router router.Router) error {
 	t.Helper()
-	err := dal.ShutdownConnection()
-	if err != nil {
-		return err
-	}
-	return nil
+	return router.StopRouter()
 }
 
-func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, registerHandler ...RegisterTestHandler) {
+func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, registerHandler ...handler.RegisterTestHandler) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
-			WithDBs(t, [][][]string{common.Database(testInfo.Db)}, registerHandler, func(router *gin.Engine) {
+			WithDBs(t, [][][]string{common.Database(testInfo.Db)}, registerHandler, func() {
 				url := NewPKReadURL(testInfo.Db, testInfo.Table)
 				body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
-				httpCode, res := ProcessRequest(t, router, ds.PK_HTTP_VERB, url,
+				httpCode, res := ProcessRequest(t, ds.PK_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, testInfo.BodyContains)
 				if httpCode == http.StatusOK {
 					ValidateResArrayData(t, testInfo, res, isBinaryData)
@@ -423,7 +464,7 @@ func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, reg
 }
 
 func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinaryData bool,
-	registerHandlers ...RegisterTestHandler) {
+	registerHandlers ...handler.RegisterTestHandler) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
 
@@ -448,10 +489,10 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 			}
 			batch := ds.BatchOperation{Operations: &subOps}
 
-			WithDBs(t, dbs, registerHandlers, func(router *gin.Engine) {
+			WithDBs(t, dbs, registerHandlers, func() {
 				url := NewBatchReadURL()
 				body, _ := json.MarshalIndent(batch, "", "\t")
-				httpCode, res := ProcessRequest(t, router, ds.BATCH_HTTP_VERB, url,
+				httpCode, res := ProcessRequest(t, ds.BATCH_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, "")
 				if httpCode == http.StatusOK {
 					validateBatchResponse(t, testInfo, res, isBinaryData)

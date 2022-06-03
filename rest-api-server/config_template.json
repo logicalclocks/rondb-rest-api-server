@@ -17,9 +17,15 @@
                 "User": "rondb",
                 "Password": "rondb"
         },
+        "Security": {
+                "EnableTLS": true,
+                "RequireAndVerifyClientCert": true,
+                "CertificateFile": "",
+                "PrivateKeyFile": ""
+        },
         "Log": {
-                "Level": "debug",
-                "Filename": "test.log",
+                "Level": "info",
+                "Filename": "",
                 "MaxSizeMB": 100,
                 "MaxBackups": 10,
                 "MaxAge": 30
