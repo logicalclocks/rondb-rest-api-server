@@ -19,6 +19,7 @@ package router
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"time"
@@ -28,6 +29,7 @@ import (
 	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler"
+	sec "hopsworks.ai/rdrs/internal/security"
 	// _ "github.com/ianlancetaylor/cgosymbolizer" // enable this for stack trace for c layer
 )
 
@@ -76,14 +78,54 @@ func (rc *RouterConext) StartRouter() error {
 
 	log.Infof("Listening on %s", rc.Server.Addr)
 
+	var serverTLS *tls.Config
+	var err error
+
+	if config.Configuration().Security.EnableTLS {
+		if config.Configuration().Security.CertificateFile == "" ||
+			config.Configuration().Security.PrivateKeyFile == "" {
+			return fmt.Errorf("Server Certificate/Key not set")
+		}
+
+		serverTLS, err = serverTLSConfig()
+		if err != nil {
+			return fmt.Errorf("Unable to set server TLS config. Error %v", err)
+		}
+	}
+
 	go func() {
-		err := rc.Server.ListenAndServe()
+
+		if config.Configuration().Security.EnableTLS {
+			rc.Server.TLSConfig = serverTLS
+			err = rc.Server.ListenAndServeTLS(config.Configuration().Security.CertificateFile,
+				config.Configuration().Security.PrivateKeyFile)
+		} else {
+			err = rc.Server.ListenAndServe()
+		}
 		if err != nil {
 			log.Infof("Server returned. Error: %v", err)
 		}
 	}()
 
 	return nil
+}
+
+func serverTLSConfig() (*tls.Config, error) {
+	tlsConfig := &tls.Config{
+		MinVersion:               tls.VersionTLS13,
+		PreferServerCipherSuites: true,
+	}
+
+	if config.Configuration().Security.RequireAndVerifyClientCert {
+		tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+	}
+
+	if config.Configuration().Security.RootCACertFile != "" {
+		tlsConfig.ClientCAs = sec.TrustedCAs(config.Configuration().Security.RootCACertFile)
+	}
+
+	tlsConfig.BuildNameToCertificate()
+	return tlsConfig, nil
 }
 
 func (rc *RouterConext) StopRouter() error {

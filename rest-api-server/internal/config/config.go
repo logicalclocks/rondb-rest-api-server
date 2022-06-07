@@ -71,6 +71,7 @@ type Security struct {
 	RequireAndVerifyClientCert bool
 	CertificateFile            string
 	PrivateKeyFile             string
+	RootCACertFile             string
 }
 
 func init() {
@@ -104,10 +105,11 @@ func init() {
 	}
 
 	security := Security{
-		EnableTLS:                  false,
-		RequireAndVerifyClientCert: false,
+		EnableTLS:                  true,
+		RequireAndVerifyClientCert: true,
 		CertificateFile:            "",
 		PrivateKeyFile:             "",
+		RootCACertFile:             "",
 	}
 
 	_config = RSConfiguration{

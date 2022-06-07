@@ -45,16 +45,16 @@ func TestStat(t *testing.T) {
 	}
 
 	tu.WithDBs(t, [][][]string{common.Database(db)},
-		[]handler.RegisterTestHandler{pkread.RegisterPKTestHandler, RegisterStatTestHandler}, func() {
+		[]handler.RegisterTestHandler{pkread.RegisterPKTestHandler, RegisterStatTestHandler}, func(tc common.TestContext) {
 			for i := uint32(0); i < numOps; i++ {
-				go performPkOp(t, db, table, ch)
+				go performPkOp(t, tc, db, table, ch)
 			}
 			for i := uint32(0); i < numOps; i++ {
 				<-ch
 			}
 
 			// get stats
-			stats := getStats(t)
+			stats := getStats(t, tc)
 			if stats.NativeBufferStats.AllocationsCount != uint64(expectedAllocations) ||
 				stats.NativeBufferStats.BuffersCount != uint64(expectedAllocations) ||
 				stats.NativeBufferStats.FreeBuffers != uint64(expectedAllocations) {
@@ -69,7 +69,7 @@ func TestStat(t *testing.T) {
 		})
 }
 
-func performPkOp(t *testing.T, db string, table string, ch chan int) {
+func performPkOp(t *testing.T, tc common.TestContext, db string, table string, ch chan int) {
 	param := ds.PKReadBody{
 		Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 		ReadColumns: tu.NewReadColumn("col0"),
@@ -77,15 +77,15 @@ func performPkOp(t *testing.T, db string, table string, ch chan int) {
 	body, _ := json.MarshalIndent(param, "", "\t")
 
 	url := tu.NewPKReadURL(db, table)
-	tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+	tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 
 	ch <- 0
 }
 
-func getStats(t *testing.T) ds.StatInfo {
+func getStats(t *testing.T, tc common.TestContext) ds.StatInfo {
 	body := ""
 	url := tu.NewStatURL()
-	_, respBody := tu.ProcessRequest(t, ds.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
+	_, respBody := tu.ProcessRequest(t, tc, ds.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
 
 	var stats ds.StatInfo
 	err := json.Unmarshal([]byte(respBody), &stats)

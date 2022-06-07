@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
@@ -38,15 +39,16 @@ import (
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler"
+	sec "hopsworks.ai/rdrs/internal/security"
 	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
 
-func ProcessRequest(t testing.TB, httpVerb string,
+func ProcessRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	url string, body string, expectedStatus int, expectedMsg string) (int, string) {
 	t.Helper()
 
-	client := http.Client{}
+	client := setupClient(tc)
 	var resp *http.Response
 	var err error
 	switch httpVerb {
@@ -88,6 +90,30 @@ func ProcessRequest(t testing.TB, httpVerb string,
 	}
 
 	return respCode, respBody
+}
+
+func setupClient(tc common.TestContext) *http.Client {
+
+	c := &http.Client{}
+
+	if config.Configuration().Security.RootCACertFile != "" {
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: sec.TrustedCAs(tc.RootCACertFile),
+			},
+		}
+
+		if config.Configuration().Security.RequireAndVerifyClientCert {
+			clientCert, err := tls.LoadX509KeyPair(tc.ClientCertFile, tc.ClientKeyFile)
+			if err != nil {
+				log.Fatalf("%v\n", err)
+			}
+			transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}
+		}
+		c.Transport = transport
+	}
+
+	return c
 }
 
 func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isBinaryData bool) {
@@ -359,11 +385,18 @@ func RandString(n int) string {
 }
 
 func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.RegisterTestHandler,
-	fn func()) {
+	fn func(tc common.TestContext)) {
 	t.Helper()
+
+	tc := common.TestContext{}
 
 	// set log level to warn for testing
 	log.SetLevel("WARN")
+
+	//
+	if config.Configuration().Security.EnableTLS {
+		sec.SetupCerts(&tc)
+	}
 
 	rand.Seed(int64(time.Now().Nanosecond()))
 
@@ -399,7 +432,7 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 
 	time.Sleep(250 * time.Millisecond)
 
-	fn()
+	fn(tc)
 
 	stats := dal.GetNativeBuffersStats()
 	if stats.BuffersCount != stats.FreeBuffers {
@@ -450,10 +483,10 @@ func shutDownRouter(t testing.TB, router router.Router) error {
 func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, registerHandler ...handler.RegisterTestHandler) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
-			WithDBs(t, [][][]string{common.Database(testInfo.Db)}, registerHandler, func() {
+			WithDBs(t, [][][]string{common.Database(testInfo.Db)}, registerHandler, func(tc common.TestContext) {
 				url := NewPKReadURL(testInfo.Db, testInfo.Table)
 				body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
-				httpCode, res := ProcessRequest(t, ds.PK_HTTP_VERB, url,
+				httpCode, res := ProcessRequest(t, tc, ds.PK_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, testInfo.BodyContains)
 				if httpCode == http.StatusOK {
 					ValidateResArrayData(t, testInfo, res, isBinaryData)
@@ -489,10 +522,10 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 			}
 			batch := ds.BatchOperation{Operations: &subOps}
 
-			WithDBs(t, dbs, registerHandlers, func() {
+			WithDBs(t, dbs, registerHandlers, func(tc common.TestContext) {
 				url := NewBatchReadURL()
 				body, _ := json.MarshalIndent(batch, "", "\t")
-				httpCode, res := ProcessRequest(t, ds.BATCH_HTTP_VERB, url,
+				httpCode, res := ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, "")
 				if httpCode == http.StatusOK {
 					validateBatchResponse(t, testInfo, res, isBinaryData)

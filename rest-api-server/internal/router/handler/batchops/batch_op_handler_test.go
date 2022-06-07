@@ -428,14 +428,14 @@ func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBi
 
 func TestBatchMissingReqField(t *testing.T) {
 	tu.WithDBs(t, [][][]string{common.Database("DB000")},
-		[]handler.RegisterTestHandler{RegisterBatchTestHandler}, func() {
+		[]handler.RegisterTestHandler{RegisterBatchTestHandler}, func(tc common.TestContext) {
 			url := tu.NewBatchReadURL()
 			// Test missing method
 			operations := NewOperationsTBD(t, 3)
 			operations[1].Method = nil
 			operationsWrapper := ds.BatchOperation{Operations: &operations}
 			body, _ := json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Method' failed ")
 
 			// Test missing relative URL
@@ -443,7 +443,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].RelativeURL = nil
 			operationsWrapper = ds.BatchOperation{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'RelativeURL' failed ")
 
 			// Test missing body
@@ -451,7 +451,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].Body = nil
 			operationsWrapper = ds.BatchOperation{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Body' failed ")
 
 			// Test missing filter in an operation
@@ -459,7 +459,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			*&operations[1].Body.Filters = nil
 			operationsWrapper = ds.BatchOperation{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Filters' failed")
 		})
 }

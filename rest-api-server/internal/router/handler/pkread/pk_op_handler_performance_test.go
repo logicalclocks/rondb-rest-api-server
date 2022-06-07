@@ -45,7 +45,7 @@ func BenchmarkSimple(t *testing.B) {
 	opCount := 0
 	threadId := 0
 	tu.WithDBs(t, [][][]string{common.Database(db)},
-		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func() {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(tc common.TestContext) {
 
 			t.ResetTimer()
 			start := time.Now()
@@ -60,7 +60,7 @@ func BenchmarkSimple(t *testing.B) {
 				reqBody := createReq(maxRows, opCount, operationId)
 
 				for bp.Next() {
-					tu.ProcessRequest(t, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
+					tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
 				}
 			})
 			t.StopTimer()
@@ -94,7 +94,7 @@ func BenchmarkMT(b *testing.B) {
 	table := "table_1"
 	maxRows := 1000
 	tu.WithDBs(b, [][][]string{common.Database(db)},
-		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func() {
+		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(tc common.TestContext) {
 
 			b.ResetTimer()
 			threads := 1
@@ -108,7 +108,7 @@ func BenchmarkMT(b *testing.B) {
 			go producer1(b, numOps, link)
 
 			for i := 0; i < threads; i++ {
-				go consumer1(b, i, db, table, maxRows, link, donearr[i])
+				go consumer1(b, tc, i, db, table, maxRows, link, donearr[i])
 			}
 
 			for i := 0; i < threads; i++ {
@@ -131,7 +131,7 @@ func producer1(b testing.TB, numOps int, link chan int) {
 	close(link)
 }
 
-func consumer1(b testing.TB, id int, db string, table string, maxRowID int, link chan int, done chan bool) {
+func consumer1(b testing.TB, tc common.TestContext, id int, db string, table string, maxRowID int, link chan int, done chan bool) {
 	for opId := range link {
 		rowId := opId % maxRowID
 		url := tu.NewPKReadURL(db, table)
@@ -143,7 +143,7 @@ func consumer1(b testing.TB, id int, db string, table string, maxRowID int, link
 		}
 		body, _ := json.Marshal(param)
 
-		tu.ProcessRequest(b, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+		tu.ProcessRequest(b, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 		// stats, _ := stat.Stats()
 		// fmt.Printf("Thread %d, Stats: %v\n", id, *stats)
 	}

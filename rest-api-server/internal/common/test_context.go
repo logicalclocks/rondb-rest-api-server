@@ -14,9 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+package common
 
-package handler
-
-import "github.com/gin-gonic/gin"
-
-type RegisterTestHandler func(*gin.Engine)
+// These are some parameters needed for testing
+type TestContext struct {
+	CertsDir       string
+	RootCACertFile string
+	RootCAKeyFile  string
+	ClientCertFile string
+	ClientKeyFile  string
+}
