@@ -31,7 +31,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
@@ -393,7 +392,6 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 	// set log level to warn for testing
 	log.SetLevel("WARN")
 
-	//
 	if config.Configuration().Security.EnableTLS {
 		sec.SetupCerts(&tc)
 	}
@@ -439,6 +437,10 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 		t.Fatalf("Number of free buffers do not match. Expecting: %d, Got: %d",
 			stats.BuffersCount, stats.FreeBuffers)
 	}
+
+	if config.Configuration().Security.EnableTLS {
+		sec.DeleteCerts(&tc)
+	}
 }
 
 func runSQLQueries(t testing.TB, db *sql.DB, setup []string) {
@@ -448,30 +450,6 @@ func runSQLQueries(t testing.TB, db *sql.DB, setup []string) {
 		if err != nil {
 			t.Fatalf("failed to run command. %s. Error: %v", command, err)
 		}
-	}
-}
-
-func startServer(t testing.TB, server *http.Server, router *gin.Engine, registerHandlers []handler.RegisterTestHandler) {
-
-	router.Use(loggerMiddleware())
-	for _, handler := range registerHandlers {
-		handler(router)
-	}
-
-	addr := fmt.Sprintf("%s:%d", config.Configuration().RestServer.IP, config.Configuration().RestServer.Port)
-	server.Handler = router
-	server.Addr = addr
-	//err := server.ListenAndServeTLS(serverCertFile, serverKeyFile)
-	err := server.ListenAndServe()
-	if err != nil {
-		log.Infof("%v", err)
-	}
-}
-
-func loggerMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		//  Processing requests
-		c.Next()
 	}
 }
 

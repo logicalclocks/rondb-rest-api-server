@@ -278,11 +278,12 @@ func readCAKey(rootCAKeyFile string) (interface{}, error) {
 }
 
 func SetupCerts(tc *common.TestContext) error {
-	certsDir := "/tmp/certs"
+	certsDir := filepath.Join(os.TempDir(), "certs-for-unit-testing")
 	rootCACertFile, rootCAKeyFile, err := rootCA(certsDir)
 	if err != nil {
 		return err
 	}
+
 	tc.RootCACertFile = rootCACertFile
 	tc.RootCAKeyFile = rootCAKeyFile
 	config.Configuration().Security.RootCACertFile = rootCACertFile
@@ -304,4 +305,8 @@ func SetupCerts(tc *common.TestContext) error {
 	}
 
 	return nil
+}
+
+func DeleteCerts(tc *common.TestContext) error {
+	return os.RemoveAll(tc.CertsDir)
 }
