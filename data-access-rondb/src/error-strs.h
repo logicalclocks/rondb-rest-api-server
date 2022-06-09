@@ -52,6 +52,9 @@ extern "C" {
 #define ERROR_026 "Reading BLOB/TEXT column is not supported yet."
 #define ERROR_027 "Invalid Date/Time."
 #define ERROR_028 "Programming error. Please report bug."
+#define ERROR_029 "Failed to start scan operation."
+#define ERROR_030 "Failed to set lock mode."
+#define ERROR_031 "Failed to set filter."
 
 #ifdef __cplusplus
 }

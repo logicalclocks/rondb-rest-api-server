@@ -669,7 +669,7 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     [[fallthrough]];
   case NdbDictionary::Column::Longvarchar: {
     ///< Length bytes: 2, little-endian
-    int attr_bytes;
+    Uint32 attr_bytes;
     const char *data_start = nullptr;
     if (GetByteArray(attr, &data_start, &attr_bytes) != 0) {
       return RS_CLIENT_ERROR(ERROR_019);
@@ -685,7 +685,7 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     [[fallthrough]];
   case NdbDictionary::Column::Longvarbinary: {
     ///< Length bytes: 2, little-endian
-    int attr_bytes;
+    Uint32 attr_bytes;
     const char *data_start = nullptr;
     if (GetByteArray(attr, &data_start, &attr_bytes) != 0) {
       return RS_CLIENT_ERROR(ERROR_019);
@@ -825,7 +825,7 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
                          " Type: " + std::to_string(col->getType()));
 }
 
-int GetByteArray(const NdbRecAttr *attr, const char **first_byte, int *bytes) {
+int GetByteArray(const NdbRecAttr *attr, const char **first_byte, Uint32 *bytes) {
   const NdbDictionary::Column::ArrayType array_type = attr->getColumn()->getArrayType();
   const size_t attr_bytes                           = attr->get_size_in_bytes();
   const char *aRef                                  = attr->aRef();

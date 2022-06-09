@@ -38,10 +38,14 @@ inline void set_log_call_back_fns(const Callbacks cbs) {
 }
 
 inline void log(const int level, const char *msg) {
-  RS_LOG_MSG log_msg;
-  log_msg.level = level;
-  strncpy(log_msg.message, msg, RS_LOG_MSG_LEN-1);
-  my_cb_fns.logger(log_msg);
+  if (my_cb_fns.logger != nullptr) {
+    RS_LOG_MSG log_msg;
+    log_msg.level = level;
+    strncpy(log_msg.message, msg, RS_LOG_MSG_LEN - 1);
+    my_cb_fns.logger(log_msg);
+  } else {
+    std::cout << msg << std::endl;
+  }
 }
 
 inline void PANIC(const char *msg) {

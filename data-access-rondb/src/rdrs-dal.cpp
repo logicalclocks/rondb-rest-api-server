@@ -28,9 +28,10 @@
 #include <NdbApi.hpp>
 #include "src/error-strs.h"
 #include "src/logger.hpp"
-#include "db-operations/pk/pkr-operation.hpp"
+#include "src/db-operations/pk/pkr-operation.hpp"
 #include "src/status.hpp"
 #include "src/ndb_object_pool.hpp"
+#include "src/db-operations/pk/common.hpp"
 
 int GetAvailableAPINode(const char *connection_string);
 
@@ -225,13 +226,299 @@ void register_callbacks(Callbacks cbs) {
   set_log_call_back_fns(cbs);
 }
 
+RS_Status select_table(Ndb *ndb_object, const char *database_str, const char *table_str,
+                       const NdbDictionary::Table **table_dict) {
+  if (ndb_object->setCatalogName(database_str) != 0) {
+    return RS_CLIENT_ERROR(ERROR_011 + std::string(" Database: ") + std::string(database_str) +
+                           std::string(". Table: ") + std::string(table_str));
+  }
+
+  const NdbDictionary::Dictionary *dict = ndb_object->getDictionary();
+  *table_dict                           = dict->getTable(table_str);
+
+  if (table_dict == nullptr) {
+    return RS_CLIENT_ERROR(ERROR_011 + std::string(" Database: ") + std::string(database_str) +
+                           std::string(". Table: ") + std::string(table_str));
+  }
+  return RS_OK;
+}
+
+RS_Status start_transaction(Ndb *ndb_object, NdbTransaction **tx) {
+  NdbError err;
+  *tx = ndb_object->startTransaction();
+  if (tx == nullptr) {
+    err = ndb_object->getNdbError();
+    return RS_RONDB_SERVER_ERROR(err, ERROR_005);
+  }
+  return RS_OK;
+}
+
+RS_Status get_scan_op(Ndb *ndb_object, NdbTransaction *tx, const NdbDictionary::Table *table_dict,
+                      NdbScanOperation **scanOp) {
+  NdbError err;
+  *scanOp = tx->getNdbScanOperation(table_dict);
+  if (scanOp == nullptr) {
+    err = ndb_object->getNdbError();
+    return RS_RONDB_SERVER_ERROR(err, ERROR_029);
+  }
+  return RS_OK;
+}
+
+RS_Status read_tuples(Ndb *ndb_object, NdbScanOperation *scanOp) {
+  NdbError err;
+  if (scanOp->readTuples(NdbOperation::LM_Exclusive) != 0) {
+    err = ndb_object->getNdbError();
+    return RS_RONDB_SERVER_ERROR(err, ERROR_030);
+  }
+  return RS_OK;
+}
+
+RS_Status find_api_key(Ndb *ndb_object, const char *prefix, HopsworksAPIKey *api_key) {
+
+  NdbError err;
+  const NdbDictionary::Table *table_dict;
+  NdbTransaction *tx;
+  NdbScanOperation *scanOp;
+
+  RS_Status status = select_table(ndb_object, "hopsworks", "api_key", &table_dict);
+  if (status.http_code != SUCCESS) {
+    return status;
+  }
+
+  status = start_transaction(ndb_object, &tx);
+  if (status.http_code != SUCCESS) {
+    return status;
+  }
+
+  status = get_scan_op(ndb_object, tx, table_dict, &scanOp);
+  if (status.http_code != SUCCESS) {
+    ndb_object->closeTransaction(tx);
+    return status;
+  }
+
+  status = read_tuples(ndb_object, scanOp);
+  if (status.http_code != SUCCESS) {
+    ndb_object->closeTransaction(tx);
+    return status;
+  }
+
+  int col_id      = table_dict->getColumn("prefix")->getColumnNo();
+  Uint32 col_size = (Uint32)table_dict->getColumn("prefix")->getSizeInBytes();
+  if (strlen(prefix) > col_size) {
+    return RS_CLIENT_ERROR("Wrong length of the search key");
+  }
+
+  char cmp_str[col_size];
+  memcpy(cmp_str + 1, prefix, col_size - 1);
+  cmp_str[0] = (char)strlen(prefix);
+
+  NdbScanFilter filter(scanOp);
+  if (filter.begin(NdbScanFilter::AND) < 0 ||
+      filter.cmp(NdbScanFilter::COND_EQ, col_id, cmp_str, col_size) < 0 || filter.end() < 0) {
+    err = ndb_object->getNdbError();
+    ndb_object->closeTransaction(tx);
+    return RS_RONDB_SERVER_ERROR(err, ERROR_031);
+  }
+
+  bool check;
+  NdbRecAttr *user_id = scanOp->getValue("user_id");
+  NdbRecAttr *secret  = scanOp->getValue("secret");
+  NdbRecAttr *salt    = scanOp->getValue("salt");
+  NdbRecAttr *name    = scanOp->getValue("name");
+
+  if (user_id == nullptr || secret == nullptr || salt == nullptr || name == nullptr) {
+    return RS_RONDB_SERVER_ERROR(err, ERROR_019);
+  }
+
+  if (tx->execute(NdbTransaction::NoCommit) != 0) {
+    err = ndb_object->getNdbError();
+    ndb_object->closeTransaction(tx);
+    return RS_RONDB_SERVER_ERROR(err, ERROR_009);
+  }
+
+  while ((check = scanOp->nextResult(true)) == 0) {
+    do {
+
+      Uint32 name_attr_bytes;
+      const char *name_data_start = nullptr;
+      if (GetByteArray(name, &name_data_start, &name_attr_bytes) != 0) {
+        return RS_CLIENT_ERROR(ERROR_019);
+      }
+
+      Uint32 salt_attr_bytes;
+      const char *salt_data_start = nullptr;
+      if (GetByteArray(salt, &salt_data_start, &salt_attr_bytes) != 0) {
+        return RS_CLIENT_ERROR(ERROR_019);
+      }
+
+      Uint32 secret_attr_bytes;
+      const char *secret_data_start = nullptr;
+      if (GetByteArray(secret, &secret_data_start, &secret_attr_bytes) != 0) {
+        return RS_CLIENT_ERROR(ERROR_019);
+      }
+
+      if (sizeof(api_key->secret) < secret_attr_bytes || sizeof(api_key->name) < name_attr_bytes ||
+          sizeof(api_key->salt) < salt_attr_bytes) {
+        return RS_CLIENT_ERROR(ERROR_021);
+      }
+
+      memcpy(api_key->name, name_data_start, name_attr_bytes);
+      api_key->name[name_attr_bytes] = 0;
+
+      memcpy(api_key->secret, secret_data_start, secret_attr_bytes);
+      api_key->secret[secret_attr_bytes] = 0;
+
+      memcpy(api_key->salt, salt_data_start, salt_attr_bytes);
+      api_key->salt[salt_attr_bytes] = 0;
+
+      api_key->user_id = user_id->int32_value();
+    } while ((check = scanOp->nextResult(false)) == 0);
+  }
+
+  ndb_object->closeTransaction(tx);
+
+  return RS_OK;
+}
+
+RS_Status find_user(Ndb *ndb_object, HopsworksAPIKey *api_key) {
+
+  if (ndb_object->setCatalogName("hopsworks") != 0) {
+    return RS_CLIENT_ERROR(ERROR_011 + std::string(" Database: hopsworks. Table: api_key "));
+  }
+
+  //  const NdbDictionary::Dictionary *dict  = ndb_object->getDictionary();
+  //  const NdbDictionary::Table *table_dict = dict->getTable("api_key");
+  //
+  //  if (table_dict == nullptr) {
+  //    return RS_CLIENT_ERROR(ERROR_011 + std::string(" Database: hopsworks. Table: api_key "));
+  //  }
+  //
+  //  NdbError err;
+  //  NdbTransaction *tx = ndb_object->startTransaction();
+  //  if (tx == nullptr) {
+  //    err = ndb_object->getNdbError();
+  //    return RS_RONDB_SERVER_ERROR(err, ERROR_005);
+  //  }
+  //
+  //  NdbScanOperation *scanOp = tx->getNdbScanOperation(table_dict);
+  //  if (scanOp == nullptr) {
+  //    err = ndb_object->getNdbError();
+  //    ndb_object->closeTransaction(tx);
+  //    return RS_RONDB_SERVER_ERROR(err, ERROR_029);
+  //  }
+  //
+  //  if (scanOp->readTuples(NdbOperation::LM_Exclusive) != 0) {
+  //    err = ndb_object->getNdbError();
+  //    ndb_object->closeTransaction(tx);
+  //    return RS_RONDB_SERVER_ERROR(err, ERROR_030);
+  //  }
+  //
+  //  int col_id      = table_dict->getColumn("prefix")->getColumnNo();
+  //  Uint32 col_size = (Uint32)table_dict->getColumn("prefix")->getSizeInBytes();
+  //  if (strlen(prefix) > col_size) {
+  //    return RS_CLIENT_ERROR("Wrong length of the search key");
+  //  }
+  //
+  //  char cmp_str[col_size];
+  //  memcpy(cmp_str + 1, prefix, col_size - 1);
+  //  cmp_str[0] = (char)strlen(prefix);
+  //
+  //  NdbScanFilter filter(scanOp);
+  //  if (filter.begin(NdbScanFilter::AND) < 0 ||
+  //      filter.cmp(NdbScanFilter::COND_EQ, col_id, cmp_str, col_size) < 0 || filter.end() < 0) {
+  //    err = ndb_object->getNdbError();
+  //    ndb_object->closeTransaction(tx);
+  //    return RS_RONDB_SERVER_ERROR(err, ERROR_031);
+  //  }
+  //
+  //  bool check;
+  //  NdbRecAttr *user_id = scanOp->getValue("user_id");
+  //  NdbRecAttr *secret  = scanOp->getValue("secret");
+  //  NdbRecAttr *salt    = scanOp->getValue("salt");
+  //  NdbRecAttr *name    = scanOp->getValue("name");
+  //
+  //  if (user_id == nullptr || secret == nullptr || salt == nullptr || name == nullptr) {
+  //    return RS_RONDB_SERVER_ERROR(err, ERROR_019);
+  //  }
+  //
+  //  if (tx->execute(NdbTransaction::NoCommit) != 0) {
+  //    err = ndb_object->getNdbError();
+  //    ndb_object->closeTransaction(tx);
+  //    return RS_RONDB_SERVER_ERROR(err, ERROR_009);
+  //  }
+  //
+  //  while ((check = scanOp->nextResult(true)) == 0) {
+  //    do {
+  //
+  //      Uint32 name_attr_bytes;
+  //      const char *name_data_start = nullptr;
+  //      if (GetByteArray(name, &name_data_start, &name_attr_bytes) != 0) {
+  //        return RS_CLIENT_ERROR(ERROR_019);
+  //      }
+  //
+  //      Uint32 salt_attr_bytes;
+  //      const char *salt_data_start = nullptr;
+  //      if (GetByteArray(salt, &salt_data_start, &salt_attr_bytes) != 0) {
+  //        return RS_CLIENT_ERROR(ERROR_019);
+  //      }
+  //
+  //      Uint32 secret_attr_bytes;
+  //      const char *secret_data_start = nullptr;
+  //      if (GetByteArray(secret, &secret_data_start, &secret_attr_bytes) != 0) {
+  //        return RS_CLIENT_ERROR(ERROR_019);
+  //      }
+  //
+  //      if (sizeof(api_key->secret) < secret_attr_bytes || sizeof(api_key->name) < name_attr_bytes
+  //      ||
+  //          sizeof(api_key->salt) < salt_attr_bytes) {
+  //        return RS_CLIENT_ERROR(ERROR_021);
+  //      }
+  //
+  //      memcpy(api_key->name, name_data_start, name_attr_bytes);
+  //      api_key->name[name_attr_bytes] = 0;
+  //
+  //      memcpy(api_key->secret, secret_data_start, secret_attr_bytes);
+  //      api_key->secret[secret_attr_bytes] = 0;
+  //
+  //      memcpy(api_key->salt, salt_data_start, salt_attr_bytes);
+  //      api_key->salt[salt_attr_bytes] = 0;
+  //
+  //      api_key->user_id = user_id->int32_value();
+  //    } while ((check = scanOp->nextResult(false)) == 0);
+  //  }
+  //
+  // ndb_object->closeTransaction(tx);
+
+  return RS_OK;
+}
+
 /**
  * only for testing
  */
 int main(int argc, char **argv) {
-  ndb_init();
   char connection_string[] = "localhost:1186";
-  INFO(std::string("Free node is ") + std::to_string(GetAvailableAPINode(connection_string)));
+  Init(connection_string, true);
+
+  Ndb *ndb_object  = nullptr;
+  RS_Status status = NdbObjectPool::GetInstance()->GetNdbObject(ndb_connection, &ndb_object);
+  if (status.http_code != SUCCESS) {
+    INFO("Failed to get the NDB object");
+    return 1;
+  }
+
+  HopsworksAPIKey api_key;
+  status = find_api_key(ndb_object, "ZaCRiVfQOxuOIXZk", &api_key);
+  if (status.http_code != SUCCESS) {
+    ERROR(status.message);
+  }
+
+  std::cout << "User ID: " << api_key.user_id << std::endl;
+  std::cout << "name: " << api_key.name << std::endl;
+  std::cout << "secret: " << api_key.secret << std::endl;
+  std::cout << "salt: " << api_key.salt << std::endl;
+  // status = find_databases("ZaCRiVfQOxuOIXZ2", ndb_object);
+  // status = find_databases("%", ndb_object);
+
   ndb_end(0);
 }
 

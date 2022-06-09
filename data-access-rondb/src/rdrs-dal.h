@@ -81,6 +81,29 @@ typedef struct RonDB_Stats {
   volatile unsigned int ndb_objects_available;
 } RonDB_Stats;
 
+//API Key table
+typedef struct HopsworksAPIKey {
+  char secret[513];
+  char salt[257];
+  char name[46];
+  int user_id;
+} HopsworksAPIKey;
+
+//User table
+typedef struct HopsworksUsers {
+  char email[151];
+} HopsworksUsers;
+
+//project_team table
+typedef struct HopsworksProjectTeam {
+  int porject_id;
+} HopsworksProjectTeam;
+
+//project_team table
+typedef struct HopsworksProject {
+  char porjectname[100];
+} HopsworksProject;
+
 /**
  * Initialize connection to the database
  */

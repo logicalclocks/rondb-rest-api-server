@@ -46,6 +46,6 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
    * return data for array columns
    *
    */
-  int GetByteArray(const NdbRecAttr *attr, const char **first_byte, int *bytes);
+  int GetByteArray(const NdbRecAttr *attr, const char **first_byte, Uint32 *bytes);
 
 #endif  // DATA_ACCESS_RONDB_SRC_DB_OPERATIONS_PK_COMMON_H_
