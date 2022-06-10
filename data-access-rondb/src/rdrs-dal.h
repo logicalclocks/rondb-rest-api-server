@@ -101,7 +101,7 @@ typedef struct HopsworksProjectTeam {
 
 //project_team table
 typedef struct HopsworksProject {
-  char porjectname[100];
+  char porjectname[101];
 } HopsworksProject;
 
 /**
@@ -143,6 +143,18 @@ typedef struct {
 * Register call back function  
 */
 void register_callbacks(Callbacks cbs);
+
+
+/**
+ * Find api key row for given secret
+ */
+RS_Status find_api_key(char *prefix, HopsworksAPIKey* api_key);
+
+
+/*
+ * Find all projects for the api key
+ */
+RS_Status find_all_projects(HopsworksAPIKey* api_key, char ***projects, int count);
 
 #endif
 
