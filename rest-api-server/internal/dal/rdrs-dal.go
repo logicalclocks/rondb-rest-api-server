@@ -55,7 +55,7 @@ func InitRonDBConnection(connStr string, find_available_node_id bool) *DalError 
 
 	cs := C.CString(connStr)
 	defer C.free(unsafe.Pointer(cs))
-	ret := C.Init(cs, C.bool(find_available_node_id))
+	ret := C.init(cs, C.bool(find_available_node_id))
 
 	if ret.http_code != http.StatusOK {
 		return cToGoRet(&ret)
@@ -65,7 +65,7 @@ func InitRonDBConnection(connStr string, find_available_node_id bool) *DalError 
 }
 
 func ShutdownConnection() *DalError {
-	ret := C.Shutdown()
+	ret := C.shutdown_connection()
 
 	if ret.http_code != http.StatusOK {
 		return cToGoRet(&ret)
@@ -84,7 +84,7 @@ func RonDBPKRead(request *NativeBuffer, response *NativeBuffer) *DalError {
 	cresponse.buffer = (*C.char)(response.Buffer)
 	cresponse.size = C.uint(response.Size)
 
-	ret := C.PKRead(&crequest, &cresponse)
+	ret := C.pk_read(&crequest, &cresponse)
 
 	if ret.http_code != http.StatusOK {
 		return cToGoRet(&ret)
@@ -110,7 +110,7 @@ func RonDBBatchedPKRead(noOps uint32, requests []*NativeBuffer, responses []*Nat
 		cResps[i].size = C.uint(responses[i].Size)
 	}
 
-	ret := C.PKBatchRead(C.uint(noOps), (*C.RS_Buffer)(reqMem), (*C.RS_Buffer)(respMem))
+	ret := C.pk_batch_read(C.uint(noOps), (*C.RS_Buffer)(reqMem), (*C.RS_Buffer)(respMem))
 
 	if ret.http_code != http.StatusOK {
 		return cToGoRet(&ret)
@@ -129,7 +129,7 @@ func GetRonDBStats() (*RonDBStats, *DalError) {
 	p := (*C.RonDB_Stats)(C.malloc(C.size_t(unsafe.Sizeof(C.sizeof_RonDB_Stats))))
 	defer C.free(unsafe.Pointer(p))
 
-	ret := C.GetRonDBStats(p)
+	ret := C.get_rondb_stats(p)
 
 	if ret.http_code != http.StatusOK {
 		return nil, cToGoRet(&ret)

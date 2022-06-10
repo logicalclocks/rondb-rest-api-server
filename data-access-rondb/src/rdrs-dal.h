@@ -107,27 +107,27 @@ typedef struct HopsworksProject {
 /**
  * Initialize connection to the database
  */
-RS_Status Init(const char *connection_string, _Bool find_available_node_id);
+RS_Status init(const char *connection_string, _Bool find_available_node_id);
 
 /**
  * Shutdown connection
  */
-RS_Status Shutdown();
+RS_Status shutdown_connection();
 
 /**
  * Primary key read operation
  */
-RS_Status PKRead(RS_Buffer *reqBuff, RS_Buffer *respBuff);
+RS_Status pk_read(RS_Buffer *reqBuff, RS_Buffer *respBuff);
 
 /**
  * Batched primary key read operation
  */
-RS_Status PKBatchRead(unsigned int no_req, RS_Buffer *req_buffs, RS_Buffer *resp_buffs);
+RS_Status pk_batch_read(unsigned int no_req, RS_Buffer *req_buffs, RS_Buffer *resp_buffs);
 
 /**
  * Deallocate pointer array
  */
-RS_Status GetRonDBStats(RonDB_Stats *stats);
+RS_Status get_rondb_stats(RonDB_Stats *stats);
 
 
 /**

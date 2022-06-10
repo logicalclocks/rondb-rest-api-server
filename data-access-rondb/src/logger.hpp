@@ -33,7 +33,7 @@
 
 static Callbacks my_cb_fns;
 
-inline void set_log_call_back_fns(const Callbacks cbs) {
+inline void setLogCallBackFns(const Callbacks cbs) {
   my_cb_fns = cbs;
 }
 
