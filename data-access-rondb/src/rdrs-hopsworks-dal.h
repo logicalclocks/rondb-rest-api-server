@@ -60,10 +60,6 @@ RS_Status find_api_key(const char *prefix, HopsworksAPIKey* api_key);
  */
 RS_Status find_all_projects(int uid, char ***projects, int *count);
 
-RS_Status testall2(int uid, int *count);
-
-RS_Status testall1(int uid);
-
 #endif
 
 #ifdef __cplusplus

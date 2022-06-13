@@ -162,7 +162,6 @@ RS_Status find_api_key_int(Ndb *ndb_object, const char *prefix, HopsworksAPIKey 
         return RS_CLIENT_ERROR(ERROR_019);
       }
 
-  std::cout<<"----------> Testing 2 "<< std::endl;
       if (sizeof(api_key->secret) < secret_attr_bytes || sizeof(api_key->name) < name_attr_bytes ||
           sizeof(api_key->salt) < salt_attr_bytes) {
         return RS_CLIENT_ERROR(ERROR_021);
@@ -188,14 +187,11 @@ RS_Status find_api_key_int(Ndb *ndb_object, const char *prefix, HopsworksAPIKey 
 
 RS_Status find_api_key(const char *prefix, HopsworksAPIKey *api_key) {
 
-  std::cout<<"----------> Testing "<< std::endl;
-
   Ndb *ndb_object  = nullptr;
   RS_Status status = NdbObjectPool::GetInstance()->GetNdbObject(ndb_connection, &ndb_object);
   if (status.http_code != SUCCESS) {
     return status;
   }
-  std::cout<<"----------> Testing2 "<< std::endl;
 
   status = find_api_key_int(ndb_object, prefix, api_key);
   closeNDBObject(ndb_object);
@@ -524,14 +520,15 @@ RS_Status find_all_projects(int uid, char ***projects, int *count) {
 
   *count = project_vec.size();
   HopsworksProject dummy;
-  *projects = (char **)malloc(*count * sizeof(char *));
+  // void *p = malloc(*count * sizeof(char *));
+
+  *projects = (char **) malloc(*count * sizeof(char *));
 
   char **ease = *projects;
   for (Uint32 i = 0; i < project_vec.size(); i++) {
     ease[i] = (char *)malloc(sizeof(dummy.porjectname) * sizeof(char));
     strncpy(ease[i], project_vec[i].porjectname, strlen(project_vec[i].porjectname));
   }
-
   return RS_OK;
 }
 
@@ -572,11 +569,4 @@ int main(int argc, char **argv) {
   }
 
   ndb_end(0);
-}
-
-RS_Status testall2(int uid, int *count){
-  return RS_OK;
-}
-RS_Status testall1(int uid) {
-  return RS_OK;
 }

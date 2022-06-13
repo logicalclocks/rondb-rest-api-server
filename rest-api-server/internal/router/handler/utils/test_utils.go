@@ -38,7 +38,7 @@ import (
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler"
-	sec "hopsworks.ai/rdrs/internal/security"
+	"hopsworks.ai/rdrs/internal/security/tlsutils"
 	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
@@ -98,7 +98,7 @@ func setupClient(tc common.TestContext) *http.Client {
 	if config.Configuration().Security.RootCACertFile != "" {
 		transport := &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs: sec.TrustedCAs(tc.RootCACertFile),
+				RootCAs: tlsutils.TrustedCAs(tc.RootCACertFile),
 			},
 		}
 
@@ -393,7 +393,7 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 	log.SetLevel("WARN")
 
 	if config.Configuration().Security.EnableTLS {
-		sec.SetupCerts(&tc)
+		tlsutils.SetupCerts(&tc)
 	}
 
 	rand.Seed(int64(time.Now().Nanosecond()))
@@ -439,7 +439,7 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 	}
 
 	if config.Configuration().Security.EnableTLS {
-		sec.DeleteCerts(&tc)
+		tlsutils.DeleteCerts(&tc)
 	}
 }
 

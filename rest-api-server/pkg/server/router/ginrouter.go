@@ -29,7 +29,7 @@ import (
 	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler"
-	sec "hopsworks.ai/rdrs/internal/security"
+	"hopsworks.ai/rdrs/internal/security/tlsutils"
 	// _ "github.com/ianlancetaylor/cgosymbolizer" // enable this for stack trace for c layer
 )
 
@@ -121,7 +121,7 @@ func serverTLSConfig() (*tls.Config, error) {
 	}
 
 	if config.Configuration().Security.RootCACertFile != "" {
-		tlsConfig.ClientCAs = sec.TrustedCAs(config.Configuration().Security.RootCACertFile)
+		tlsConfig.ClientCAs = tlsutils.TrustedCAs(config.Configuration().Security.RootCACertFile)
 	}
 
 	tlsConfig.BuildNameToCertificate()

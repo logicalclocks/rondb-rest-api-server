@@ -14,29 +14,4 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package security
-
-import (
-	"fmt"
-	"testing"
-
-	"hopsworks.ai/rdrs/internal/dal"
-)
-
-func TestAPIKey(t *testing.T) {
-	// dbs := [][][]string{}
-	// dbs = append(dbs, common.Database("hopsworks"))
-	// handlers := []handler.RegisterTestHandler{}
-	// handlers = append(handlers, batchops.RegisterBatchTestHandler)
-	// tu.WithDBs(t, dbs, handlers, func(tc common.TestContext) {})
-}
-
-func TestAPI1(t *testing.T) {
-	key, err := dal.GetAPIKey("ZaCRiVfQOxuOIXZk22")
-	if err != nil {
-		t.Fatalf("Errot: %v", err)
-	}
-
-	fmt.Printf("Secret : %s\n", key.Secret)
-	fmt.Printf("UID : %d\n", key.UserID)
-}
+package apikey
