@@ -21,6 +21,7 @@
 #include <iostream>
 #include "src/status.hpp"
 #include "src/error-strs.h"
+#include "src/logger.hpp"
 
 NdbObjectPool *NdbObjectPool::__instance = nullptr;
 
@@ -33,6 +34,11 @@ void NdbObjectPool::InitPool() {
 }
 
 NdbObjectPool *NdbObjectPool::GetInstance() {
+
+    if ( __instance == nullptr ) {
+      ERROR("NDB object pool is not initialized");
+    }
+
   return __instance;
 }
 

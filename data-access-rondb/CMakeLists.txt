@@ -53,7 +53,7 @@ SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wformat-securit
 
 file(GLOB_RECURSE SOURCE ${PROJECT_SOURCE_DIR}/src/*)
 
-add_executable(rdrclient ${SOURCE})
-#add_library(rdrclient SHARED ${SOURCE})
+#add_executable(rdrclient ${SOURCE})
+add_library(rdrclient SHARED ${SOURCE})
 
 target_link_libraries(rdrclient ndbclient rdrs_string pthread)

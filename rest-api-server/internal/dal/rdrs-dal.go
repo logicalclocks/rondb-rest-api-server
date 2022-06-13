@@ -24,6 +24,7 @@ package dal
 #include <stdlib.h>
 #include <stdbool.h>
 #include "./../../../data-access-rondb/src/rdrs-dal.h"
+#include "./../../../data-access-rondb/src/rdrs-hopsworks-dal.h"
 #include "./../../../data-access-rondb/src/rdrs-const.h"
 #include "./../../../data-access-rondb/src/error-strs.h"
 */
@@ -49,13 +50,6 @@ type RonDBStats struct {
 	NdbObjectsDeletionCount uint64
 	NdbObjectsTotalCount    uint64
 	NdbObjectsFreeCount     uint64
-}
-
-type APIKey struct {
-	secret  string
-	salt    string
-	name    string
-	user_id int
 }
 
 func InitRonDBConnection(connStr string, find_available_node_id bool) *DalError {
@@ -133,26 +127,7 @@ func cToGoRet(ret *C.RS_Status) *DalError {
 
 func GetRonDBStats() (*RonDBStats, *DalError) {
 
-	p := (*C.RonDB_Stats)(C.malloc(C.size_t(unsafe.Sizeof(C.sizeof_RonDB_Stats))))
-	defer C.free(unsafe.Pointer(p))
-
-	ret := C.get_rondb_stats(p)
-
-	if ret.http_code != http.StatusOK {
-		return nil, cToGoRet(&ret)
-	}
-	var rstats RonDBStats
-	rstats.NdbObjectsCreationCount = uint64(p.ndb_objects_created)
-	rstats.NdbObjectsDeletionCount = uint64(p.ndb_objects_deleted)
-	rstats.NdbObjectsTotalCount = uint64(p.ndb_objects_count)
-	rstats.NdbObjectsFreeCount = uint64(p.ndb_objects_available)
-
-	return &rstats, nil
-}
-
-func GetAPIKey(userKey string) (*APIKey, *DalError) {
-
-	p := (*C.HopsworksAPIKey)(C.malloc(C.size_t(unsafe.Sizeof(C.sizeof_HopsworksAPIKey))))
+	p := (*C.RonDB_Stats)(C.malloc(C.size_t(C.sizeof_RonDB_Stats)))
 	defer C.free(unsafe.Pointer(p))
 
 	ret := C.get_rondb_stats(p)

@@ -17,18 +17,26 @@
 package security
 
 import (
+	"fmt"
 	"testing"
 
-	"hopsworks.ai/rdrs/internal/common"
-	"hopsworks.ai/rdrs/internal/router/handler"
-	"hopsworks.ai/rdrs/internal/router/handler/batchops"
-	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
+	"hopsworks.ai/rdrs/internal/dal"
 )
 
 func TestAPIKey(t *testing.T) {
-	dbs := [][][]string{}
-	dbs = append(dbs, common.Database("hopsworks"))
-	handlers := []handler.RegisterTestHandler{}
-	handlers = append(handlers, batchops.RegisterBatchTestHandler)
-	tu.WithDBs(t, dbs, handlers, func(tc common.TestContext) {})
+	// dbs := [][][]string{}
+	// dbs = append(dbs, common.Database("hopsworks"))
+	// handlers := []handler.RegisterTestHandler{}
+	// handlers = append(handlers, batchops.RegisterBatchTestHandler)
+	// tu.WithDBs(t, dbs, handlers, func(tc common.TestContext) {})
+}
+
+func TestAPI1(t *testing.T) {
+	key, err := dal.GetAPIKey("ZaCRiVfQOxuOIXZk22")
+	if err != nil {
+		t.Fatalf("Errot: %v", err)
+	}
+
+	fmt.Printf("Secret : %s\n", key.Secret)
+	fmt.Printf("UID : %d\n", key.UserID)
 }

@@ -81,29 +81,6 @@ typedef struct RonDB_Stats {
   volatile unsigned int ndb_objects_available;
 } RonDB_Stats;
 
-//API Key table
-typedef struct HopsworksAPIKey {
-  char secret[513];
-  char salt[257];
-  char name[46];
-  int user_id;
-} HopsworksAPIKey;
-
-//User table
-typedef struct HopsworksUsers {
-  char email[151];
-} HopsworksUsers;
-
-//project_team table
-typedef struct HopsworksProjectTeam {
-  int porject_id;
-} HopsworksProjectTeam;
-
-//project_team table
-typedef struct HopsworksProject {
-  char porjectname[101];
-} HopsworksProject;
-
 /**
  * Initialize connection to the database
  */
@@ -143,18 +120,6 @@ typedef struct {
 * Register call back function  
 */
 void register_callbacks(Callbacks cbs);
-
-
-/**
- * Find api key row for given secret
- */
-RS_Status find_api_key(char *prefix, HopsworksAPIKey* api_key);
-
-
-/*
- * Find all projects for the api key
- */
-RS_Status find_all_projects(HopsworksAPIKey* api_key, char ***projects, int count);
 
 #endif
 
