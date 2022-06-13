@@ -41,7 +41,7 @@ typedef struct HopsworksUsers {
 
 //project_team table
 typedef struct HopsworksProjectTeam {
-  int porject_id;
+  int project_id;
 } HopsworksProjectTeam;
 
 //project_team table

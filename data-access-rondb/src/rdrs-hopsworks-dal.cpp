@@ -360,7 +360,7 @@ RS_Status find_project_team_int(Ndb *ndb_object, HopsworksUsers *users,
   while ((check = scanOp->nextResult(true)) == 0) {
     do {
       HopsworksProjectTeam project_team;
-      project_team.porject_id = project_id->int32_value();
+      project_team.project_id = project_id->int32_value();
       project_team_vec->push_back(project_team);
     } while ((check = scanOp->nextResult(false)) == 0);
   }
@@ -429,7 +429,7 @@ RS_Status find_projects_int(Ndb *ndb_object, std::vector<HopsworksProjectTeam> *
   }
 
   for (Uint32 i = 0; i < project_team_vec->size(); i++) {
-    if (filter.eq(col_id, (Uint32)(*project_team_vec)[i].porject_id) < 0) {
+    if (filter.eq(col_id, (Uint32)(*project_team_vec)[i].project_id) < 0) {
       err = ndb_object->getNdbError();
       ndb_object->closeTransaction(tx);
       return RS_RONDB_SERVER_ERROR(err, ERROR_031);
