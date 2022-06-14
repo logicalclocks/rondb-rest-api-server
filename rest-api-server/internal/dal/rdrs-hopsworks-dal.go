@@ -25,8 +25,10 @@ package dal
 */
 import "C"
 import (
+	"crypto/sha256"
 	"fmt"
 	"net/http"
+	"strings"
 	"unsafe"
 )
 
@@ -42,7 +44,6 @@ func GetAPIKey(userKey string) (*HopsworksAPIKey, *DalError) {
 	cUserKey := C.CString(userKey)
 	defer C.free(unsafe.Pointer(cUserKey))
 
-	fmt.Printf("Size of mem is %d\n", C.size_t(C.sizeof_HopsworksAPIKey))
 	apiKey := (*C.HopsworksAPIKey)(C.malloc(C.size_t(C.sizeof_HopsworksAPIKey)))
 	defer C.free(unsafe.Pointer(apiKey))
 
@@ -62,7 +63,7 @@ func GetAPIKey(userKey string) (*HopsworksAPIKey, *DalError) {
 	return &hopsworksAPIKey, nil
 }
 
-func GetUserDBs(uid int) ([]string, *DalError) {
+func GetUserProjects(uid int) ([]string, *DalError) {
 	var dbs []string
 
 	var count C.int
@@ -75,18 +76,46 @@ func GetUserDBs(uid int) ([]string, *DalError) {
 
 	dstBuf := unsafe.Slice((**C.char)(projects), count)
 
-	fmt.Printf("Master Address %d\n", uintptr(unsafe.Pointer(projects)))
 	for _, buff := range dstBuf {
 		db := C.GoString(buff)
 		dbs = append(dbs, db)
-		fmt.Printf("Proj %s\n", db)
-		fmt.Printf("Address %d\n", uintptr(unsafe.Pointer(buff)))
 		C.free(unsafe.Pointer(buff))
 	}
 	C.free(unsafe.Pointer(projects))
 
 	if ret.http_code != http.StatusOK {
 		return nil, cToGoRet(&ret)
+	}
+
+	return dbs, nil
+}
+
+func GetUserDatabases(apiKey string) ([]string, *DalError) {
+	var dbs []string
+
+	splits := strings.Split(apiKey, ".")
+	prefix := splits[0]
+	secret := splits[1]
+
+	if len(splits) != 2 || len(splits[0]) != 16 {
+		return dbs, &DalError{HttpCode: 404, Message: "Wrong API Key"}
+	}
+
+	key, err := GetAPIKey(prefix)
+	if err != nil {
+		return dbs, err
+	}
+
+	//sha256(client.secret + db.salt) = db.secret
+	newSecret := sha256.Sum256([]byte(secret + key.Salt))
+	newSecretHex := fmt.Sprintf("%x", newSecret)
+	if strings.Compare(string(newSecretHex), key.Secret) != 0 {
+		return dbs, &DalError{HttpCode: 404, Message: "Wrong API Key."}
+	}
+
+	dbs, err = GetUserProjects(key.UserID)
+	if err != nil {
+		return dbs, err
 	}
 
 	return dbs, nil

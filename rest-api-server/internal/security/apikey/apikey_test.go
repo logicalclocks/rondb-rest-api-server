@@ -17,7 +17,6 @@
 package apikey
 
 import (
-	"fmt"
 	"testing"
 
 	"hopsworks.ai/rdrs/internal/common"
@@ -34,17 +33,25 @@ func TestAPIKey(t *testing.T) {
 	handlers = append(handlers, batchops.RegisterBatchTestHandler)
 	tu.WithDBs(t, dbs, handlers, func(tc common.TestContext) {
 
-		key, err := dal.GetAPIKey("ZaCRiVfQOxuOIXZk")
-		if err != nil {
-			t.Fatalf("Errot: %v", err)
-		}
-		fmt.Printf("Secret : %s\n", key.Secret)
-		fmt.Printf("UID : %d\n", key.UserID)
-
-		dbs, err := dal.GetUserDBs(key.UserID)
-		if err != nil {
+		_, err := dal.GetUserDatabases("bkYjEz6OTZyevbqT.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+		if err == nil {
+			t.Fatalf("Supplied wrong prefix. This should have failed. ")
 		}
 
-		fmt.Printf("Databases are %v\n", dbs)
+		_, err = dal.GetUserDatabases("bkYjEz6OTZyevbqT.")
+		if err == nil {
+			t.Fatalf("No secret. This should have failed")
+		}
+
+		_, err = dal.GetUserDatabases("bkYjEz6OTZyevbq.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+		if err == nil {
+			t.Fatalf("Wrong length prefix. This should have failed")
+		}
+
+		// correct api key
+		_, err = dal.GetUserDatabases("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+		if err != nil {
+			t.Fatalf("No error expected")
+		}
 	})
 }

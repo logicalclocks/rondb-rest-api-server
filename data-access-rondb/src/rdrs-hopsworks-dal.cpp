@@ -141,8 +141,15 @@ RS_Status find_api_key_int(Ndb *ndb_object, const char *prefix, HopsworksAPIKey 
     return RS_RONDB_SERVER_ERROR(err, ERROR_009);
   }
 
+  int count = 0;
   while ((check = scanOp->nextResult(true)) == 0) {
     do {
+      count++;
+
+      if (count > 1) {
+        ndb_object->closeTransaction(tx);
+        return RS_CLIENT_ERROR("Wrong API Prefix");
+      }
 
       Uint32 name_attr_bytes;
       const char *name_data_start = nullptr;
@@ -181,6 +188,10 @@ RS_Status find_api_key_int(Ndb *ndb_object, const char *prefix, HopsworksAPIKey 
   }
 
   ndb_object->closeTransaction(tx);
+
+  if (count == 0) {
+    return RS_CLIENT_404_ERROR();
+  }
 
   return RS_OK;
 }
@@ -234,8 +245,7 @@ RS_Status find_user_int(Ndb *ndb_object, Uint32 uid, HopsworksUsers *users) {
 
   int col_id = table_dict->getColumn("uid")->getColumnNo();
   NdbScanFilter filter(scanOp);
-  if (filter.begin(NdbScanFilter::AND) < 0 || filter.eq(col_id, uid) < 0 ||
-      filter.end() < 0) {
+  if (filter.begin(NdbScanFilter::AND) < 0 || filter.eq(col_id, uid) < 0 || filter.end() < 0) {
     err = ndb_object->getNdbError();
     ndb_object->closeTransaction(tx);
     return RS_RONDB_SERVER_ERROR(err, ERROR_031);
@@ -522,7 +532,7 @@ RS_Status find_all_projects(int uid, char ***projects, int *count) {
   HopsworksProject dummy;
   // void *p = malloc(*count * sizeof(char *));
 
-  *projects = (char **) malloc(*count * sizeof(char *));
+  *projects = (char **)malloc(*count * sizeof(char *));
 
   char **ease = *projects;
   for (Uint32 i = 0; i < project_vec.size(); i++) {
@@ -537,7 +547,7 @@ RS_Status find_all_projects(int uid, char ***projects, int *count) {
  */
 int main(int argc, char **argv) {
 
-  std::cout<<"size of is "<<sizeof(HopsworksAPIKey)<<std::endl;
+  std::cout << "size of is " << sizeof(HopsworksAPIKey) << std::endl;
 
   char connection_string[] = "localhost:1186";
   init(connection_string, true);
@@ -564,8 +574,7 @@ int main(int argc, char **argv) {
   status = find_all_projects(api_key.user_id, &projects, &count);
 
   for (int i = 0; i < count; i++) {
-    std::cout<<"Porject name "<<projects[i]<<std::endl;
-    
+    std::cout << "Porject name " << projects[i] << std::endl;
   }
 
   ndb_end(0);

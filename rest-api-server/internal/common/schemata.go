@@ -584,8 +584,13 @@ func init() {
 			"INSERT INTO `project_team` VALUES (119,'onlinefs@hopsworks.ai','Data scientist','2022-05-30 14:17:43')",
 			"INSERT INTO `project_team` VALUES (128,'serving@hopsworks.se','Data scientist','2022-06-01 13:28:05')",
 
-			"INSERT INTO `api_key` VALUES (1,'ZaCRiVfQOxuOIXZk','fdd4ca5ee3ddfb2fe54a27a78a20f5fce029817cb629b7da368a76d91fbc41e6','NMa8549c2nBoOfvO9cMcHbiJpDj1243BI0YZu4axr+rrJ0xWe4+sEeS4xu7M/mrWJlfkVm75yFYfB/0w49BIrA==','2022-05-30 13:32:45','2022-05-30 13:32:45','onlinefs_11a7cde26a2ea2e5f7e2e043',10179,0)",
-			"INSERT INTO `api_key` VALUES (2,'bM9pnbK4p0qUqPEs','422dc1a845b7fcfb0127df5c9920290ec4fd296c44e537883022720a1d12d453','CCjvdMolGPDDycZXUAK4rdzlLGjpgxaCppxqfMYv+TXq+IWFUYWiw5IW+iZyHdST6VmDsxLZuZP9kwiERBmEPQ==','2022-05-31 12:46:56','2022-05-31 12:46:56','jptlocal',10000,0)",
+			// 1  bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub
+			// 2  oqZdmmRYy5QCwh55.nbqiMNJS3BHMe1OabnaZtAH8OiU39A2DFNP0WSU8LNhjwJgBnaAkU4veXLTi4bmy
+			// 3  TsbTJMYyobErsbXY.bgi8GIsey3hkTzswyVSRm1B05qXoDuz55M6WXiSHwfiqxg7i9RgJ20Wz5ZFW9h7b
+
+			"INSERT INTO `api_key` VALUES (2049 , 'bkYjEz6OTZyevbqt' , '709faa77accc3f30394cfb53b67253ba64881528cb3056eea110703ca430cce4' , '1/1TxiaiIB01rIcY2E36iuwKP6fm2GzBaNaQqOVGMhH0AvcIlIzaUIw0fMDjKNLa0OWxAOrfTSPqAolpI/n+ug==' , '2022-06-14 10:27:03' , '2022-06-14 10:27:03' , 'myapikey1'             ,   10179 ,        0 )",
+			"INSERT INTO `api_key` VALUES (2050 , 'oqZdmmRYy5QCwh55' , '649df9aed4609d4c65a5e0d519eed754e3dc97a65df22133a547a1cee7a8e4a6' , 'o24ewhFzfXzulNwII9oGPbRwPZP/UYcBfuyD3HQEECATHERdcCz4h8owbB3rMhbQtXNPRHw1uY1F+l7GAiKKow==' , '2022-06-14 10:27:44' , '2022-06-14 10:27:44' , 'myapikey2'             ,   10000 ,        0 )",
+			"INSERT INTO `api_key` VALUES (2051 , 'TsbTJMYyobErsbXY' , 'f790ffc635b4251283317caf888b0e44a76c8fedd234e5a975938654c15b91c9' , 'k0hcvIpu66ojKEU7CLY+3xNqVD3Zj7cHWyb/ioaasMrbEyo1VBPZ2oqg01mOoEmMfmZ7v9cjOMez/bC0dK/sZw==' , '2022-06-14 10:28:13' , '2022-06-14 10:28:13' , 'myapikey3'             ,   10179 ,        0 )",
 		},
 
 		{ // clean up commands
