@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"hopsworks.ai/rdrs/internal/common"
-	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/router/handler"
 	"hopsworks.ai/rdrs/internal/router/handler/batchops"
 	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
@@ -33,23 +32,23 @@ func TestAPIKey(t *testing.T) {
 	handlers = append(handlers, batchops.RegisterBatchTestHandler)
 	tu.WithDBs(t, dbs, handlers, func(tc common.TestContext) {
 
-		_, err := dal.GetUserDatabases("bkYjEz6OTZyevbqT.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+		err := ValidateAPIKey("bkYjEz6OTZyevbqT.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "")
 		if err == nil {
 			t.Fatalf("Supplied wrong prefix. This should have failed. ")
 		}
 
-		_, err = dal.GetUserDatabases("bkYjEz6OTZyevbqT.")
+		err = ValidateAPIKey("bkYjEz6OTZyevbqT.")
 		if err == nil {
 			t.Fatalf("No secret. This should have failed")
 		}
 
-		_, err = dal.GetUserDatabases("bkYjEz6OTZyevbq.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+		err = ValidateAPIKey("bkYjEz6OTZyevbq.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
 		if err == nil {
 			t.Fatalf("Wrong length prefix. This should have failed")
 		}
 
 		// correct api key
-		_, err = dal.GetUserDatabases("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+		err = ValidateAPIKey("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "demo_fs_meb100000", "online_fs1")
 		if err != nil {
 			t.Fatalf("No error expected")
 		}
