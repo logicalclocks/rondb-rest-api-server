@@ -48,21 +48,32 @@ func ProcessRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	t.Helper()
 
 	client := setupClient(tc)
+	var req *http.Request
 	var resp *http.Response
 	var err error
 	switch httpVerb {
 	case "POST":
-		resp, err = client.Post(url, "application/json", strings.NewReader(body))
+		req, err = http.NewRequest("POST", url, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
 
 	case "GET":
-		resp, err = client.Get(url)
+		req, err = http.NewRequest("GET", url, nil)
 
 	default:
 		t.Fatalf("Http verb not yet implemented. Verb %s", httpVerb)
 	}
 
 	if err != nil {
-		t.Fatalf("Test failed to make request. Error: %v", err)
+		t.Fatalf("Test failed to create request. Error: %v", err)
+	}
+
+	if config.Configuration().Security.UseHopsWorksAPIKeys {
+		req.Header.Set("X-API-KEY", common.HOPSWORKS_TEST_API_KEY)
+	}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatalf("Test failed to perform request. Error: %v", err)
 	}
 
 	respCode := resp.StatusCode

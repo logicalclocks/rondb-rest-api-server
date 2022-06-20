@@ -72,6 +72,7 @@ type Security struct {
 	CertificateFile            string
 	PrivateKeyFile             string
 	RootCACertFile             string
+	UseHopsWorksAPIKeys        bool
 }
 
 func init() {
@@ -110,6 +111,7 @@ func init() {
 		CertificateFile:            "",
 		PrivateKeyFile:             "",
 		RootCACertFile:             "",
+		UseHopsWorksAPIKeys:        true,
 	}
 
 	_config = RSConfiguration{
