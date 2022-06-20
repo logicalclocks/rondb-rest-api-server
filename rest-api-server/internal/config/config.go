@@ -67,12 +67,13 @@ type RonDB struct {
 }
 
 type Security struct {
-	EnableTLS                  bool
-	RequireAndVerifyClientCert bool
-	CertificateFile            string
-	PrivateKeyFile             string
-	RootCACertFile             string
-	UseHopsWorksAPIKeys        bool
+	EnableTLS                        bool
+	RequireAndVerifyClientCert       bool
+	CertificateFile                  string
+	PrivateKeyFile                   string
+	RootCACertFile                   string
+	UseHopsWorksAPIKeys              bool
+	HopsWorksAPIKeysCacheValiditySec int
 }
 
 func init() {
@@ -106,12 +107,13 @@ func init() {
 	}
 
 	security := Security{
-		EnableTLS:                  true,
-		RequireAndVerifyClientCert: true,
-		CertificateFile:            "",
-		PrivateKeyFile:             "",
-		RootCACertFile:             "",
-		UseHopsWorksAPIKeys:        true,
+		EnableTLS:                        true,
+		RequireAndVerifyClientCert:       true,
+		CertificateFile:                  "",
+		PrivateKeyFile:                   "",
+		RootCACertFile:                   "",
+		UseHopsWorksAPIKeys:              true,
+		HopsWorksAPIKeysCacheValiditySec: 3,
 	}
 
 	_config = RSConfiguration{

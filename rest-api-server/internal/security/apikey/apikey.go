@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 )
 
@@ -41,21 +42,27 @@ func ValidateAPIKey(apiKey string, dbs ...string) error {
 	}
 
 	keyFoundInCache, allowedAccess := findAndValidateCache(apiKey, dbs...)
-	if keyFoundInCache && !allowedAccess {
-		return fmt.Errorf("Unauthorized")
-	}
 
-	_, err := GetUserDatabases(apiKey) // this fetches the updates from DB and updates the cache
-	if err != nil {
-		return err
-	}
+	if keyFoundInCache {
+		if !allowedAccess {
+			return fmt.Errorf("Unauthorized")
+		} else {
+			return nil
+		}
+	} else {
 
-	keyFoundInCache, allowedAccess = findAndValidateCache(apiKey, dbs...)
-	if keyFoundInCache && !allowedAccess {
-		return fmt.Errorf("Unauthorized")
-	}
+		_, err := GetUserDatabases(apiKey) // this fetches the updates from DB and updates the cache
+		if err != nil {
+			return err
+		}
 
-	return nil
+		keyFoundInCache, allowedAccess = findAndValidateCache(apiKey, dbs...)
+		if keyFoundInCache && allowedAccess {
+			return nil
+		} else {
+			return fmt.Errorf("Unauthorized")
+		}
+	}
 }
 
 func findAndValidateCache(apiKey string, dbs ...string) (keyFoundInCache, allowedAccess bool) {
@@ -83,29 +90,28 @@ func findAndValidateCache(apiKey string, dbs ...string) (keyFoundInCache, allowe
 }
 
 func GetUserDatabases(apiKey string) ([]string, error) {
-	var dbs []string
 
 	splits := strings.Split(apiKey, ".")
 	prefix := splits[0]
 	secret := splits[1]
 
 	if len(splits) != 2 || len(splits[0]) != 16 {
-		return dbs, fmt.Errorf("Wrong API Key")
+		return []string{}, fmt.Errorf("Wrong API Key")
 	}
 
 	key, err := dal.GetAPIKey(prefix)
 	if err != nil {
-		return dbs, err
+		return []string{}, err
 	}
 
 	//sha256(client.secret + db.salt) = db.secret
 	newSecret := sha256.Sum256([]byte(secret + key.Salt))
 	newSecretHex := fmt.Sprintf("%x", newSecret)
 	if strings.Compare(string(newSecretHex), key.Secret) != 0 {
-		return dbs, fmt.Errorf("Wrong API Key")
+		return []string{}, fmt.Errorf("Wrong API Key")
 	}
 
-	dbs, err = dal.GetUserProjects(key.UserID)
+	dbs, err := dal.GetUserProjects(key.UserID)
 	if err != nil {
 		return dbs, err
 	}
@@ -114,11 +120,30 @@ func GetUserDatabases(apiKey string) ([]string, error) {
 	for _, db := range dbs {
 		dbsMap[db] = true
 	}
-	userDBs := UserDBs{uDBs: dbsMap, expires: time.Now().Add(3 * time.Second)}
+
+	userDBs := UserDBs{uDBs: dbsMap,
+		expires: time.Now().Add(time.Duration(config.Configuration().Security.HopsWorksAPIKeysCacheValiditySec) * time.Second)}
 
 	key2UserDBsMutex.Lock()
 	key2UserDBs[apiKey] = userDBs
 	key2UserDBsMutex.Unlock()
 
 	return dbs, nil
+}
+
+func Reset() {
+	key2UserDBsMutex.Lock()
+	key2UserDBs = make(map[string]UserDBs)
+	key2UserDBsMutex.Unlock()
+}
+
+func cacheUpdateTime(apiKey string) time.Time {
+	key2UserDBsMutex.Lock()
+	defer key2UserDBsMutex.Unlock()
+	val, ok := key2UserDBs[apiKey]
+	if ok {
+		return val.expires.Add(time.Duration(-config.Configuration().Security.HopsWorksAPIKeysCacheValiditySec) * time.Second)
+	} else {
+		return time.Unix(0, 0)
+	}
 }

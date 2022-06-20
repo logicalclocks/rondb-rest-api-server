@@ -26,9 +26,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"hopsworks.ai/rdrs/internal/common"
+	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
+	"hopsworks.ai/rdrs/internal/security/apikey"
 )
 
 func RegisterPKTestHandler(e *gin.Engine) {
@@ -50,10 +52,23 @@ func PkReadHandler(c *gin.Context) {
 		return
 	}
 
-	request, response, err := CreateNativeRequest(&pkReadParams)
+	err = checkAPIKey(c, pkReadParams.DB)
+	if err != nil {
+		c.AbortWithError(http.StatusUnauthorized, err)
+		return
+	}
+
+	dalErr := processRequestNSetStatus(c, &pkReadParams)
+	if dalErr != nil && log.IsDebug() {
+		log.Debugf("Unable to perform pk-read request. Body: %-v. Error: %v\n", pkReadParams, err)
+	}
+}
+
+func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *dal.DalError {
+	request, response, err := CreateNativeRequest(pkReadParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"OK": false, "msg": fmt.Sprintf("%v", err)})
-		return
+		return nil
 	}
 	defer dal.ReturnBuffer(request)
 	defer dal.ReturnBuffer(response)
@@ -74,9 +89,12 @@ func PkReadHandler(c *gin.Context) {
 			common.SetResponseError(c, dalErr.HttpCode, common.ErrorResponse{Error: message})
 		}
 
+		return dalErr
 	} else {
 		setResponseBodyUnsafe(c, http.StatusOK, response)
 	}
+
+	return nil
 }
 
 func setResponseBodyUnsafe(c *gin.Context, code int, resp *dal.NativeBuffer) {
@@ -196,6 +214,18 @@ func validateDBIdentifier(identifier string) error {
 		if !((r >= rune(0x0001) && r <= rune(0x007F)) || (r >= rune(0x0080) && r <= rune(0x0FFF))) {
 			return fmt.Errorf("field validation failed. Invalid character '%U' ", r)
 		}
+	}
+	return nil
+}
+
+func checkAPIKey(c *gin.Context, db *string) error {
+	// check for Hopsworks api keys
+	if config.Configuration().Security.UseHopsWorksAPIKeys {
+		xapikey := c.GetHeader(ds.API_KEY_NAME)
+		if xapikey == "" { // not set
+			return fmt.Errorf("Unauthorized. No API key supplied")
+		}
+		return apikey.ValidateAPIKey(xapikey, *db)
 	}
 	return nil
 }

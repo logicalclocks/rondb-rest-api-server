@@ -31,7 +31,6 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
@@ -68,7 +67,7 @@ func ProcessRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	}
 
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
-		req.Header.Set("X-API-KEY", common.HOPSWORKS_TEST_API_KEY)
+		req.Header.Set(ds.API_KEY_NAME, common.HOPSWORKS_TEST_API_KEY)
 	}
 
 	resp, err = client.Do(req)
@@ -394,7 +393,7 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.RegisterTestHandler,
+func WithDBs(t testing.TB, dbs []string, registerHandlers []handler.RegisterTestHandler,
 	fn func(tc common.TestContext)) {
 	t.Helper()
 
@@ -409,31 +408,12 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 
 	rand.Seed(int64(time.Now().Nanosecond()))
 
-	//user:password@tcp(IP:Port)/
-	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/",
-		config.Configuration().MySQLServer.User,
-		config.Configuration().MySQLServer.Password,
-		config.Configuration().MySQLServer.IP,
-		config.Configuration().MySQLServer.Port)
-	dbConnection, err := sql.Open("mysql", connectionString)
-	defer dbConnection.Close()
-	if err != nil {
-		t.Fatalf("failed to connect to db. %v", err)
-	}
-
-	for _, db := range dbs {
-		if len(db) != 2 {
-			t.Fatal("expecting the setup array to contain two sub arrays where the first " +
-				"sub array contains commands to setup the DBs, " +
-				"and the second sub array contains commands to clean up the DBs")
-		}
-		defer runSQLQueries(t, dbConnection, db[1])
-		runSQLQueries(t, dbConnection, db[0])
-	}
+	common.CreateDatabases(t, dbs...)
+	defer common.DropDatabases(t, dbs...)
 
 	routerCtx := router.CreateRouterContext()
 	routerCtx.SetupRouter(registerHandlers)
-	err = routerCtx.StartRouter()
+	err := routerCtx.StartRouter()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -454,16 +434,6 @@ func WithDBs(t testing.TB, dbs [][][]string, registerHandlers []handler.Register
 	}
 }
 
-func runSQLQueries(t testing.TB, db *sql.DB, setup []string) {
-	t.Helper()
-	for _, command := range setup {
-		_, err := db.Exec(command)
-		if err != nil {
-			t.Fatalf("failed to run command. %s. Error: %v", command, err)
-		}
-	}
-}
-
 func shutDownRouter(t testing.TB, router router.Router) error {
 	t.Helper()
 	return router.StopRouter()
@@ -472,7 +442,10 @@ func shutDownRouter(t testing.TB, router router.Router) error {
 func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, registerHandler ...handler.RegisterTestHandler) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
-			WithDBs(t, [][][]string{common.Database(testInfo.Db)}, registerHandler, func(tc common.TestContext) {
+			dbs := []string{}
+			dbs = append(dbs, testInfo.Db)
+
+			WithDBs(t, dbs, registerHandler, func(tc common.TestContext) {
 				url := NewPKReadURL(testInfo.Db, testInfo.Table)
 				body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
 				httpCode, res := ProcessRequest(t, tc, ds.PK_HTTP_VERB, url,
@@ -491,17 +464,16 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 		t.Run(name, func(t *testing.T) {
 
 			// all databases used in this test
-			dbsMap := map[string]bool{}
-			dbNames := make([]string, 0, len(dbsMap))
+			dbNamesMap := map[string]bool{}
+			dbNamesArr := []string{}
 			for _, op := range testInfo.Operations {
-				if _, ok := dbsMap[op.DB]; !ok {
-					dbsMap[op.DB] = true
+				if _, ok := dbNamesMap[op.DB]; !ok {
+					dbNamesMap[op.DB] = true
 				}
 			}
-			dbs := [][][]string{}
-			for k := range dbsMap {
-				dbNames = append(dbNames, k)
-				dbs = append(dbs, common.Database(k))
+
+			for k := range dbNamesMap {
+				dbNamesArr = append(dbNamesArr, k)
 			}
 
 			//batch operation
@@ -511,7 +483,7 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 			}
 			batch := ds.BatchOperation{Operations: &subOps}
 
-			WithDBs(t, dbs, registerHandlers, func(tc common.TestContext) {
+			WithDBs(t, dbNamesArr, registerHandlers, func(tc common.TestContext) {
 				url := NewBatchReadURL()
 				body, _ := json.MarshalIndent(batch, "", "\t")
 				httpCode, res := ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url,

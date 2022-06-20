@@ -21,3 +21,5 @@ import "hopsworks.ai/rdrs/version"
 const DB_PP = "db"
 const TABLE_PP = "table"
 const DB_OPS_EP_GROUP = "/" + version.API_VERSION + "/:" + DB_PP + "/:" + TABLE_PP + "/"
+
+const API_KEY_NAME = "X-API-KEY"

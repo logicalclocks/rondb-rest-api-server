@@ -32,7 +32,7 @@ import (
 
 func TestPKReadOmitRequired(t *testing.T) {
 
-	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+	tu.WithDBs(t, []string{"DB000"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 
 			// Test. Omitting filter should result in 400 error
@@ -66,7 +66,7 @@ func TestPKReadOmitRequired(t *testing.T) {
 }
 
 func TestPKReadLargeColumns(t *testing.T) {
-	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+	tu.WithDBs(t, []string{"DB000"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 
 			// Test. Large filter column names.
@@ -116,7 +116,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 
 func TestPKInvalidIdentifier(t *testing.T) {
 
-	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+	tu.WithDBs(t, []string{"DB000"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 			//Valid chars [ U+0001 .. U+007F] and [ U+0080 .. U+FFFF]
 			// Test. invalid filter
@@ -162,7 +162,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 
 func TestPKUniqueParams(t *testing.T) {
 
-	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+	tu.WithDBs(t, []string{"DB000"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 			// Test. unique read columns
 			readColumns := make([]ds.ReadColumn, 2)
@@ -210,7 +210,7 @@ func TestPKUniqueParams(t *testing.T) {
 // DB/Table does not exist
 func TestPKERROR_011(t *testing.T) {
 
-	tu.WithDBs(t, [][][]string{common.Database("DB001")},
+	tu.WithDBs(t, []string{"DB001"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 			pkCol := "id0"
 			pkVal := "1"
@@ -223,7 +223,7 @@ func TestPKERROR_011(t *testing.T) {
 			body, _ := json.MarshalIndent(param, "", "\t")
 
 			url := tu.NewPKReadURL("DB001_XXX", "table_1")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
+			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusUnauthorized, "")
 
 			url = tu.NewPKReadURL("DB001", "table_1_XXX")
 			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
@@ -233,7 +233,7 @@ func TestPKERROR_011(t *testing.T) {
 // column does not exist
 func TestPKERROR_012(t *testing.T) {
 
-	tu.WithDBs(t, [][][]string{common.Database("DB001")},
+	tu.WithDBs(t, []string{"DB001"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 			pkCol := "id0"
 			pkVal := "1"
@@ -253,7 +253,7 @@ func TestPKERROR_012(t *testing.T) {
 // Primary key test.
 func TestPKERROR_013_ERROR_014(t *testing.T) {
 
-	tu.WithDBs(t, [][][]string{common.Database("DB002")},
+	tu.WithDBs(t, []string{"DB002"},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
 			// send an other request with one column missing from def
 			// //		// one PK col is missing

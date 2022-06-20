@@ -18,9 +18,14 @@
 package common
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
+	"testing"
+
+	_ "github.com/go-sql-driver/mysql"
+	"hopsworks.ai/rdrs/internal/config"
 )
 
 const HOPSWORKS_SCHEMA_NAME = "hopsworks"
@@ -582,7 +587,7 @@ func GenerateHWSchema(userProjects ...string) [][]string {
 	}
 
 	dropSchema := []string{ // clean up commands
-		// "DROP DATABASE " + db,
+		"DROP DATABASE " + HOPSWORKS_SCHEMA_NAME,
 	}
 
 	commands := [][]string{creaetSchema, dropSchema}
@@ -649,4 +654,67 @@ func Database(name string) [][]string {
 		return [][]string{}
 	}
 	return db
+}
+
+func CreateDatabases(t testing.TB, dbNames ...string) {
+	if config.Configuration().Security.UseHopsWorksAPIKeys {
+		GenerateHWSchema(dbNames...)
+		dbNames = append(dbNames, HOPSWORKS_SCHEMA_NAME)
+	}
+	createDatabasesInt(t, true, dbNames...)
+}
+
+func DropDatabases(t testing.TB, dbNames ...string) {
+	if config.Configuration().Security.UseHopsWorksAPIKeys {
+		GenerateHWSchema(dbNames...)
+		dbNames = append(dbNames, HOPSWORKS_SCHEMA_NAME)
+	}
+	createDatabasesInt(t, false, dbNames...)
+}
+
+func createDatabasesInt(t testing.TB, create bool, dbNames ...string) {
+
+	if len(dbNames) == 0 {
+		t.Fatal("No database specified")
+	}
+
+	dbs := [][][]string{}
+	for _, dbName := range dbNames {
+		dbs = append(dbs, Database(dbName))
+	}
+
+	//user:password@tcp(IP:Port)/
+	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/",
+		config.Configuration().MySQLServer.User,
+		config.Configuration().MySQLServer.Password,
+		config.Configuration().MySQLServer.IP,
+		config.Configuration().MySQLServer.Port)
+	dbConnection, err := sql.Open("mysql", connectionString)
+	defer dbConnection.Close()
+	if err != nil {
+		t.Fatalf("failed to connect to db. %v", err)
+	}
+
+	for _, db := range dbs {
+		if len(db) != 2 {
+			t.Fatal("expecting the setup array to contain two sub arrays where the first " +
+				"sub array contains commands to setup the DBs, " +
+				"and the second sub array contains commands to clean up the DBs")
+		}
+		if create {
+			runSQLQueries(t, dbConnection, db[0])
+		} else { //drop
+			runSQLQueries(t, dbConnection, db[1])
+		}
+	}
+}
+
+func runSQLQueries(t testing.TB, db *sql.DB, setup []string) {
+	t.Helper()
+	for _, command := range setup {
+		_, err := db.Exec(command)
+		if err != nil {
+			t.Fatalf("failed to run command. %s. Error: %v", command, err)
+		}
+	}
 }

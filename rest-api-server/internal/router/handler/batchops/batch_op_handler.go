@@ -25,10 +25,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"hopsworks.ai/rdrs/internal/common"
+	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler/pkread"
+	"hopsworks.ai/rdrs/internal/security/apikey"
 	"hopsworks.ai/rdrs/version"
 )
 
@@ -65,37 +67,15 @@ func BatchOpsHandler(c *gin.Context) {
 		}
 	}
 
-	noOps := uint32(len(pkOperations))
-	reqPtrs := make([]*dal.NativeBuffer, noOps)
-	respPtrs := make([]*dal.NativeBuffer, noOps)
-
-	for i, pkOp := range pkOperations {
-		reqPtrs[i], respPtrs[i], err = pkread.CreateNativeRequest(&pkOp)
-		defer dal.ReturnBuffer(reqPtrs[i])
-		defer dal.ReturnBuffer(respPtrs[i])
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"OK": false, "msg": fmt.Sprintf("%v", err)})
-			return
-		}
+	err = checkAPIKey(c, &pkOperations)
+	if err != nil {
+		c.AbortWithError(http.StatusUnauthorized, err)
+		return
 	}
 
-	dalErr := dal.RonDBBatchedPKRead(noOps, reqPtrs, respPtrs)
-
-	var message string
-	if dalErr != nil {
-		if dalErr.HttpCode >= http.StatusInternalServerError {
-			message = fmt.Sprintf("%v File: %v, Line: %v ", dalErr.Message, dalErr.ErrFileName, dalErr.ErrLineNo)
-		} else {
-			message = fmt.Sprintf("%v", dalErr.Message)
-		}
-		common.SetResponseError(c, dalErr.HttpCode, common.ErrorResponse{Error: message})
-	} else {
-
-		c.Writer.Write(([]byte)(string("[")))
-		for i := uint32(0); i < noOps; i++ {
-			setResponseBodyUnsafe(c, http.StatusOK, respPtrs[i], i != (noOps-1))
-		}
-		c.Writer.Write(([]byte)(string("]")))
+	dalErr := processRequestNSetStatus(c, &pkOperations)
+	if dalErr != nil && log.IsDebug() {
+		log.Debugf("Unable to perform batch request. Body: %-v. Error: %v\n", operations, err)
 	}
 }
 
@@ -147,5 +127,69 @@ func parsePKRead(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) 
 	pkReadarams.Filters = params.Filters
 	pkReadarams.ReadColumns = params.ReadColumns
 	pkReadarams.OperationID = params.OperationID
+	return nil
+}
+
+func processRequestNSetStatus(c *gin.Context, pkOperations *[]ds.PKReadParams) *dal.DalError {
+
+	noOps := uint32(len(*pkOperations))
+	reqPtrs := make([]*dal.NativeBuffer, noOps)
+	respPtrs := make([]*dal.NativeBuffer, noOps)
+
+	var err error
+	for i, pkOp := range *pkOperations {
+		reqPtrs[i], respPtrs[i], err = pkread.CreateNativeRequest(&pkOp)
+		defer dal.ReturnBuffer(reqPtrs[i])
+		defer dal.ReturnBuffer(respPtrs[i])
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"OK": false, "msg": fmt.Sprintf("%v", err)})
+			return &dal.DalError{HttpCode: http.StatusInternalServerError, Message: fmt.Sprintf("%v", err)}
+		}
+	}
+
+	dalErr := dal.RonDBBatchedPKRead(noOps, reqPtrs, respPtrs)
+
+	var message string
+	if dalErr != nil {
+		if dalErr.HttpCode >= http.StatusInternalServerError {
+			message = fmt.Sprintf("%v File: %v, Line: %v ", dalErr.Message, dalErr.ErrFileName, dalErr.ErrLineNo)
+		} else {
+			message = fmt.Sprintf("%v", dalErr.Message)
+		}
+		common.SetResponseError(c, dalErr.HttpCode, common.ErrorResponse{Error: message})
+		return dalErr
+
+	} else {
+		c.Writer.Write(([]byte)(string("[")))
+		for i := uint32(0); i < noOps; i++ {
+			setResponseBodyUnsafe(c, http.StatusOK, respPtrs[i], i != (noOps-1))
+		}
+		c.Writer.Write(([]byte)(string("]")))
+	}
+
+	return nil
+}
+
+func checkAPIKey(c *gin.Context, pkOperations *[]ds.PKReadParams) error {
+	// check for Hopsworks api keys
+	if config.Configuration().Security.UseHopsWorksAPIKeys {
+		xapikey := c.GetHeader(ds.API_KEY_NAME)
+		if xapikey == "" { // not set
+			return fmt.Errorf("Unauthorized. No API key supplied")
+		}
+
+		dbMap := make(map[string]bool)
+		dbArr := []string{}
+
+		for _, op := range *pkOperations {
+			dbMap[*op.DB] = true
+		}
+
+		for dbKey := range dbMap {
+			dbArr = append(dbArr, dbKey)
+		}
+
+		return apikey.ValidateAPIKey(xapikey, dbArr...)
+	}
 	return nil
 }

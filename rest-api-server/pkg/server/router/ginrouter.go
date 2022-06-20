@@ -29,6 +29,7 @@ import (
 	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler"
+	"hopsworks.ai/rdrs/internal/security/apikey"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
 	// _ "github.com/ianlancetaylor/cgosymbolizer" // enable this for stack trace for c layer
 )
@@ -142,6 +143,8 @@ func (rc *RouterConext) StopRouter() error {
 	if dalErr != nil {
 		log.Errorf("Failed to stop RonDB API. Error %v", dalErr)
 	}
+
+	apikey.Reset()
 
 	return nil
 }

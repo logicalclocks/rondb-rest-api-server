@@ -44,33 +44,33 @@ func BenchmarkSimple(t *testing.B) {
 	maxRows := 1000
 	opCount := 0
 	threadId := 0
-	tu.WithDBs(t, [][][]string{common.Database(db)},
-		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(tc common.TestContext) {
+	tu.WithDBs(t, []string{db}, []handler.RegisterTestHandler{RegisterPKTestHandler,
+		stat.RegisterStatTestHandler}, func(tc common.TestContext) {
 
-			t.ResetTimer()
-			start := time.Now()
+		t.ResetTimer()
+		start := time.Now()
 
-			t.RunParallel(func(bp *testing.PB) {
+		t.RunParallel(func(bp *testing.PB) {
 
-				url := tu.NewPKReadURL(db, table)
-				operationId := fmt.Sprintf("operation_%d", threadId)
-				threadId++
+			url := tu.NewPKReadURL(db, table)
+			operationId := fmt.Sprintf("operation_%d", threadId)
+			threadId++
 
-				opCount++
-				reqBody := createReq(maxRows, opCount, operationId)
+			opCount++
+			reqBody := createReq(maxRows, opCount, operationId)
 
-				for bp.Next() {
-					tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
-				}
-			})
-			t.StopTimer()
-
-			speed := float64(t.N) / time.Since(start).Seconds()
-			ns := float64(time.Since(start).Nanoseconds()) / float64(t.N)
-
-			fmt.Printf("Throughput %f ops/sec\n.", speed)
-			fmt.Printf("Latency  %f ns/op\n", ns)
+			for bp.Next() {
+				tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
+			}
 		})
+		t.StopTimer()
+
+		speed := float64(t.N) / time.Since(start).Seconds()
+		ns := float64(time.Since(start).Nanoseconds()) / float64(t.N)
+
+		fmt.Printf("Throughput %f ops/sec\n.", speed)
+		fmt.Printf("Latency  %f ns/op\n", ns)
+	})
 }
 
 func createReq(maxRows, opCount int, operationId string) string {
@@ -93,7 +93,7 @@ func BenchmarkMT(b *testing.B) {
 	db := "bench"
 	table := "table_1"
 	maxRows := 1000
-	tu.WithDBs(b, [][][]string{common.Database(db)},
+	tu.WithDBs(b, []string{db},
 		[]handler.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(tc common.TestContext) {
 
 			b.ResetTimer()

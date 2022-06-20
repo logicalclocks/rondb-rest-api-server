@@ -62,7 +62,7 @@ RS_Status get_scan_op(Ndb *ndb_object, NdbTransaction *tx, const NdbDictionary::
                       NdbScanOperation **scanOp) {
   NdbError err;
   *scanOp = tx->getNdbScanOperation(table_dict);
-  if (scanOp == nullptr) {
+  if (*scanOp == nullptr) {
     err = ndb_object->getNdbError();
     return RS_RONDB_SERVER_ERROR(err, ERROR_029);
   }

@@ -427,7 +427,7 @@ func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBi
 }
 
 func TestBatchMissingReqField(t *testing.T) {
-	tu.WithDBs(t, [][][]string{common.Database("DB000")},
+	tu.WithDBs(t, []string{"DB000"},
 		[]handler.RegisterTestHandler{RegisterBatchTestHandler}, func(tc common.TestContext) {
 			url := tu.NewBatchReadURL()
 			// Test missing method
