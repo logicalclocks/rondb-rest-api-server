@@ -71,7 +71,7 @@ func GetUserProjects(uid int) ([]string, *DalError) {
 
 	ret := C.find_all_projects(C.int(uid), projectsPtr, countptr)
 
-	dstBuf := unsafe.Slice((**C.char)(projects), count)
+	dstBuf := unsafe.Slice((**C.char)(unsafe.Pointer(projects)), count)
 
 	for _, buff := range dstBuf {
 		db := C.GoString(buff)

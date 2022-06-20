@@ -42,6 +42,7 @@ inline void log(const int level, const char *msg) {
     RS_LOG_MSG log_msg;
     log_msg.level = level;
     strncpy(log_msg.message, msg, RS_LOG_MSG_LEN - 1);
+    log_msg.message[RS_LOG_MSG_LEN - 1] = 0;
     my_cb_fns.logger(log_msg);
   } else {
     std::cout << msg << std::endl;

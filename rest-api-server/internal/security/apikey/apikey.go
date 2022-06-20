@@ -27,7 +27,7 @@ import (
 )
 
 type UserDBs struct {
-	userDBs map[string]string
+	uDBs    map[string]bool
 	expires time.Time
 }
 
@@ -45,7 +45,7 @@ func ValidateAPIKey(apiKey string, dbs ...string) error {
 		return fmt.Errorf("Unauthorized")
 	}
 
-	dbs, err := GetUserDatabases(apiKey) // this fetches the updates from DB and updates the cache
+	_, err := GetUserDatabases(apiKey) // this fetches the updates from DB and updates the cache
 	if err != nil {
 		return err
 	}
@@ -70,8 +70,9 @@ func findAndValidateCache(apiKey string, dbs ...string) (keyFoundInCache, allowe
 	// found in cache
 	if ok && time.Now().Before(userDBs.expires) {
 		keyFoundInCache = true
+
 		for _, db := range dbs {
-			if _, found := userDBs.userDBs[db]; !found {
+			if _, found := userDBs.uDBs[db]; !found {
 				allowedAccess = false
 				return
 			}
@@ -109,13 +110,11 @@ func GetUserDatabases(apiKey string) ([]string, error) {
 		return dbs, err
 	}
 
-	fmt.Printf("%v\n", dbs)
-
-	dbsMap := make(map[string]string)
+	dbsMap := make(map[string]bool)
 	for _, db := range dbs {
-		dbsMap[db] = db
+		dbsMap[db] = true
 	}
-	userDBs := UserDBs{userDBs: dbsMap, expires: time.Now().Add(3 * time.Second)}
+	userDBs := UserDBs{uDBs: dbsMap, expires: time.Now().Add(3 * time.Second)}
 
 	key2UserDBsMutex.Lock()
 	key2UserDBs[apiKey] = userDBs

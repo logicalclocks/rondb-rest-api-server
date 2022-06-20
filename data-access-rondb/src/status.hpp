@@ -50,8 +50,11 @@ inline RS_Status __RS_ERROR(const HTTP_CODE http_code, int status, int classific
   ret.err_line_no    = line_no;
 
   strncpy(ret.message, msg.c_str(), RS_STATUS_MSG_LEN - 1);  // last byte for null terminator char
+  ret.message[RS_STATUS_MSG_LEN - 1] = 0;
+
   strncpy(ret.err_file_name, file_name.c_str(),
           RS_STATUS_FILE_NAME_LEN - 1);  // last byte for null terminator char
+  ret.err_file_name[RS_STATUS_FILE_NAME_LEN - 1] = 0;
 
   return ret;
 }
@@ -62,7 +65,7 @@ inline RS_Status __RS_ERROR_RONDB(const struct NdbError &error, std::string msg,
                         " MySQL Code: " + std::to_string(error.mysql_code) +
                         " Message: " + error.message;
   return __RS_ERROR(SERVER_ERROR, error.status, error.classification, error.code, error.mysql_code,
-                   userMsg, lineNo, file_name);
+                    userMsg, lineNo, file_name);
 }
 
 #define __MYFILENAME__ __FILE__

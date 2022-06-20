@@ -27,7 +27,8 @@ import (
 
 func TestAPIKey(t *testing.T) {
 	dbs := [][][]string{}
-	dbs = append(dbs, common.Database("hopsworks"))
+	common.GenerateHWSchema("test1", "test2")
+	dbs = append(dbs, common.Database(common.HOPSWORKS_SCHEMA_NAME))
 	handlers := []handler.RegisterTestHandler{}
 	handlers = append(handlers, batchops.RegisterBatchTestHandler)
 	tu.WithDBs(t, dbs, handlers, func(tc common.TestContext) {
@@ -47,8 +48,19 @@ func TestAPIKey(t *testing.T) {
 			t.Fatalf("Wrong length prefix. This should have failed")
 		}
 
+		// correct api key but wrong db. this api key can not access test3 db
+		err = ValidateAPIKey("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "test3")
+		if err == nil {
+			t.Fatalf("This should have failed")
+		}
+
 		// correct api key
-		err = ValidateAPIKey("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "demo_fs_meb100000", "online_fs1")
+		err = ValidateAPIKey("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "test2")
+		if err != nil {
+			t.Fatalf("No error expected")
+		}
+
+		err = ValidateAPIKey("bkYjEz6OTZyevbqt.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "test1", "test2")
 		if err != nil {
 			t.Fatalf("No error expected")
 		}
