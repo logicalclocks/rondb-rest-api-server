@@ -34,11 +34,6 @@ typedef Uint64 uint64;
 typedef Uint64 ulonglong;
 typedef Int64 longlong;
 
-struct my_timeval {
-  int64_t m_tv_sec;
-  int64_t m_tv_usec;
-};
-
 constexpr const std::size_t MAX_DATE_STRING_REP_LENGTH =
     sizeof("YYYY-MM-DD AM HH:MM:SS.FFFFFF+HH:MM");
 typedef struct MYSQL_TIME_STATUS {
@@ -76,9 +71,18 @@ longlong TIME_to_longlong_time_packed(const MYSQL_TIME &my_time);
 
 void my_time_packed_to_binary(longlong nr, uchar *ptr, uint dec);
 
-void my_timestamp_to_binary(const my_timeval *tm, unsigned char *ptr, unsigned int dec);
 
-void my_timestamp_from_binary(my_timeval *tm, const unsigned char *ptr, unsigned int dec);
+// 22.01.X
+// struct my_timeval {
+// int64_t m_tv_sec;
+// int64_t m_tv_usec;
+// };
+// void my_timestamp_to_binary(const my_timeval *tm, unsigned char *ptr, unsigned int dec);
+// void my_timestamp_from_binary(my_timeval *tm, const unsigned char *ptr, unsigned int dec);
+//
+
+void my_timestamp_to_binary(const timeval *tm, unsigned char *ptr, unsigned int dec);
+void my_timestamp_from_binary(timeval *tm, const unsigned char *ptr, unsigned int dec);
 
 static inline uint32 uint3korr(const uchar *A) {
   return static_cast<uint32>((static_cast<uint32>(A[0])) + ((static_cast<uint32>(A[1])) << 8) +
