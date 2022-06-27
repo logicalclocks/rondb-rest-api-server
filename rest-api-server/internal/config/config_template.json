@@ -2,7 +2,6 @@
    "RestServer":{
       "IP":"localhost",
       "Port":8080,
-      "APIVersion":"0.1.0",
       "BufferSize":327680,
       "PreAllocatedBuffers":1024,
       "GOMAXPROCS":-1

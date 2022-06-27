@@ -31,6 +31,7 @@ import (
 	"hopsworks.ai/rdrs/internal/router/handler"
 	"hopsworks.ai/rdrs/internal/security/apikey"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
+	"hopsworks.ai/rdrs/version"
 	// _ "github.com/ianlancetaylor/cgosymbolizer" // enable this for stack trace for c layer
 )
 
@@ -153,7 +154,7 @@ func CreateRouterContext() Router {
 	router := RouterConext{
 		ServerIP:   config.Configuration().RestServer.IP,
 		ServerPort: config.Configuration().RestServer.Port,
-		APIVersion: config.Configuration().RestServer.APIVersion,
+		APIVersion: version.API_VERSION,
 		DBIP:       config.Configuration().RonDBConfig.IP,
 		DBPort:     config.Configuration().RonDBConfig.Port,
 		Server:     &http.Server{},

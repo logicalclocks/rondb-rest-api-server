@@ -25,7 +25,6 @@ import (
 	"path/filepath"
 
 	"hopsworks.ai/rdrs/internal/log"
-	"hopsworks.ai/rdrs/version"
 )
 
 const CONFIG_FILE_NAME = "config.json"
@@ -48,7 +47,6 @@ func (config RSConfiguration) String() string {
 type RestServer struct {
 	IP                  string
 	Port                uint16
-	APIVersion          string
 	BufferSize          int
 	PreAllocatedBuffers uint32
 	GOMAXPROCS          int
@@ -80,7 +78,6 @@ func init() {
 	restServer := RestServer{
 		IP:                  "localhost",
 		Port:                8080,
-		APIVersion:          version.VERSION,
 		BufferSize:          320 * 1024,
 		GOMAXPROCS:          -1,
 		PreAllocatedBuffers: 1024,
@@ -100,7 +97,7 @@ func init() {
 
 	log := log.LogConfig{
 		Level:      "info",
-		Filename:   "",
+		FilePath:   "",
 		MaxSizeMB:  100,
 		MaxBackups: 10,
 		MaxAge:     30,

@@ -14,7 +14,7 @@ func init() {
 
 type LogConfig struct {
 	Level      string
-	Filename   string
+	FilePath   string
 	MaxSizeMB  int
 	MaxBackups int
 	MaxAge     int
@@ -23,7 +23,7 @@ type LogConfig struct {
 func NewLogConfig() LogConfig {
 	return LogConfig{
 		Level:      "info",
-		Filename:   "",
+		FilePath:   "",
 		MaxSizeMB:  100,
 		MaxBackups: 10,
 		MaxAge:     30,
@@ -42,9 +42,9 @@ func InitLogger(logConfig LogConfig) {
 	})
 
 	// setup log cutting
-	if logConfig.Filename != "" {
+	if logConfig.FilePath != "" {
 		log.SetOutput(&lumberjack.Logger{
-			Filename:   logConfig.Filename,
+			Filename:   logConfig.FilePath,
 			MaxSize:    logConfig.MaxSizeMB,
 			MaxBackups: logConfig.MaxBackups,
 			MaxAge:     logConfig.MaxAge,
