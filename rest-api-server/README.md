@@ -169,3 +169,97 @@ Is used to perform batched primary key read operations.
   }
 ]
 ```
+
+## Security
+
+Currently, the REST API server only supports [Hopsworks API Keys](https://docs.hopsworks.ai/feature-store-api/2.5.3/integrations/databricks/api_key/) for authentication and authorization. In the future, we plan to extend MySQL server users and privileges to the REST API.  Add the API key to the HTTP request using the **X-API-KEY** header. Ofcouse, you have to enable TLS when using API Keys. See, the configuration section for security related configuration parameters.  
+
+## Configuration 
+```json
+{                                                         
+        "RestServer": {                                   
+                "IP": "localhost",                        
+                "Port": 8080,                             
+                "APIVersion": "0.1.0",                    
+                "BufferSize": 327680,                     
+                "PreAllocatedBuffers": 1024,              
+                "GOMAXPROCS": -1                          
+        },                                                
+        "RonDBConfig": {                                  
+                "IP": "localhost",                        
+                "Port": 1186                              
+        },                                                
+        "MySQLServer": {                                  
+                "IP": "localhost",                        
+                "Port": 3306,                             
+                "User": "rondb",                          
+                "Password": "rondb"                       
+        },                                                
+        "Security": {                                     
+                "EnableTLS": true,                        
+                "RequireAndVerifyClientCert": true,       
+                "CertificateFile": "",                    
+                "PrivateKeyFile": ""                      
+        },                                                
+        "Log": {                                          
+                "Level": "info",                          
+                "FilePath": "",                           
+                "MaxSizeMB": 100,                         
+                "MaxBackups": 10,                         
+                "MaxAge": 30                              
+        }                                                             
+}                                                             
+
+```
+
+ - **RestServer** 
+
+   - **IP:** Binds the REST server to this IP. The default value is *localhost*
+  
+   - **Port:** REST server port. The default port is *8080*
+   
+   - **APIVersion:** Current version of the REST API. Current version is *0.1.0*
+   
+   - **BufferSize:** Size of the buffers that are used to pass requests/responses between the Go and C++ layers. The buffers should be large enough to accommodate any request/response. The default size is *327680* (32 KB). 
+
+   - **PreAllocatedBuffers:** Numbers of buffers to preallocate. The default value is *1024*.
+   
+   - **GOMAXPROCS:** The GOMAXPROCS variable limits the number of operating system threads that can execute user-level Go code simultaneously.  The default value is -1, that is it does not change the current settings.
+
+   - **RonDBConfig.IP:** RonDB management node IP. The default value is *localhost*.
+   
+   - **RonDBConfig.Port:** RonDB management node port. The default value is *1186*.
+  
+ - **MySQLServer:** configuration. MySQL server is only used for testing
+  
+   - **IP:** MySQL Server IP. The default value is *localhost*.
+   
+   - **Port:** MySQL Server port. The default value is *3306*.
+   
+   - **User:** MySQL Server user. The default value is *rondb*.
+   
+   - **Password:** MySQL Server user password. The default value is *rondb*.
+
+ - **Security:** REST server security settings 
+  
+   - **EnableTLS:** Enable/Disable TLS. The default value is *true*.
+   
+   - **RequireAndVerifyClientCert:**  Enable/Disable TLS client certificate requirement. The default value is *true*.
+
+   - **RootCACertFile:**  Root CA file. Used in testing that use self-signed certificates. The default value is not set.
+   
+   - **CertificateFile:** Server certificate file. The default value is not set.
+   
+   - **PrivateKeyFile:** Server private key file. The default value is not set.
+
+ - **Log:** REST Server logging settings 
+  
+   - **Level:** log level, Supported levels are *panic, error, warn, info, debug,* and  *trace*. The default value is *info*.
+   
+   - **FilePath:** log file location. The default value is not set.
+   
+   - **MaxSizeMB:** max log file size. The default value is *100*.
+   
+   - **MaxBackups:** max number of log files to store. The default value is *10*.
+   
+   - **MaxAge:** max-age of log files in days. The default value is *30*.
