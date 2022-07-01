@@ -179,7 +179,7 @@ Currently, the REST API server only supports [Hopsworks API Keys](https://docs.h
 {                                                         
         "RestServer": {                                   
                 "IP": "localhost",                        
-                "Port": 8080,                             
+                "Port": 4406,                             
                 "APIVersion": "0.1.0",                    
                 "BufferSize": 327680,                     
                 "PreAllocatedBuffers": 1024,              
@@ -216,7 +216,7 @@ Currently, the REST API server only supports [Hopsworks API Keys](https://docs.h
 
    - **IP:** Binds the REST server to this IP. The default value is *localhost*
   
-   - **Port:** REST server port. The default port is *8080*
+   - **Port:** REST server port. The default port is *4406*
    
    - **APIVersion:** Current version of the REST API. Current version is *0.1.0*
    

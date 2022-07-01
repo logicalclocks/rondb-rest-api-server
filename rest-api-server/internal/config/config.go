@@ -77,7 +77,7 @@ type Security struct {
 func init() {
 	restServer := RestServer{
 		IP:                  "localhost",
-		Port:                8080,
+		Port:                4406,
 		BufferSize:          320 * 1024,
 		GOMAXPROCS:          -1,
 		PreAllocatedBuffers: 1024,

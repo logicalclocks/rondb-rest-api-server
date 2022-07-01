@@ -1,7 +1,7 @@
 {
         "RestServer": {
                 "IP": "localhost",
-                "Port": 8080,
+                "Port": 4406,
                 "APIVersion": "0.1.0",
                 "BufferSize": 327680,
                 "PreAllocatedBuffers": 1024,
