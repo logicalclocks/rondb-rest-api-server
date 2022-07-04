@@ -17,7 +17,6 @@ GITCOMMIT=`git rev-parse --short HEAD`
 BUILDTIME=`date +%FT%T%z`
 HOSTNAME=`hostname`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
-VERSION=`grep "\bVERSION\b" version/version.go  | grep -o "[0-9.]*"`
 SERVER_BIN="rdrs"
 
 DIRS = $(shell find . -type d)
@@ -33,7 +32,7 @@ rdrs: $(DIRS) $(FILES)
 		-X hopsworks.ai/rdrs/version.BUILDTIME=${BUILDTIME} \
 		-X hopsworks.ai/rdrs/version.HOSTNAME=${HOSTNAME} \
 		-X hopsworks.ai/rdrs/version.BRANCH=${BRANCH}" \
-		-o ./bin/server/$(VERSION)/$(SERVER_BIN) ./cmd/server/main.go 
+		-o ./bin/server/$(SERVER_BIN) ./cmd/server/main.go 
 
 clean:
 	go clean -cache

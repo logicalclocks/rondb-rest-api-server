@@ -37,10 +37,16 @@ import (
 
 func main() {
 	configFile := flag.String("config", "", "Configuration file path")
+	ver := flag.Bool("v", false, "Configuration file path")
 	flag.Parse()
 
 	if *configFile != "" {
 		config.LoadConfig(*configFile, true)
+	}
+
+	if *ver == true {
+		fmt.Printf("App version %s, API version %s\n", version.VERSION, version.API_VERSION)
+		return
 	}
 
 	log.InitLogger(config.Configuration().Log)
