@@ -38,14 +38,22 @@ message(STATUS "Using RONDB_DIR installed at ${RONDB_DIR} ")
 
 include_directories(${RONDB_DIR}/include ${RONDB_DIR}/include/storage/ndb ${RONDB_DIR}/include/storage/ndb/ndbapi ${RONDB_DIR}/include/storage/ndb/mgmapi)
 
-if(BOOST_ROOT)
-  IF(NOT EXISTS ${BOOST_ROOT})
-    message(FATAL_ERROR "Invalid boost root directory")
-  endif()
-
-  include_directories(${BOOST_ROOT}) 
+# Pass boost location using ENV variable or using -D
+if(DEFINED ENV{BOOST_ROOT})
+  set(BOOST_DIR $ENV{BOOST_ROOT})
+elseif (BOOST_ROOT)
+  set(BOOST_DIR  ${BOOST_ROOT})
 endif()
 
+if(BOOST_DIR)
+  IF(NOT EXISTS ${BOOST_DIR})
+    message(FATAL_ERROR "Invalid boost root directory. ${BOOST_DIR}")
+  endif()
+  message(STATUS "Using Boost installed at ${BOOST_DIR} ")
+  include_directories(${BOOST_DIR}) 
+else()
+  message(STATUS "Using systems' boost ")
+endif()
 
 link_directories(${RONDB_DIR}/lib)
 
