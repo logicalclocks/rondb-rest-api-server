@@ -58,10 +58,19 @@ RS_Status start_transaction(Ndb *ndb_object, NdbTransaction **tx) {
   return RS_OK;
 }
 
-RS_Status get_scan_op(Ndb *ndb_object, NdbTransaction *tx, const NdbDictionary::Table *table_dict,
-                      NdbScanOperation **scanOp) {
+RS_Status get_index_scan_op(Ndb *ndb_object, NdbTransaction *tx,
+                            const NdbDictionary::Table *table_dict, const char *index_name,
+                            NdbScanOperation **scanOp) {
+
   NdbError err;
-  *scanOp = tx->getNdbScanOperation(table_dict);
+  const NdbDictionary::Dictionary *dict = ndb_object->getDictionary();
+  const NdbDictionary::Index *index     = dict->getIndex(index_name, table_dict->getName());
+
+  if (index == nullptr) {
+    return RS_SERVER_ERROR(ERROR_032 + std::string(" Index: ") + std::string(index_name));
+  }
+
+  *scanOp = tx->getNdbIndexScanOperation(index);
   if (*scanOp == nullptr) {
     err = ndb_object->getNdbError();
     return RS_RONDB_SERVER_ERROR(err, ERROR_029);
@@ -95,7 +104,8 @@ RS_Status find_api_key_int(Ndb *ndb_object, const char *prefix, HopsworksAPIKey 
     return status;
   }
 
-  status = get_scan_op(ndb_object, tx, table_dict, &scanOp);
+  std::string index_name = "prefix_UNIQUE";
+  status = get_index_scan_op(ndb_object, tx, table_dict, index_name.c_str(), &scanOp);
   if (status.http_code != SUCCESS) {
     ndb_object->closeTransaction(tx);
     return status;
@@ -216,6 +226,9 @@ RS_Status find_api_key(const char *prefix, HopsworksAPIKey *api_key) {
 
 RS_Status find_user_int(Ndb *ndb_object, Uint32 uid, HopsworksUsers *users) {
 
+  // FIX ME: Use batch PK lookups instead of Index Scan Op
+  //
+
   NdbError err;
   const NdbDictionary::Table *table_dict;
   NdbTransaction *tx;
@@ -231,7 +244,8 @@ RS_Status find_user_int(Ndb *ndb_object, Uint32 uid, HopsworksUsers *users) {
     return status;
   }
 
-  status = get_scan_op(ndb_object, tx, table_dict, &scanOp);
+  std::string index_name = "PRIMARY";
+  status = get_index_scan_op(ndb_object, tx, table_dict, index_name.c_str(), &scanOp);
   if (status.http_code != SUCCESS) {
     ndb_object->closeTransaction(tx);
     return status;
@@ -324,7 +338,8 @@ RS_Status find_project_team_int(Ndb *ndb_object, HopsworksUsers *users,
     return status;
   }
 
-  status = get_scan_op(ndb_object, tx, table_dict, &scanOp);
+  std::string index_name = "team_member";
+  status = get_index_scan_op(ndb_object, tx, table_dict, index_name.c_str(), &scanOp);
   if (status.http_code != SUCCESS) {
     ndb_object->closeTransaction(tx);
     return status;
@@ -402,6 +417,8 @@ RS_Status find_project_team(HopsworksUsers *users,
 RS_Status find_projects_int(Ndb *ndb_object, std::vector<HopsworksProjectTeam> *project_team_vec,
                             std::vector<HopsworksProject> *project_vec) {
 
+  // FIX ME: Use batch PK lookups instead of Index Scan Op
+  //
   NdbError err;
   const NdbDictionary::Table *table_dict;
   NdbTransaction *tx;
@@ -417,7 +434,8 @@ RS_Status find_projects_int(Ndb *ndb_object, std::vector<HopsworksProjectTeam> *
     return status;
   }
 
-  status = get_scan_op(ndb_object, tx, table_dict, &scanOp);
+  std::string index_name = "PRIMARY";
+  status = get_index_scan_op(ndb_object, tx, table_dict, index_name.c_str(), &scanOp);
   if (status.http_code != SUCCESS) {
     ndb_object->closeTransaction(tx);
     return status;
@@ -537,7 +555,7 @@ RS_Status find_all_projects(int uid, char ***projects, int *count) {
   char **ease = *projects;
   for (Uint32 i = 0; i < project_vec.size(); i++) {
     ease[i] = (char *)malloc(sizeof(dummy.porjectname) * sizeof(char));
-    memcpy(ease[i], project_vec[i].porjectname, strlen(project_vec[i].porjectname)+1);
+    memcpy(ease[i], project_vec[i].porjectname, strlen(project_vec[i].porjectname) + 1);
   }
   return RS_OK;
 }

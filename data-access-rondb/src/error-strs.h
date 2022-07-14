@@ -55,6 +55,7 @@ extern "C" {
 #define ERROR_029 "Failed to start scan operation."
 #define ERROR_030 "Failed to set lock mode."
 #define ERROR_031 "Failed to set filter."
+#define ERROR_032 "Failed to load index."
 
 #ifdef __cplusplus
 }
