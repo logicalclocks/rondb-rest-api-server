@@ -24,8 +24,7 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/glog v1.0.0
-	github.com/golang/protobuf v1.3.3 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
@@ -41,8 +40,14 @@ require (
 )
 
 require (
+	google.golang.org/grpc v1.48.0
+	google.golang.org/protobuf v1.28.0
+)
+
+require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
-	github.com/mattn/go-pointer v0.0.1 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
+	golang.org/x/text v0.3.6 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

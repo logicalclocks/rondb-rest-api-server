@@ -298,8 +298,8 @@ func NewReadColumn(col string) *[]ds.ReadColumn {
 
 func NewPKReadURL(db string, table string) string {
 
-	url := fmt.Sprintf("%s:%d%s%s", config.Configuration().RestServer.IP,
-		config.Configuration().RestServer.Port,
+	url := fmt.Sprintf("%s:%d%s%s", config.Configuration().RestServer.RESTServerIP,
+		config.Configuration().RestServer.RESTServerPort,
 		ds.DB_OPS_EP_GROUP, ds.PK_DB_OPERATION)
 	url = strings.Replace(url, ":"+ds.DB_PP, db, 1)
 	url = strings.Replace(url, ":"+ds.TABLE_PP, table, 1)
@@ -308,16 +308,16 @@ func NewPKReadURL(db string, table string) string {
 }
 
 func NewBatchReadURL() string {
-	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.IP,
-		config.Configuration().RestServer.Port,
+	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.RESTServerIP,
+		config.Configuration().RestServer.RESTServerPort,
 		version.API_VERSION, ds.BATCH_OPERATION)
 	appendURLProtocol(&url)
 	return url
 }
 
 func NewStatURL() string {
-	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.IP,
-		config.Configuration().RestServer.Port,
+	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.RESTServerIP,
+		config.Configuration().RestServer.RESTServerPort,
 		version.API_VERSION, ds.STAT_OPERATION)
 	appendURLProtocol(&url)
 	return url

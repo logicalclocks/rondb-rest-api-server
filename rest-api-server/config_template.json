@@ -1,7 +1,9 @@
 {
         "RestServer": {
-                "IP": "localhost",
-                "Port": 4406,
+                "RESTServerIP": "localhost",
+                "RESTServerPort": 4406,
+                "GRPCServerIP": "localhost",
+                "GRPCServerPort": 5406,
                 "APIVersion": "0.1.0",
                 "BufferSize": 327680,
                 "PreAllocatedBuffers": 1024,

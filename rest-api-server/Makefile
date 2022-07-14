@@ -38,6 +38,9 @@ clean:
 	go clean -cache
 	rm -rf ./bin/*
 
+build_proto:
+	protoc --go_out=./internal/grpcsrv/ --go-grpc_out=./internal/grpcsrv ./internal/grpcsrv/rdrs.proto
+
 test: 
 	go test -p 1 ./... -coverprofile coverage.out 
 	go tool cover -html=coverage.out -o coverage.html && xdg-open coverage.html

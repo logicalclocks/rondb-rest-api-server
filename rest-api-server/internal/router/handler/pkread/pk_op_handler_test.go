@@ -18,14 +18,19 @@
 package pkread
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
+	"google.golang.org/grpc"
 	"hopsworks.ai/rdrs/internal/common"
+	"hopsworks.ai/rdrs/internal/config"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/router/handler"
 	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
 )
@@ -275,7 +280,44 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 			body, _ = json.MarshalIndent(param, "", "\t")
 			url = tu.NewPKReadURL("DB002", "table_1")
 			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_014())
+		})
+}
 
-			// no of pk cols matches but the column names are different
+// Testing GRPC
+func TestGRPC(t *testing.T) {
+
+	db := "DB002"
+	table := "table_1"
+	tu.WithDBs(t, []string{db},
+		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
+
+			conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
+				config.Configuration().RestServer.GRPCServerIP,
+				config.Configuration().RestServer.GRPCServerPort),
+				grpc.WithInsecure())
+			defer conn.Close()
+
+			if err != nil {
+				t.Fatalf("Failed to connect to server %v", err)
+			}
+
+			client := grpcsrv.NewRonDBRestServerClient(conn)
+
+			// ------------
+			pkReadParams := ds.PKReadParams{
+				// DB:    &db,
+				Table: &table,
+				// Filters:     tu.NewFilters("id", 1),
+				// ReadColumns: tu.NewReadColumn("col_0"),
+				// OperationID: tu.NewOperationID(64),
+			}
+
+			reqProto := grpcsrv.ConvertPKReadParams(&pkReadParams)
+
+			resp, err := client.PKRead(context.Background(), reqProto)
+			if err != nil {
+				t.Fatalf("Failed to send request to server %v", err)
+			}
+			log.Printf("Response got form server %v", resp)
 		})
 }

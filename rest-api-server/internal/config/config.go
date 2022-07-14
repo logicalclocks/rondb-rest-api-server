@@ -45,8 +45,10 @@ func (config RSConfiguration) String() string {
 }
 
 type RestServer struct {
-	IP                  string
-	Port                uint16
+	RESTServerIP        string
+	RESTServerPort      uint16
+	GRPCServerIP        string
+	GRPCServerPort      uint16
 	BufferSize          int
 	PreAllocatedBuffers uint32
 	GOMAXPROCS          int
@@ -76,8 +78,10 @@ type Security struct {
 
 func init() {
 	restServer := RestServer{
-		IP:                  "localhost",
-		Port:                4406,
+		RESTServerIP:        "localhost",
+		RESTServerPort:      4406,
+		GRPCServerIP:        "localhost",
+		GRPCServerPort:      5406,
 		BufferSize:          320 * 1024,
 		GOMAXPROCS:          -1,
 		PreAllocatedBuffers: 1024,
