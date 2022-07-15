@@ -358,7 +358,6 @@ func TestBatchArrayTableLongVarbinary(t *testing.T) {
 
 func ArrayColumnBatchTest(t *testing.T, table string, database string, isBinary bool, colWidth int, padding bool) {
 
-	arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, "-1", http.StatusNotFound)
 	tests := map[string]ds.BatchOperationTestInfo{
 		"simple1": { // bigger batch of array column table
 			HttpCode: http.StatusOK,
@@ -388,7 +387,6 @@ func TestBatchBadSubOp(t *testing.T) {
 	padding := false
 	colWidth := 256
 
-	arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, "-1", http.StatusNotFound)
 	tests := map[string]ds.BatchOperationTestInfo{
 		"simple1": { // bigger batch of array column table
 			HttpCode: http.StatusBadRequest,
