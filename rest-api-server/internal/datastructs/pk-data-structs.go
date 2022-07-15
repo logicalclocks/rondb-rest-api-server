@@ -26,6 +26,7 @@ const FILTER_PARAM_NAME = "filters"
 const READ_COL_PARAM_NAME = "read-columns"
 const OPERATION_ID_PARAM_NAME = "operation-id"
 
+// Request
 type PKReadParams struct {
 	DB          *string       `json:"db" `
 	Table       *string       `json:"table"`
@@ -60,7 +61,7 @@ const (
 type ReadColumn struct {
 	Column *string `json:"column"    form:"column"    binding:"required,min=1,max=64"`
 
-	// Data return type you can change the return type for the column data
+	// You can change the return type for the column data
 	// int/floats/decimal are returned as JSON Number type (default),
 	// varchar/char are returned as strings (default) and varbinary as base64 (default)
 	// Right now only default return type is supported
@@ -69,6 +70,18 @@ type ReadColumn struct {
 	// more parameter can be added later.
 }
 
+// Response
+type Column struct {
+	Name  *string          `json:"name"     form:"name"     binding:"required,min=1,max=64"`
+	Value *json.RawMessage `json:"value"    form:"value"    binding:"required"`
+}
+
+type PKReadResponse struct {
+	OperationID *string   `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
+	Data        *[]Column `json:"data"           form:"data"            binding:"omitempty"`
+}
+
+// For testing only
 type PKTestInfo struct {
 	PkReq        PKReadBody
 	Table        string

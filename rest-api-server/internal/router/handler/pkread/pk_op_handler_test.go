@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"testing"
 
@@ -305,19 +304,25 @@ func TestGRPC(t *testing.T) {
 
 			// ------------
 			pkReadParams := ds.PKReadParams{
-				// DB:    &db,
-				Table: &table,
-				// Filters:     tu.NewFilters("id", 1),
+				DB:      &db,
+				Table:   &table,
+				Filters: tu.NewFilters("id", 1),
 				// ReadColumns: tu.NewReadColumn("col_0"),
 				// OperationID: tu.NewOperationID(64),
 			}
 
 			reqProto := grpcsrv.ConvertPKReadParams(&pkReadParams)
 
-			resp, err := client.PKRead(context.Background(), reqProto)
+			respProto, err := client.PKRead(context.Background(), reqProto)
 			if err != nil {
 				t.Fatalf("Failed to send request to server %v", err)
 			}
-			log.Printf("Response got form server %v", resp)
+
+			resp := grpcsrv.ConvertPKReadResponseProto(respProto)
+			bytes, err := json.Marshal(resp)
+			if err != nil {
+				t.Fatalf("Failed to marshal %v", err)
+			}
+			fmt.Printf("Response got form server %s \n", string(bytes))
 		})
 }

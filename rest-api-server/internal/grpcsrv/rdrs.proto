@@ -15,38 +15,48 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+syntax = "proto2";
 
 option go_package = "./../grpcsrv";
 
+//__________________  PK Read Request __________________
 message FilterProto {
-  string Column = 1;
-  bytes Value = 2;
+  required string Column = 1;
+  required bytes Value = 2;
 }
 
 message ReadColumnProto {
-  string Column = 1;
+  required string Column = 1;
   optional string DataReturnType = 2;
 }
 
 message PKReadRequestProto {
-  string DB = 1;
-  string Table = 2;
+  required string DB = 1;
+  required string Table = 2;
   repeated FilterProto Filters = 3;
   repeated ReadColumnProto ReadColumns = 4;
   optional string OperationID = 5;
 }
 
+//__________________  PK Read Response __________________
+message ColumnProto {
+  required string Name = 1;
+  required bytes Value = 2;
+}
+
 message PKReadResponseProto {
-  int32 resp = 1;
+  optional string OperationID = 1;
+  repeated ColumnProto Data = 2;
 }
 
+//__________________  Batch Request __________________
 message BatchRequestProto {
-  int32 req = 1;
+  required int32 req = 1;
 }
 
+//__________________  Batch Response __________________
 message BatchResponseProto {
-  int32 resp = 1;
+required   int32 resp = 1;
 }
 
 service RonDBRestServer {
