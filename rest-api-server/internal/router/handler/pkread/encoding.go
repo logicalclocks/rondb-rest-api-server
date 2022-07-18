@@ -75,7 +75,7 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	iBuf := unsafe.Slice((*uint32)(request.Buffer), request.Size)
 
 	// First N bytes are for header
-	var head uint32 = C.PKR_HEADER_END
+	var head uint32 = C.PK_REQ_HEADER_END
 
 	dbOffSet := head
 
@@ -171,14 +171,14 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	}
 
 	// request buffer header
-	iBuf[C.PKR_OP_TYPE_IDX] = uint32(C.RDRS_PK_REQ_ID)
-	iBuf[C.PKR_CAPACITY_IDX] = uint32(request.Size)
-	iBuf[C.PKR_LENGTH_IDX] = uint32(head)
-	iBuf[C.PKR_DB_IDX] = uint32(dbOffSet)
-	iBuf[C.PKR_TABLE_IDX] = uint32(tableOffSet)
-	iBuf[C.PKR_PK_COLS_IDX] = uint32(pkOffset)
-	iBuf[C.PKR_READ_COLS_IDX] = uint32(readColsOffset)
-	iBuf[C.PKR_OP_ID_IDX] = uint32(opIdOffset)
+	iBuf[C.PK_REQ_OP_TYPE_IDX] = uint32(C.RDRS_PK_REQ_ID)
+	iBuf[C.PK_REQ_CAPACITY_IDX] = uint32(request.Size)
+	iBuf[C.PK_REQ_LENGTH_IDX] = uint32(head)
+	iBuf[C.PK_REQ_DB_IDX] = uint32(dbOffSet)
+	iBuf[C.PK_REQ_TABLE_IDX] = uint32(tableOffSet)
+	iBuf[C.PK_REQ_PK_COLS_IDX] = uint32(pkOffset)
+	iBuf[C.PK_REQ_READ_COLS_IDX] = uint32(readColsOffset)
+	iBuf[C.PK_REQ_OP_ID_IDX] = uint32(opIdOffset)
 
 	//xxd.Print(0, bBuf[:])
 	return request, response, nil

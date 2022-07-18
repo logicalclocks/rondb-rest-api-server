@@ -29,19 +29,33 @@ extern "C" {
 #define ADDRESS_SIZE 4
 
 // Request Type Identifiers
-#define RDRS_PK_REQ_ID    1
-#define RDRS_BATCH_REQ_ID 2
+#define RDRS_PK_REQ_ID     1
+#define RDRS_PK_RESP_ID    2
+#define RDRS_BATCH_REQ_ID  3
+#define RDRS_BATCH_RESP_ID 4
+
+// Data types
+// Everyting is a string. 
+// However for RDRS_STRING_DATATYPE the string
+// is enclosed in quotes. This is now JSON works
+#define RDRS_STRING_DATATYPE 1  
+#define RDRS_NON_STRING_DATATYPE 2
 
 // Primary Key Read Request Header Indexes
-#define PKR_OP_TYPE_IDX   0
-#define PKR_CAPACITY_IDX  1
-#define PKR_LENGTH_IDX    2
-#define PKR_DB_IDX        3
-#define PKR_TABLE_IDX     4
-#define PKR_PK_COLS_IDX   5
-#define PKR_READ_COLS_IDX 6
-#define PKR_OP_ID_IDX     7
-#define PKR_HEADER_END    32
+#define PK_REQ_OP_TYPE_IDX   0
+#define PK_REQ_CAPACITY_IDX  1
+#define PK_REQ_LENGTH_IDX    2
+#define PK_REQ_DB_IDX        3
+#define PK_REQ_TABLE_IDX     4
+#define PK_REQ_PK_COLS_IDX   5
+#define PK_REQ_READ_COLS_IDX 6
+#define PK_REQ_OP_ID_IDX     7
+#define PK_REQ_HEADER_END    32
+
+// Primary Key Read Response Header Indexes
+
+
+// Primary Key Read Request Header Indexes
 
 #ifdef __cplusplus
 }
