@@ -71,9 +71,12 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *da
 		return nil
 	}
 	defer dal.ReturnBuffer(request)
-	defer dal.ReturnBuffer(response)
 
 	dalErr := dal.RonDBPKRead(request, response)
+
+	// buf := unsafe.Slice((*byte)(response.Buffer), response.Size)
+	// xxd.Print(0, buf)
+	// os.Exit(0)
 
 	var message string
 	if dalErr != nil {

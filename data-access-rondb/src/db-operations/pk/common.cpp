@@ -26,6 +26,7 @@
 #include "src/rondb-lib/rdrs_string.hpp"
 #include "src/rondb-lib/decimal_utils.hpp"
 #include "src/mystring.hpp"
+#include "src/rdrs-const.h"
 
 RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *operation,
                             PKRRequest *request, Uint32 colIdx) {
@@ -279,7 +280,9 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
 
     const int len = request->PKValueLen(colIdx);
     if (len > col->getLength()) {
-      return RS_CLIENT_ERROR(std::string(ERROR_008)+" Data len is greater than column length. Column: "+std::string(col->getName()));
+      return RS_CLIENT_ERROR(
+          std::string(ERROR_008) +
+          " Data len is greater than column length. Column: " + std::string(col->getName()));
     }
 
     const char *charStr = request->PKValueCStr(colIdx);
@@ -301,7 +304,9 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
     ///< Length bytes: 2, little-endian
     const int len = request->PKValueLen(colIdx);
     if (len > col->getLength()) {
-      return RS_CLIENT_ERROR(std::string(ERROR_008)+" Data len is greater than column length. Column: "+std::string(col->getName()));
+      return RS_CLIENT_ERROR(
+          std::string(ERROR_008) +
+          " Data len is greater than column length. Column: " + std::string(col->getName()));
     }
     char *charStr;
     if (request->PKValueNDBStr(colIdx, col, &charStr) != 0) {
@@ -328,7 +333,9 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
         boost::beast::detail::base64::decode(pk, encodedStr, request->PKValueLen(colIdx));
 
     if (static_cast<int>(ret.first) > col->getLength()) {
-      return RS_CLIENT_ERROR(std::string(ERROR_008)+" Data len is greater than column length. Column: "+std::string(col->getName()));
+      return RS_CLIENT_ERROR(
+          std::string(ERROR_008) +
+          " Data len is greater than column length. Column: " + std::string(col->getName()));
     }
 
     if (operation->equal(request->PKName(colIdx), pk, col->getLength()) != 0) {
@@ -359,7 +366,9 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
         pk + additional_len, encodedStr, request->PKValueLen(colIdx));
 
     if (static_cast<int>(ret.first) > col->getLength()) {
-      return RS_CLIENT_ERROR(std::string(ERROR_008)+" Data len is greater than column length. Column: "+std::string(col->getName()));
+      return RS_CLIENT_ERROR(
+          std::string(ERROR_008) +
+          " Data len is greater than column length. Column: " + std::string(col->getName()));
     }
 
     // insert the length at the begenning of the array
@@ -396,7 +405,8 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
     }
 
     if (l_time.hour != 0 || l_time.minute != 0 || l_time.second != 0 || l_time.second_part != 0) {
-      return RS_CLIENT_ERROR(std::string(ERROR_008)+" Expecting only date data. Column: "+std::string(col->getName()));
+      return RS_CLIENT_ERROR(std::string(ERROR_008) +
+                             " Expecting only date data. Column: " + std::string(col->getName()));
     }
 
     unsigned char packed[col->getSizeInBytes()];
@@ -580,10 +590,10 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
   return RS_OK;
 }
 
-RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool appendComma) {
+RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response) {
   const NdbDictionary::Column *col = attr->getColumn();
   if (attr->isNULL()) {
-    return response->Append_string("null", false, appendComma);
+    return response->SetColumnDataNull(attr->getColumn()->getName());
   }
 
   switch (col->getType()) {
@@ -593,51 +603,51 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
   }
   case NdbDictionary::Column::Tinyint: {
     ///< 8 bit. 1 byte signed integer, can be used in array
-    return response->Append_i8(attr->int8_value(), appendComma);
+    return response->Append_i8(attr->getColumn()->getName(), attr->int8_value());
   }
   case NdbDictionary::Column::Tinyunsigned: {
     ///< 8 bit. 1 byte unsigned integer, can be used in array
-    return response->Append_iu8(attr->u_8_value(), appendComma);
+    return response->Append_iu8(attr->getColumn()->getName(), attr->u_8_value());
   }
   case NdbDictionary::Column::Smallint: {
     ///< 16 bit. 2 byte signed integer, can be used in array
-    return response->Append_i16(attr->short_value(), appendComma);
+    return response->Append_i16(attr->getColumn()->getName(), attr->short_value());
   }
   case NdbDictionary::Column::Smallunsigned: {
     ///< 16 bit. 2 byte unsigned integer, can be used in array
-    return response->Append_iu16(attr->u_short_value(), appendComma);
+    return response->Append_iu16(attr->getColumn()->getName(), attr->u_short_value());
   }
   case NdbDictionary::Column::Mediumint: {
     ///< 24 bit. 3 byte signed integer, can be used in array
-    return response->Append_i24(attr->medium_value(), appendComma);
+    return response->Append_i24(attr->getColumn()->getName(), attr->medium_value());
   }
   case NdbDictionary::Column::Mediumunsigned: {
     ///< 24 bit. 3 byte unsigned integer, can be used in array
-    return response->Append_iu24(attr->u_medium_value(), appendComma);
+    return response->Append_iu24(attr->getColumn()->getName(), attr->u_medium_value());
   }
   case NdbDictionary::Column::Int: {
     ///< 32 bit. 4 byte signed integer, can be used in array
-    return response->Append_i32(attr->int32_value(), appendComma);
+    return response->Append_i32(attr->getColumn()->getName(), attr->int32_value());
   }
   case NdbDictionary::Column::Unsigned: {
     ///< 32 bit. 4 byte unsigned integer, can be used in array
-    return response->Append_iu32(attr->u_32_value(), appendComma);
+    return response->Append_iu32(attr->getColumn()->getName(), attr->u_32_value());
   }
   case NdbDictionary::Column::Bigint: {
     ///< 64 bit. 8 byte signed integer, can be used in array
-    return response->Append_i64(attr->int64_value(), appendComma);
+    return response->Append_i64(attr->getColumn()->getName(), attr->int64_value());
   }
   case NdbDictionary::Column::Bigunsigned: {
     ///< 64 Bit. 8 byte signed integer, can be used in array
-    return response->Append_iu64(attr->u_64_value(), appendComma);
+    return response->Append_iu64(attr->getColumn()->getName(), attr->u_64_value());
   }
   case NdbDictionary::Column::Float: {
     ///< 32-bit float. 4 bytes float, can be used in array
-    return response->Append_f32(attr->float_value(), appendComma);
+    return response->Append_f32(attr->getColumn()->getName(), attr->float_value());
   }
   case NdbDictionary::Column::Double: {
     ///< 64-bit float. 8 byte float, can be used in array
-    return response->Append_d64(attr->double_value(), appendComma);
+    return response->Append_d64(attr->getColumn()->getName(), attr->double_value());
   }
   case NdbDictionary::Column::Olddecimal: {
     ///< MySQL < 5.0 signed decimal,  Precision, Scale
@@ -659,7 +669,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     void *bin     = attr->aRef();
     int bin_len   = attr->get_size_in_bytes();
     decimal_bin2str(bin, bin_len, precision, scale, decStr, MaxDecimalStrLen);
-    return response->Append_string(decStr, false, appendComma);
+    return response->Append_string(attr->getColumn()->getName(), std::string(decStr),
+                                   RDRS_FLOAT_DATATYPE);
   }
   case NdbDictionary::Column::Char:
     ///< Len. A fixed array of 1-byte chars
@@ -674,8 +685,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     if (GetByteArray(attr, &data_start, &attr_bytes) != 0) {
       return RS_CLIENT_ERROR(ERROR_019);
     } else {
-      return response->Append_char(data_start, attr_bytes, attr->getColumn()->getCharset(),
-                                   appendComma);
+      return response->Append_char(attr->getColumn()->getName(), data_start, attr_bytes,
+                                   attr->getColumn()->getCharset());
     }
   }
   case NdbDictionary::Column::Binary:
@@ -694,7 +705,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
       char buffer[encoded_str_size];
       size_t ret = boost::beast::detail::base64::encode(reinterpret_cast<void *>(buffer),
                                                         data_start, attr_bytes);
-      return response->Append_string(std::string(buffer, ret), true, appendComma);
+      return response->Append_string(attr->getColumn()->getName(), std::string(buffer, ret),
+                                     RDRS_BINARY_DATATYPE);
     }
   }
   case NdbDictionary::Column::Datetime: {
@@ -708,7 +720,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     my_unpack_date(&l_time, attr->aRef());
     char to[MAX_DATE_STRING_REP_LENGTH];
     my_date_to_str(l_time, to);
-    return response->Append_string(std::string(to), true, appendComma);
+    return response->Append_string(attr->getColumn()->getName(), std::string(to),
+                                   RDRS_DATETIME_DATATYPE);
   }
   case NdbDictionary::Column::Blob: {
     ///< Binary large object (see NdbBlob)
@@ -739,7 +752,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     char buffer[encoded_str_size];
     size_t ret =
         boost::beast::detail::base64::encode(reinterpret_cast<void *>(buffer), reversed, words);
-    return response->Append_string(std::string(buffer, ret), true, appendComma);
+    return response->Append_string(attr->getColumn()->getName(), std::string(buffer, ret),
+                                   RDRS_BIT_DATATYPE);
   }
   case NdbDictionary::Column::Time: {
     ///< Time without date
@@ -749,7 +763,7 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
   case NdbDictionary::Column::Year: {
     ///< Year 1901-2155 (1 byte)
     Int32 year = (uint)(1900 + attr->aRef()[0]);
-    return response->Append_i32(year, appendComma);
+    return response->Append_i32(attr->getColumn()->getName(), year);
   }
   case NdbDictionary::Column::Timestamp: {
     ///< Unix time
@@ -776,7 +790,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     char to[MAX_DATE_STRING_REP_LENGTH];
     my_TIME_to_str(l_time, to, precision);
 
-    return response->Append_string(std::string(to), true, appendComma);
+    return response->Append_string(attr->getColumn()->getName(), std::string(to),
+                                   RDRS_DATETIME_DATATYPE);
   }
   case NdbDictionary::Column::Datetime2: {
     ///< 5 bytes plus 0-3 fraction
@@ -791,7 +806,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     char to[MAX_DATE_STRING_REP_LENGTH];
     my_TIME_to_str(l_time, to, precision);
 
-    return response->Append_string(std::string(to), true, appendComma);
+    return response->Append_string(attr->getColumn()->getName(), std::string(to),
+                                   RDRS_DATETIME_DATATYPE);
   }
   case NdbDictionary::Column::Timestamp2: {
     ///< 4 bytes + 0-3 fraction
@@ -817,7 +833,8 @@ RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool
     char to[MAX_DATE_STRING_REP_LENGTH];
     my_TIME_to_str(l_time, to, precision);
 
-    return response->Append_string(std::string(to), true, appendComma);
+    return response->Append_string(attr->getColumn()->getName(), std::string(to),
+                                   RDRS_DATETIME_DATATYPE);
   }
   }
 

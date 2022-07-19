@@ -40,7 +40,7 @@ RS_Status SetOperationPKCol(const NdbDictionary::Column *col, NdbOperation *oper
 /**
  * it stores the data read from the DB into the response buffer
  */
-RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response, bool appendComma);
+RS_Status WriteColToRespBuff(const NdbRecAttr *attr, PKRResponse *response);
 
   /**
    * return data for array columns

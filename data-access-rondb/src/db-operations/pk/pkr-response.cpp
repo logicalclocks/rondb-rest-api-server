@@ -22,11 +22,138 @@
 #include <mysql.h>
 #include <iostream>
 #include <sstream>
+#include <cassert>
 #include "src/rondb-lib/rdrs_string.hpp"
 #include "src/mystring.hpp"
+#include "src/rdrs-const.h"
 
 PKRResponse::PKRResponse(const RS_Buffer *respBuff) {
-  this->resp = respBuff;
+  this->resp        = respBuff;
+  this->writeHeader = PK_RESP_HEADER_END;
+  this->WriteHeaderField(PK_RESP_OP_TYPE_IDX, RDRS_PK_RESP_ID);
+  this->WriteHeaderField(PK_RESP_CAPACITY_IDX, resp->size);
+}
+
+RS_Status PKRResponse::WriteHeaderField(Uint32 index, Uint32 value) {
+  Uint32 *b = reinterpret_cast<Uint32 *>(this->resp->buffer);
+  b[index]  = value;
+  return RS_OK;
+}
+
+RS_Status PKRResponse::SetStatus(Uint32 value) {
+  this->WriteHeaderField(PK_RESP_OP_STATUS_IDX, value);
+  return RS_OK;
+}
+
+RS_Status PKRResponse::Close() {
+  this->WriteHeaderField(PK_RESP_LENGTH_IDX, writeHeader);
+  return RS_OK;
+}
+
+RS_Status PKRResponse::SetDB(const char *db) {
+  Uint32 dbAddr    = this->writeHeader;
+  RS_Status status = this->Append_cstring(db);
+  if (status.http_code != SUCCESS) {
+    return status;
+  }
+  this->WriteHeaderField(PK_RESP_DB_IDX, dbAddr);
+  return RS_OK;
+}
+
+RS_Status PKRResponse::SetTable(const char *table) {
+  Uint32 tableAddr = this->writeHeader;
+  RS_Status status = this->Append_cstring(table);
+  if (status.http_code != SUCCESS) {
+    return status;
+  }
+  this->WriteHeaderField(PK_RESP_TABLE_IDX, tableAddr);
+  return RS_OK;
+}
+
+RS_Status PKRResponse::SetOperationID(const char *opID) {
+  Uint32 opIDAddr    = this->writeHeader;
+  RS_Status status = this->Append_cstring(opID);
+  if (status.http_code != SUCCESS) {
+    return status;
+  }
+  this->WriteHeaderField(PK_RESP_OP_ID_IDX, opIDAddr);
+  return RS_OK;
+}
+
+bool PKRResponse::HasCapacity(char *str) {
+  Uint32 strl = strlen(str) + 1;  // +1 for null terminator
+  if (strl > GetRemainingCapacity()) {
+    return false;
+  }
+  return true;
+}
+
+RS_Status PKRResponse::Append_cstring(const char *str) {
+  Uint32 strl = strlen(str) + 1;  // for null terminator
+  if (strl > GetRemainingCapacity()) {
+    return RS_SERVER_ERROR(ERROR_016);
+  }
+
+  std::memcpy(resp->buffer + writeHeader, str, strl);
+  writeHeader += strl;
+  return RS_OK;
+}
+
+RS_Status PKRResponse::SetNoOfColumns(Uint32 cols) {
+  // 3 because +1 for Col Name Address
+  // +1 for Value Address
+  // +1 for isNULL
+  Uint32 spaceNeeded = cols * ADDRESS_SIZE * 3;
+  if (spaceNeeded > GetRemainingCapacity()) {
+    return RS_SERVER_ERROR(ERROR_016);
+  }
+
+  this->writeHeader = (this->writeHeader + spaceNeeded);
+  this->colsToWrite = cols;
+  return RS_OK;
+}
+
+RS_Status PKRResponse::SetColumnDataNull(const char *colName) {
+  return SetColumnDataInt(colName, nullptr, RDRS_UNKNOWN_DATATYPE);
+}
+
+RS_Status PKRResponse::SetColumnData(const char *colName, const char *value, Uint32 type) {
+  return this->SetColumnDataInt(colName, value, type);
+}
+
+RS_Status PKRResponse::SetColumnDataInt(const char *colName, const char *value, Uint32 type) {
+  // first index is for column name
+  // second index is for column value
+  // thrid index is for isNULL
+  // forth index is for data type, e.g., string or non-string data
+  Uint32 *b           = reinterpret_cast<Uint32 *>(this->resp->buffer);
+  Uint32 indexWritten = (PK_RESP_HEADER_END / ADDRESS_SIZE);
+  indexWritten += (colsWritten * 4);
+
+  Uint32 nameAddress = this->writeHeader;
+  RS_Status status   = Append_cstring(colName);
+  if (status.http_code != SUCCESS) {
+    return status;
+  }
+  b[indexWritten + 0] = nameAddress;
+
+  if (value == nullptr) {
+    b[indexWritten + 1] = 0;                      // value address not set
+    b[indexWritten + 2] = 1;                      // isNULL
+    b[indexWritten + 3] = RDRS_UNKNOWN_DATATYPE;  // data type
+  } else {
+    Uint32 valueAddress = this->writeHeader;
+    RS_Status status    = Append_cstring(value);
+    if (status.http_code != SUCCESS) {
+      return status;
+    }
+    b[indexWritten + 1] = valueAddress;  // value address
+    b[indexWritten + 2] = 0;             // isNULL
+    b[indexWritten + 3] = type;          // data type
+  }
+
+  colsWritten++;
+  return RS_OK;
 }
 
 char *PKRResponse::GetResponseBuffer() {
@@ -49,122 +176,82 @@ void *PKRResponse::GetWritePointer() {
   return resp->buffer + writeHeader;
 }
 
-RS_Status PKRResponse::Append_string(std::string str, bool add_quotes, bool appendComma) {
-  int additional_len = add_quotes ? 2 : 0;
-  additional_len     = appendComma ? additional_len + 1 : additional_len;
-
-  if ((str.length() + additional_len) >= GetRemainingCapacity()) {  // +2 for quotation marks
+RS_Status PKRResponse::Append_string(const char *colName, std::string value, Uint32 type) {
+  if ((value.length() + 1) > GetRemainingCapacity()) {  // +1 null terminator
     return RS_SERVER_ERROR(ERROR_016);
   }
 
-  if (!add_quotes) {
-    Append_cstring(str.c_str(), appendComma);
-  } else {
-    Append_cstring("\"", false);
-    Append_cstring(str.c_str(), false);
-    Append_cstring("\"", appendComma);
-  }
-
-  return RS_OK;
+  return SetColumnData(colName, value.c_str(), type);
 }
 
-RS_Status PKRResponse::Append_cstring(const char *str, bool appendComma) {
-  int strl = strlen(str);
-  if (static_cast<Uint32>(strl + (appendComma ? 1 : 0)) > GetRemainingCapacity()) {
-    return RS_SERVER_ERROR(ERROR_016);
-  }
-
-  std::memcpy(resp->buffer + writeHeader, str, strl);
-  writeHeader += strl;
-
-  if (appendComma) {
-    resp->buffer[writeHeader] = ',';
-    writeHeader += 1;
-  }
-
-  return RS_OK;
+RS_Status PKRResponse::Append_i8(const char *colName, char num) {
+  return Append_i64(colName, num);
 }
 
-RS_Status PKRResponse::Append_i8(char num, bool appendComma) {
-  return Append_i64(num, appendComma);
+RS_Status PKRResponse::Append_iu8(const char *colName, unsigned char num) {
+  return Append_iu64(colName, num);
 }
 
-RS_Status PKRResponse::Append_iu8(unsigned char num, bool appendComma) {
-  return Append_iu64(num, appendComma);
+RS_Status PKRResponse::Append_i16(const char *colName, Int16 num) {
+  return Append_i64(colName, num);
 }
 
-RS_Status PKRResponse::Append_i16(Int16 num, bool appendComma) {
-  return Append_i64(num, appendComma);
+RS_Status PKRResponse::Append_iu16(const char *colName, Uint16 num) {
+  return Append_iu64(colName, num);
 }
 
-RS_Status PKRResponse::Append_iu16(Uint16 num, bool appendComma) {
-  return Append_iu64(num, appendComma);
+RS_Status PKRResponse::Append_i24(const char *colName, int num) {
+  return Append_i64(colName, num);
 }
 
-RS_Status PKRResponse::Append_i24(int num, bool appendComma) {
-  return Append_i64(num, appendComma);
+RS_Status PKRResponse::Append_iu24(const char *colName, Uint32 num) {
+  return Append_iu64(colName, num);
 }
 
-RS_Status PKRResponse::Append_iu24(Uint32 num, bool appendComma) {
-  return Append_iu64(num, appendComma);
+RS_Status PKRResponse::Append_iu32(const char *colName, Uint32 num) {
+  return Append_iu64(colName, num);
 }
 
-RS_Status PKRResponse::Append_iu32(Uint32 num, bool appendComma) {
-  return Append_iu64(num, appendComma);
+RS_Status PKRResponse::Append_i32(const char *colName, Int32 num) {
+  return Append_i64(colName, num);
 }
 
-RS_Status PKRResponse::Append_i32(Int32 num, bool appendComma) {
-  return Append_i64(num, appendComma);
+RS_Status PKRResponse::Append_f32(const char *colName, float num) {
+  return Append_d64(colName, num);
 }
 
-RS_Status PKRResponse::Append_f32(float num, bool appendComma) {
-  return Append_d64(num, appendComma);
-}
-
-RS_Status PKRResponse::Append_d64(double num, bool appendComma) {
+RS_Status PKRResponse::Append_d64(const char *colName, double num) {
   try {
     std::stringstream ss;
     ss << num;
-    Append_string(ss.str(), false, appendComma);
+    return this->SetColumnData(colName, ss.str().c_str(), RDRS_FLOAT_DATATYPE);
   } catch (...) {
     return RS_SERVER_ERROR(ERROR_015);
   }
-  return RS_OK;
 }
 
-RS_Status PKRResponse::Append_NULL() {
-  resp->buffer[writeHeader] = 0x00;
-  writeHeader += 1;
-  return RS_OK;
-}
-
-RS_Status PKRResponse::Append_iu64(Uint64 num, bool appendComma) {
+RS_Status PKRResponse::Append_iu64(const char *colName, Uint64 num) {
   try {
     std::string numStr = std::to_string(num);
-    Append_string(numStr, false, appendComma);
+    return this->SetColumnData(colName, numStr.c_str(), RDRS_INTEGER_DATATYPE);
   } catch (...) {
     return RS_SERVER_ERROR(ERROR_015);
   }
-  return RS_OK;
 }
 
-RS_Status PKRResponse::Append_i64(Int64 num, bool appendComma) {
+RS_Status PKRResponse::Append_i64(const char *colName, Int64 num) {
   try {
     std::string numStr = std::to_string(num);
-    Append_string(numStr, false, appendComma);
+    return this->SetColumnData(colName, numStr.c_str(), RDRS_INTEGER_DATATYPE);
   } catch (...) {
     return RS_SERVER_ERROR(ERROR_015);
   }
-  return RS_OK;
 }
 
-RS_Status PKRResponse::Append_char(const char *fromBuff, Uint32 fromBuffLen, CHARSET_INFO *fromCS,
-                                   bool appendComma) {
-  int extraSpace = 3;  // +2 for quotation marks and +1 for null character
-  if (appendComma) {
-    extraSpace += 1;
-  }
+RS_Status PKRResponse::Append_char(const char *colName, const char *fromBuff, Uint32 fromBuffLen,
+                                   CHARSET_INFO *fromCS) {
 
+  Uint32 extraSpace     = 1;  // +1 for null terminator
   Uint32 estimatedBytes = fromBuffLen + extraSpace;
 
   if (estimatedBytes > GetRemainingCapacity()) {
@@ -211,7 +298,5 @@ RS_Status PKRResponse::Append_char(const char *fromBuff, Uint32 fromBuffLen, CHA
   if ((escapedstr.length() + extraSpace) >= GetRemainingCapacity()) {  // +2 for quotation marks
     return RS_SERVER_ERROR(ERROR_010);
   }
-
-  Append_string(escapedstr, true, appendComma);
-  return RS_OK;
+  return this->SetColumnData(colName, escapedstr.c_str(), RDRS_STRING_DATATYPE);
 }

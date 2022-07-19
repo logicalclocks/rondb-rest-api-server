@@ -1,7 +1,0 @@
-#https://github.com/MaskRay/ccls/wiki/Project-Setup#ccls-file
-clang
--isystem.
--isystem/srv/hops/mysql/include
--isystem/srv/hops/mysql/include/storage/ndb
--isystem/srv/hops/mysql/include/storage/ndb/ndbapi
--isystem/srv/hops/mysql/include/storage/ndb/mgmapi

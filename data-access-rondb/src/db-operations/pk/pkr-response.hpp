@@ -30,21 +30,60 @@ class PKRResponse {
  private:
   const RS_Buffer *resp;
   Uint32 writeHeader = 0;
+  Uint32 colsWritten = 0;
+  Uint32 colsToWrite = 0;
 
  public:
   explicit PKRResponse(const RS_Buffer *respBuff);
 
   /**
-   * Append to response buffer
+   * Write header fields.
    */
-  RS_Status Append_cstring(const char *str, bool appendComma);
+  RS_Status WriteHeaderField(Uint32 index, Uint32 value);
 
   /**
-   * Get maximum capacity of the response buffer
-   *
-   * @return max capacity
+   =* Set status
    */
-  Uint32 GetMaxCapacity();
+  RS_Status SetStatus(Uint32 value);
+
+  /**
+   * Close response and set the data lenght. 
+   */
+  RS_Status Close();
+
+  /**
+   * Set Database Name
+   */
+  RS_Status SetDB(const char *db);
+
+  /**
+   * Set Table Name
+   */
+  RS_Status SetTable(const char *table);
+
+  /**
+   * Set Operation ID 
+   */
+  RS_Status SetOperationID(const char *opID);
+
+  /**
+   * Set No of columns/values contained
+   * in the response. This function must
+   * be called before setting any columns/values
+   * as this number is used to pre-allocate
+   * space to store pointers for the columns/values
+   */
+  RS_Status SetNoOfColumns(Uint32 cols);
+
+  /**
+   * Set data to null for this column
+   */
+  RS_Status SetColumnDataNull(const char *colName);
+
+  /**
+   * Set column name and data
+   */
+  RS_Status SetColumnData(const char *colName, const char *value, Uint32 type);
 
   /**
    * Get remaining capacity of the response buffer
@@ -52,11 +91,6 @@ class PKRResponse {
    * @return remaining capacity
    */
   Uint32 GetRemainingCapacity();
-
-  /**
-   * Append to response buffer
-   */
-  RS_Status Append_string(std::string str, bool appendComma, bool add_quotes);
 
   /**
    * Get response buffer
@@ -76,73 +110,103 @@ class PKRResponse {
   /**
    * Append to response buffer
    */
-  RS_Status Append_iu32(Uint32 num, bool appendComma);
+  RS_Status Append_iu32(const char *colName, Uint32 num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_i32(Int32 num, bool appendComma);
+  RS_Status Append_i32(const char *colName, Int32 num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_i64(Int64 num, bool appendComma);
+  RS_Status Append_i64(const char *colName, Int64 num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_iu64(Uint64 num, bool appendComma);
+  RS_Status Append_iu64(const char *colName, Uint64 num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_i8(char num, bool appendComma);
+  RS_Status Append_i8(const char *colName, char num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_iu8(unsigned char num, bool appendComma);
+  RS_Status Append_iu8(const char *colName, unsigned char num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_i16(Int16 num, bool appendComma);
+  RS_Status Append_i16(const char *colName, Int16 num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_iu16(Uint16 num, bool appendComma);
+  RS_Status Append_iu16(const char *colName, Uint16 num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_i24(int num, bool appendComma);
+  RS_Status Append_i24(const char *colName, int num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_iu24(unsigned int num, bool appendComma);
+  RS_Status Append_iu24(const char *colName, unsigned int num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_f32(float num, bool appendComma);
+  RS_Status Append_f32(const char *colName, float num);
 
   /**
    * Append to response buffer
    */
-  RS_Status Append_d64(double num, bool appendComma);
+  RS_Status Append_d64(const char *colName, double num);
 
   /**
    * Append to response buffer. Append
    */
-  RS_Status Append_char(const char *from_buffer, Uint32 from_length, CHARSET_INFO *from_cs,
-                        bool appendComma);
+  RS_Status Append_char(const char *colName, const char *from_buffer, Uint32 from_length,
+                        CHARSET_INFO *from_cs);
 
   /**
-   * Append null. Used to terminate string response message
+   * Append to response buffer. Append
    */
-  RS_Status Append_NULL();
+  RS_Status Append_string(const char *colName, std::string value, Uint32 type);
+
+ private:
+  /**
+   * Set column name and data internal method
+   */
+  RS_Status SetColumnDataInt(const char *colName, const char *value, Uint32 type);
+
+  /**
+   * Check capacity if the buffer can hold the
+   * data string
+   */
+  bool HasCapacity(char *str);
+
+  /**
+   * Get maximum capacity of the response buffer
+   *
+   * @return max capacity
+   */
+  Uint32 GetMaxCapacity();
+
+  /**
+   * Append to response buffer
+   */
+  // RS_Status Append_string(const char *colName, std::string str);
+
+  /**
+   * write a c_string to the buffer
+   *
+   */
+  RS_Status Append_cstring(const char *str);
 };
 
 #endif  // DATA_ACCESS_RONDB_SRC_PK_READ_PKR_RESPONSE_HPP_

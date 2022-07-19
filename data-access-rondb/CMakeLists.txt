@@ -22,6 +22,8 @@ cmake_minimum_required (VERSION 3.5.0)
 
 set (CMAKE_CXX_STANDARD 17)
 
+set (CMAKE_EXPORT_COMPILE_COMMANDS true)
+
 include_directories (${CMAKE_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR})
 set(RONDB_DEFAULT_DIR "/srv/hops/mysql")

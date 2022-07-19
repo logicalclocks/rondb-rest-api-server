@@ -33,7 +33,7 @@ class PKROperation {
   Uint32 no_ops;
   NdbTransaction *transaction = nullptr;
   Ndb *ndb_object             = nullptr;
-  bool isBatch = false;
+  bool isBatch                = false;
 
   std::vector<PKRRequest *> requests;
   std::vector<PKRResponse *> responses;
@@ -112,22 +112,10 @@ class PKROperation {
   RS_Status ValidateRequest();
 
   /**
-   * Append operation records to response buffer 
+   * Append operation records to response buffer
    * @return status
    */
-  RS_Status AppendOpRecs(bool found, PKRRequest *req, PKRResponse *resp,  std::vector<NdbRecAttr *> *recs);
-  
-  /**
-   * Append operation ID to response buffer 
-   * @return status
-   */
-  RS_Status AppendOpId(PKRRequest *req, PKRResponse *resp);
-
-  /**
-   * Append status of the operation to response buffer 
-   * @return status
-   */
-  RS_Status AppendStatus(PKRRequest *req, PKRResponse *resp, Int32 code);
-
+  RS_Status AppendOpRecs(bool found, PKRRequest *req, PKRResponse *resp,
+                         std::vector<NdbRecAttr *> *recs);
 };
 #endif  // DATA_ACCESS_RONDB_SRC_PK_READ_PKR_OPERATION_HPP_

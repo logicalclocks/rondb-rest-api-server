@@ -35,11 +35,16 @@ extern "C" {
 #define RDRS_BATCH_RESP_ID 4
 
 // Data types
-// Everyting is a string. 
+// Everyting is a string.
 // However for RDRS_STRING_DATATYPE the string
 // is enclosed in quotes. This is now JSON works
-#define RDRS_STRING_DATATYPE 1  
-#define RDRS_NON_STRING_DATATYPE 2
+#define RDRS_UNKNOWN_DATATYPE  0
+#define RDRS_STRING_DATATYPE   1
+#define RDRS_INTEGER_DATATYPE  2
+#define RDRS_FLOAT_DATATYPE    3
+#define RDRS_BINARY_DATATYPE   4
+#define RDRS_DATETIME_DATATYPE 5
+#define RDRS_BIT_DATATYPE      6
 
 // Primary Key Read Request Header Indexes
 #define PK_REQ_OP_TYPE_IDX   0
@@ -53,7 +58,15 @@ extern "C" {
 #define PK_REQ_HEADER_END    32
 
 // Primary Key Read Response Header Indexes
-
+#define PK_RESP_OP_TYPE_IDX   0
+#define PK_RESP_OP_STATUS_IDX 1
+#define PK_RESP_CAPACITY_IDX  2
+#define PK_RESP_LENGTH_IDX    3
+#define PK_RESP_DB_IDX        4
+#define PK_RESP_TABLE_IDX     5
+#define PK_RESP_COLS_IDX      6
+#define PK_RESP_OP_ID_IDX     7
+#define PK_RESP_HEADER_END    32
 
 // Primary Key Read Request Header Indexes
 
