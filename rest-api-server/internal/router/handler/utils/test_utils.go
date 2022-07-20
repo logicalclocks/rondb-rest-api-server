@@ -142,51 +142,51 @@ func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isB
 			t.Fatalf("%v", err)
 		}
 
-		if string(jsonVal) != string(dbVal) {
-			t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, jsonVal, dbVal)
+		if (jsonVal == nil || dbVal == nil) && !(jsonVal == nil && dbVal == nil) { // if one of prts is nill
+			t.Fatalf("The read value for key %s does not match. Got from REST Server ptr: %d, Got from MYSQL Server ptr: %d", key, jsonVal, dbVal)
+		}
+
+		if !((jsonVal == nil && dbVal == nil) || (*jsonVal == *dbVal)) {
+			t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, *jsonVal, *dbVal)
 		}
 	}
 }
 
-func getColumnDataFromJson(t testing.TB, colName string, resp string) (string, bool) {
+func getColumnDataFromJson(t testing.TB, colName string, resp string) (*string, bool) {
 	t.Helper()
 
-	if colName[0:1] != "\"" && colName[len(colName)-1:] != "\"" {
-		colName = "\"" + colName + "\""
+	kvMap := make(map[string]*string)
+	var result ds.PKReadResponse
+
+	err := json.Unmarshal([]byte(resp), &result)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal response object %v", err)
 	}
 
-	kvMap := make(map[string]string)
-
-	var result map[string]json.RawMessage
-	json.Unmarshal([]byte(resp), &result)
-
-	dataStr := string(result["data"])
-	dl := len(dataStr)
-	core := dataStr[1 : dl-1] // remove the curly braces
-	strs := strings.Split(core, ",")
-	for _, kv := range strs {
-		index := strings.Index(kv, ":")
-		kvMap[kv[0:index]] = kv[index+1:]
+	for _, col := range *result.Data {
+		if col.Value != nil {
+			value := string([]byte(*col.Value))
+			if value[0] == '"' {
+				value, err = strconv.Unquote(value)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			kvMap[*col.Name] = &value
+		} else {
+			kvMap[*col.Name] = nil
+		}
 	}
 
 	val, ok := kvMap[colName]
 	if !ok {
-		return val, ok
+		return nil, ok
 	} else {
-		var err error
-		var unquote string
-		unquote = val
-		if val[0] == '"' {
-			unquote, err = strconv.Unquote(val)
-			if err != nil {
-				t.Fatal(err)
-			}
-		}
-		return unquote, ok
+		return val, ok
 	}
 }
 
-func getColumnDataFromDB(t testing.TB, db string, table string, filters *[]ds.Filter, col string, isBinary bool) (string, error) {
+func getColumnDataFromDB(t testing.TB, db string, table string, filters *[]ds.Filter, col string, isBinary bool) (*string, error) {
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/",
 		config.Configuration().MySQLServer.User,
 		config.Configuration().MySQLServer.Password,
@@ -224,14 +224,8 @@ func getColumnDataFromDB(t testing.TB, db string, table string, filters *[]ds.Fi
 	command = fmt.Sprintf(" %s %s\n ", command, where)
 	rows, err := dbConn.Query(command)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	// Get column names
-	//columns, err := rows.Columns()
-	//if err != nil {
-	//	return "", err
-	//}
 
 	values := make([]sql.RawBytes, 1)
 	scanArgs := make([]interface{}, len(values))
@@ -242,22 +236,23 @@ func getColumnDataFromDB(t testing.TB, db string, table string, filters *[]ds.Fi
 		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		var value string
+		var value *string
 		for _, col := range values {
 
 			// Here we can check if the value is nil (NULL value)
 			if col == nil {
-				value = "null"
+				value = nil
 			} else {
-				value = string(col)
+				v := string(col)
+				value = &v
 			}
 			return value, nil
 		}
 	}
 
-	return "", nil
+	return nil, fmt.Errorf("Did not find data in the database %s", command)
 }
 
 func RawBytes(a interface{}) json.RawMessage {
@@ -573,7 +568,7 @@ func validateBatchResponseValues(t testing.TB, testInfo ds.BatchOperationTestInf
 				t.Fatalf("%v", err)
 			}
 
-			if string(jsonVal) != string(dbVal) {
+			if *jsonVal != *dbVal {
 
 				t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, jsonVal, dbVal)
 			}
