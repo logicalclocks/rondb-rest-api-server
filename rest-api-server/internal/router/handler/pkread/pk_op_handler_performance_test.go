@@ -60,7 +60,7 @@ func BenchmarkSimple(t *testing.B) {
 			reqBody := createReq(maxRows, opCount, operationId)
 
 			for bp.Next() {
-				tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
+				tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
 			}
 		})
 		t.StopTimer()
@@ -143,7 +143,7 @@ func consumer1(b testing.TB, tc common.TestContext, id int, db string, table str
 		}
 		body, _ := json.Marshal(param)
 
-		tu.ProcessRequest(b, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+		tu.ProcessHttpRequest(b, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 		// stats, _ := stat.Stats()
 		// fmt.Printf("Thread %d, Stats: %v\n", id, *stats)
 	}

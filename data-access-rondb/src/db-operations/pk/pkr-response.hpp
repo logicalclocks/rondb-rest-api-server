@@ -198,15 +198,16 @@ class PKRResponse {
   Uint32 GetMaxCapacity();
 
   /**
-   * Append to response buffer
-   */
-  // RS_Status Append_string(const char *colName, std::string str);
-
-  /**
    * write a c_string to the buffer
    *
    */
   RS_Status Append_cstring(const char *str);
+
+  /**
+   * write header field with string value 
+   *
+   */
+  RS_Status WriteStringHeaderField(Uint32 index, const char *str);
 };
 
 #endif  // DATA_ACCESS_RONDB_SRC_PK_READ_PKR_RESPONSE_HPP_

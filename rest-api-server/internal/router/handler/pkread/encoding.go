@@ -24,13 +24,16 @@ package pkread
 */
 import "C"
 import (
+	"encoding/json"
 	"fmt"
 	"math"
+	"net/http"
 	"unsafe"
 
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/log"
 )
 
 // Also checkout internal/router/handler/pkread/encoding-scheme.png
@@ -72,7 +75,7 @@ import (
 func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.NativeBuffer, error) {
 	response := dal.GetBuffer()
 	request := dal.GetBuffer()
-	iBuf := unsafe.Slice((*uint32)(request.Buffer), request.Size)
+	iBuf := unsafe.Slice((*uint32)(request.Buffer), request.Size/C.ADDRESS_SIZE)
 
 	// First N bytes are for header
 	var head uint32 = C.PK_REQ_HEADER_END
@@ -183,9 +186,90 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	//xxd.Print(0, bBuf[:])
 	return request, response, nil
 }
+func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (uint32, *ds.PKReadResponse, error) {
 
-func processResponse(buffer unsafe.Pointer) string {
-	return C.GoString((*C.char)(buffer))
+	iBuf := unsafe.Slice((*uint32)(response.Buffer), response.Size)
+	var retValue ds.PKReadResponse
+
+	responseType := iBuf[C.PK_RESP_OP_TYPE_IDX]
+	if responseType != C.RDRS_PK_RESP_ID {
+		return http.StatusInternalServerError, nil, fmt.Errorf("Wrong resonse type")
+	}
+
+	// some sanity checks
+	capacity := iBuf[C.PK_RESP_CAPACITY_IDX]
+	dataLength := iBuf[C.PK_RESP_LENGTH_IDX]
+	if response.Size != capacity || !(dataLength < capacity) {
+		return http.StatusInternalServerError, nil,
+			fmt.Errorf("Response buffer may be corrupt. Buffer capacity: %d, Buffer data lenght: %d", capacity, dataLength)
+	}
+
+	opIDX := iBuf[C.PK_RESP_OP_ID_IDX]
+	var opID *string
+	if opIDX == 0 {
+		opID = nil
+	} else {
+		goOpID := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(opIDX))))
+		opID = &goOpID
+	}
+	retValue.OperationID = opID
+
+	status := iBuf[C.PK_RESP_OP_STATUS_IDX]
+	if status == http.StatusOK { //
+		colIDX := iBuf[C.PK_RESP_COLS_IDX]
+		colCount := *(*uint32)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(colIDX)))
+
+		columns := make([]ds.Column, colCount)
+		for i := uint32(0); i < colCount; i++ {
+			colHeaderStart := (*uint32)(unsafe.Pointer(
+				uintptr(response.Buffer) +
+					uintptr(colIDX+
+						uint32(C.ADDRESS_SIZE)+ // +1 for skipping the column count
+						(i*4*C.ADDRESS_SIZE)))) // 4 number of header fieldse
+
+			colHeader := unsafe.Slice((*uint32)(colHeaderStart), 4)
+
+			nameAdd := colHeader[0]
+			name := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(nameAdd))))
+
+			valueAdd := colHeader[1]
+
+			isNull := colHeader[2]
+			dataType := colHeader[3]
+
+			columns[i].Name = &name
+
+			if isNull == 0 {
+				value := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(valueAdd))))
+				columns[i].Value = convertToJsonRaw(dataType, &value, isJson)
+			}
+
+		}
+		retValue.Data = &columns
+	}
+
+	if log.IsTrace() {
+		dbIDX := iBuf[C.PK_RESP_DB_IDX]
+		dbPtr := (*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(dbIDX)))
+
+		tableIDX := iBuf[C.PK_RESP_TABLE_IDX]
+		tablePtr := (*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(tableIDX)))
+
+		log.Tracef("Response: DB: %s, Table: %s, Response: %v", C.GoString(dbPtr), C.GoString(tablePtr), retValue)
+	}
+
+	return status, &retValue, nil
+}
+
+func convertToJsonRaw(dataType uint32, value *string, quoteStrings bool) *json.RawMessage {
+	if (quoteStrings && dataType == C.RDRS_INTEGER_DATATYPE || dataType == C.RDRS_FLOAT_DATATYPE) || !quoteStrings {
+		valueBytes := json.RawMessage(*value)
+		return &valueBytes
+	} else {
+		quotedString := fmt.Sprintf("\"%s\"", *value)
+		valueBytes := json.RawMessage(quotedString)
+		return &valueBytes
+	}
 }
 
 func dataReturnType(drt *string) (uint32, error) {

@@ -433,7 +433,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].Method = nil
 			operationsWrapper := ds.BatchOperation{Operations: &operations}
 			body, _ := json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Method' failed ")
 
 			// Test missing relative URL
@@ -441,7 +441,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].RelativeURL = nil
 			operationsWrapper = ds.BatchOperation{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'RelativeURL' failed ")
 
 			// Test missing body
@@ -449,7 +449,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].Body = nil
 			operationsWrapper = ds.BatchOperation{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Body' failed ")
 
 			// Test missing filter in an operation
@@ -457,7 +457,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			*&operations[1].Body.Filters = nil
 			operationsWrapper = ds.BatchOperation{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Filters' failed")
 		})
 }

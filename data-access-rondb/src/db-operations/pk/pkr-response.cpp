@@ -51,32 +51,28 @@ RS_Status PKRResponse::Close() {
 }
 
 RS_Status PKRResponse::SetDB(const char *db) {
-  Uint32 dbAddr    = this->writeHeader;
-  RS_Status status = this->Append_cstring(db);
-  if (status.http_code != SUCCESS) {
-    return status;
-  }
-  this->WriteHeaderField(PK_RESP_DB_IDX, dbAddr);
-  return RS_OK;
+  return WriteStringHeaderField(PK_RESP_DB_IDX, db);
 }
 
 RS_Status PKRResponse::SetTable(const char *table) {
-  Uint32 tableAddr = this->writeHeader;
-  RS_Status status = this->Append_cstring(table);
-  if (status.http_code != SUCCESS) {
-    return status;
-  }
-  this->WriteHeaderField(PK_RESP_TABLE_IDX, tableAddr);
-  return RS_OK;
+  return WriteStringHeaderField(PK_RESP_TABLE_IDX, table);
 }
 
 RS_Status PKRResponse::SetOperationID(const char *opID) {
-  Uint32 opIDAddr    = this->writeHeader;
-  RS_Status status = this->Append_cstring(opID);
-  if (status.http_code != SUCCESS) {
-    return status;
+  return WriteStringHeaderField(PK_RESP_OP_ID_IDX, opID);
+}
+
+RS_Status PKRResponse::WriteStringHeaderField(Uint32 index, const char *str) {
+  if (str == nullptr) {
+    this->WriteHeaderField(index, 0);
+  } else {
+    Uint32 addr      = this->writeHeader;
+    RS_Status status = this->Append_cstring(str);
+    if (status.http_code != SUCCESS) {
+      return status;
+    }
+    this->WriteHeaderField(index, addr);
   }
-  this->WriteHeaderField(PK_RESP_OP_ID_IDX, opIDAddr);
   return RS_OK;
 }
 
@@ -100,15 +96,27 @@ RS_Status PKRResponse::Append_cstring(const char *str) {
 }
 
 RS_Status PKRResponse::SetNoOfColumns(Uint32 cols) {
-  // 3 because +1 for Col Name Address
-  // +1 for Value Address
-  // +1 for isNULL
-  Uint32 spaceNeeded = cols * ADDRESS_SIZE * 3;
-  if (spaceNeeded > GetRemainingCapacity()) {
+
+  if (this->writeHeader % ADDRESS_SIZE != 0) {  // 4 bytes alignment
+    this->writeHeader += ADDRESS_SIZE - this->writeHeader % ADDRESS_SIZE;
+  }
+
+  // first index is for column name
+  // second index is for column value
+  // thrid index is for isNULL
+  // forth index is for data type, e.g., string or non-string data
+  Uint32 spaceNeeded4Pointers = 1 * ADDRESS_SIZE + (cols * ADDRESS_SIZE * 4);  // +1 for col count
+  if (spaceNeeded4Pointers > GetRemainingCapacity()) {
     return RS_SERVER_ERROR(ERROR_016);
   }
 
-  this->writeHeader = (this->writeHeader + spaceNeeded);
+  Uint32 colAddr = (this->writeHeader);
+  WriteHeaderField(PK_RESP_COLS_IDX, colAddr);
+
+  Uint32 *b = reinterpret_cast<Uint32 *>(this->resp->buffer + colAddr);
+  b[0]      = cols;
+
+  this->writeHeader = (this->writeHeader + spaceNeeded4Pointers);
   this->colsToWrite = cols;
   return RS_OK;
 }
@@ -125,10 +133,12 @@ RS_Status PKRResponse::SetColumnDataInt(const char *colName, const char *value, 
   // first index is for column name
   // second index is for column value
   // thrid index is for isNULL
-  // forth index is for data type, e.g., string or non-string data
-  Uint32 *b           = reinterpret_cast<Uint32 *>(this->resp->buffer);
-  Uint32 indexWritten = (PK_RESP_HEADER_END / ADDRESS_SIZE);
-  indexWritten += (colsWritten * 4);
+  // forth index is for data type, e.g., string, int, date etc
+  Uint32 *b    = reinterpret_cast<Uint32 *>(this->resp->buffer);
+  Uint32 start = b[PK_RESP_COLS_IDX];
+  start += ADDRESS_SIZE;  // skip the count
+
+  int indexWritten = (start + (colsWritten * 4 * ADDRESS_SIZE)) / ADDRESS_SIZE;
 
   Uint32 nameAddress = this->writeHeader;
   RS_Status status   = Append_cstring(colName);

@@ -19,6 +19,7 @@
 package pkread
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -65,18 +66,20 @@ func PkReadHandler(c *gin.Context) {
 }
 
 func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *dal.DalError {
-	request, response, err := CreateNativeRequest(pkReadParams)
+	reqBuff, respBuff, err := CreateNativeRequest(pkReadParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"OK": false, "msg": fmt.Sprintf("%v", err)})
 		return nil
 	}
-	defer dal.ReturnBuffer(request)
+	defer dal.ReturnBuffer(reqBuff)
+	defer dal.ReturnBuffer(respBuff)
 
-	dalErr := dal.RonDBPKRead(request, response)
+	dalErr := dal.RonDBPKRead(reqBuff, respBuff)
 
 	// buf := unsafe.Slice((*byte)(response.Buffer), response.Size)
 	// xxd.Print(0, buf)
-	// os.Exit(0)
+
+	_, response, err := ProcessPKReadResponse(respBuff, true)
 
 	var message string
 	if dalErr != nil {
@@ -100,9 +103,15 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *da
 	return nil
 }
 
-func setResponseBodyUnsafe(c *gin.Context, code int, resp *dal.NativeBuffer) {
-	c.Writer.WriteHeader(code)
-	c.Writer.Write(([]byte)(common.ProcessResponse(resp.Buffer)))
+func setResponseBodyUnsafe(c *gin.Context, code int, response *ds.PKReadResponse) {
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		c.Writer.Write(([]byte)(fmt.Sprintf("Unable to marshall response %v.  obj: %v", err, response)))
+	} else {
+		c.Writer.WriteHeader(code)
+		c.Writer.Write(responseBytes)
+	}
 }
 
 func parseRequest(c *gin.Context, pkReadParams *ds.PKReadParams) error {

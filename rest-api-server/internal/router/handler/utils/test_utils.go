@@ -42,7 +42,7 @@ import (
 	"hopsworks.ai/rdrs/version"
 )
 
-func ProcessRequest(t testing.TB, tc common.TestContext, httpVerb string,
+func ProcessHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	url string, body string, expectedStatus int, expectedMsg string) (int, string) {
 	t.Helper()
 
@@ -448,7 +448,7 @@ func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, reg
 			WithDBs(t, dbs, registerHandler, func(tc common.TestContext) {
 				url := NewPKReadURL(testInfo.Db, testInfo.Table)
 				body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
-				httpCode, res := ProcessRequest(t, tc, ds.PK_HTTP_VERB, url,
+				httpCode, res := ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, testInfo.BodyContains)
 				if httpCode == http.StatusOK {
 					ValidateResArrayData(t, testInfo, res, isBinaryData)
@@ -486,7 +486,7 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 			WithDBs(t, dbNamesArr, registerHandlers, func(tc common.TestContext) {
 				url := NewBatchReadURL()
 				body, _ := json.MarshalIndent(batch, "", "\t")
-				httpCode, res := ProcessRequest(t, tc, ds.BATCH_HTTP_VERB, url,
+				httpCode, res := ProcessHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, "")
 				if httpCode == http.StatusOK {
 					validateBatchResponse(t, testInfo, res, isBinaryData)

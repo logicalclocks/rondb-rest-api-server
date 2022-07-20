@@ -161,16 +161,17 @@ RS_Status PKROperation::CreateResponse() {
     }
 
     resp->SetDB(req->DB());
-    resp->SetTable(req->DB());
+    resp->SetTable(req->Table());
     resp->SetOperationID(req->OperationId());
     resp->SetNoOfColumns(recs.size());
 
-    // iterate over all columns
-    RS_Status ret = AppendOpRecs(found, req, resp, &recs);
-    if (ret.http_code != SUCCESS) {
-      return ret;
+    if (found) {
+      // iterate over all columns
+      RS_Status ret = AppendOpRecs(found, req, resp, &recs);
+      if (ret.http_code != SUCCESS) {
+        return ret;
+      }
     }
-
     resp->Close();
   }
 

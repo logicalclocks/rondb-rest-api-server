@@ -49,7 +49,7 @@ func TestPKReadOmitRequired(t *testing.T) {
 			url := tu.NewPKReadURL("db", "table")
 
 			body, _ := json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Filters'")
 
 			// Test. unset filter values should result in 400 error
@@ -57,14 +57,14 @@ func TestPKReadOmitRequired(t *testing.T) {
 			filter := tu.NewFilter(&col, nil)
 			param.Filters = filter
 			body, _ = json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Field validation for 'Value' failed on the 'required' tag")
 
 			val := "val"
 			filter = tu.NewFilter(nil, val)
 			param.Filters = filter
 			body, _ = json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Field validation for 'Column' failed on the 'required' tag")
 		})
 }
@@ -83,7 +83,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 			}
 			body, _ := json.MarshalIndent(param, "", "\t")
 			url := tu.NewPKReadURL("db", "table")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body),
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body),
 				http.StatusBadRequest, "Field validation for 'Column' failed on the 'max' tag")
 
 			// Test. Large read column names.
@@ -93,7 +93,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 				OperationID: tu.NewOperationID(64),
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB,
 				url, string(body), http.StatusBadRequest, "field length validation failed")
 
 			// Test. Large db and table names
@@ -104,16 +104,16 @@ func TestPKReadLargeColumns(t *testing.T) {
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
 			url1 := tu.NewPKReadURL(tu.RandString(65), "table")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url1, string(body),
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url1, string(body),
 				http.StatusBadRequest, "Field validation for 'DB' failed on the 'max' tag")
 			url2 := tu.NewPKReadURL("db", tu.RandString(65))
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url2, string(body),
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url2, string(body),
 				http.StatusBadRequest, "Field validation for 'Table' failed on the 'max' tag")
 			url3 := tu.NewPKReadURL("", "table")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url3, string(body),
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url3, string(body),
 				http.StatusBadRequest, "Field validation for 'DB' failed on the 'min' tag")
 			url4 := tu.NewPKReadURL("db", "")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url4, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url4, string(body), http.StatusBadRequest,
 				"Field validation for 'Table' failed on the 'min' tag")
 		})
 }
@@ -133,7 +133,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 			}
 			body, _ := json.MarshalIndent(param, "", "\t")
 			url := tu.NewPKReadURL("db", "table")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				fmt.Sprintf("field validation failed. Invalid character '%U' ", rune(0x0000)))
 
 			// Test. invalid read col
@@ -145,7 +145,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 				OperationID: tu.NewOperationID(64),
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
 
 			// Test. Invalid path parameteres
@@ -156,10 +156,10 @@ func TestPKInvalidIdentifier(t *testing.T) {
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
 			url1 := tu.NewPKReadURL("db"+string(rune(0x10000)), "table")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url1, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url1, string(body), http.StatusBadRequest,
 				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
 			url2 := tu.NewPKReadURL("db", "table"+string(rune(0x10000)))
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url2, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url2, string(body), http.StatusBadRequest,
 				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
 		})
 }
@@ -180,7 +180,7 @@ func TestPKUniqueParams(t *testing.T) {
 			}
 			url := tu.NewPKReadURL("db", "table")
 			body, _ := json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"field validation for 'ReadColumns' failed on the 'unique' tag")
 
 			// Test. unique filter columns
@@ -196,7 +196,7 @@ func TestPKUniqueParams(t *testing.T) {
 				OperationID: tu.NewOperationID(64),
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"field validation for filter failed on the 'unique' tag")
 
 			//Test that filter and read columns do not contain overlapping columns
@@ -206,7 +206,7 @@ func TestPKUniqueParams(t *testing.T) {
 				OperationID: tu.NewOperationID(64),
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				fmt.Sprintf("field validation for read columns faild. '%s' already included in filter", col))
 		})
 }
@@ -227,10 +227,10 @@ func TestPKERROR_011(t *testing.T) {
 			body, _ := json.MarshalIndent(param, "", "\t")
 
 			url := tu.NewPKReadURL("DB001_XXX", "table_1")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusUnauthorized, "")
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusUnauthorized, "")
 
 			url = tu.NewPKReadURL("DB001", "table_1_XXX")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_011())
 		})
 }
 
@@ -250,7 +250,7 @@ func TestPKERROR_012(t *testing.T) {
 			body, _ := json.MarshalIndent(param, "", "\t")
 
 			url := tu.NewPKReadURL("DB001", "table_1")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_012())
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_012())
 		})
 }
 
@@ -268,7 +268,7 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 			}
 			body, _ := json.MarshalIndent(param, "", "\t")
 			url := tu.NewPKReadURL("DB002", "table_1")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_013())
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_013())
 
 			// send an other request with two pk cols but wrong names
 			param = ds.PKReadBody{
@@ -278,7 +278,7 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 			}
 			body, _ = json.MarshalIndent(param, "", "\t")
 			url = tu.NewPKReadURL("DB002", "table_1")
-			tu.ProcessRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_014())
+			tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_014())
 		})
 }
 
