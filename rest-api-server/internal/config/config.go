@@ -78,12 +78,11 @@ type Security struct {
 
 func init() {
 	restServer := RestServer{
-		RESTServerIP:   "localhost",
-		RESTServerPort: 4406,
-		GRPCServerIP:   "localhost",
-		GRPCServerPort: 5406,
-		//BufferSize:          320 * 1024,
-		BufferSize:          512,
+		RESTServerIP:        "localhost",
+		RESTServerPort:      4406,
+		GRPCServerIP:        "localhost",
+		GRPCServerPort:      5406,
+		BufferSize:          320 * 1024,
 		GOMAXPROCS:          -1,
 		PreAllocatedBuffers: 1024,
 	}

@@ -131,7 +131,13 @@ func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isB
 	for i := 0; i < len(testInfo.RespKVs); i++ {
 		key := string(testInfo.RespKVs[i].(string))
 
-		jsonVal, found := getColumnDataFromJson(t, key, resp)
+		var pkResponse ds.PKReadResponse
+		err := json.Unmarshal([]byte(resp), &pkResponse)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal response object %v", err)
+		}
+
+		jsonVal, found := getColumnDataFromJson(t, key, &pkResponse)
 		if !found {
 			t.Fatalf("Key not found in the response. Key %s", key)
 		}
@@ -152,20 +158,14 @@ func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isB
 	}
 }
 
-func getColumnDataFromJson(t testing.TB, colName string, resp string) (*string, bool) {
+func getColumnDataFromJson(t testing.TB, colName string, pkResponse *ds.PKReadResponse) (*string, bool) {
 	t.Helper()
 
 	kvMap := make(map[string]*string)
-	var result ds.PKReadResponse
-
-	err := json.Unmarshal([]byte(resp), &result)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal response object %v", err)
-	}
-
-	for _, col := range *result.Data {
+	for _, col := range *pkResponse.Data {
 		if col.Value != nil {
 			value := string([]byte(*col.Value))
+			var err error
 			if value[0] == '"' {
 				value, err = strconv.Unquote(value)
 				if err != nil {
@@ -500,30 +500,29 @@ func validateBatchResponse(t testing.TB, testInfo ds.BatchOperationTestInfo, res
 }
 
 func validateBatchResponseOpIdsNCode(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string) {
-	var res []struct {
-		Code int
-		Body struct {
-			OperationId string
-		}
+	var res ds.BatchResponse
+	err := json.Unmarshal([]byte(resp), &res)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal batch response. Error %v", err)
 	}
-	json.Unmarshal([]byte(resp), &res)
 
-	if len(res) != len(testInfo.Operations) {
+	if len(*res.Result) != len(testInfo.Operations) {
 		t.Fatal("Wrong number of operation responses received")
 	}
 
-	for i := 0; i < len(res); i++ {
+	//for i := 0; i < len(*res.Result); i++ {
+	for i, subResp := range *res.Result {
 		expectingId := testInfo.Operations[i].SubOperation.Body.OperationID
 		if expectingId != nil {
-			idGot := res[i].Body.OperationId
+			idGot := *subResp.Body.OperationID
 			if *expectingId != idGot {
 				t.Fatalf("Operation ID does not match. Expecting: %s, Got: %s", *expectingId, idGot)
 			}
 		}
 
 		expectingCode := testInfo.Operations[i].HttpCode
-		codeGot := res[i].Code
-		if expectingCode != codeGot {
+		codeGot := *subResp.Code
+		if expectingCode != int(codeGot) {
 			t.Fatalf("Return code does not match. Expecting: %d, Got: %d", expectingCode, codeGot)
 		}
 	}
@@ -531,34 +530,35 @@ func validateBatchResponseOpIdsNCode(t testing.TB, testInfo ds.BatchOperationTes
 
 func validateBatchResponseMsg(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string) {
 
-	var res []json.RawMessage
+	var res struct {
+		Result []json.RawMessage
+	}
 	json.Unmarshal([]byte(resp), &res)
-
 	for i := 0; i < len(testInfo.Operations); i++ {
-		if !strings.Contains(string(res[i]), testInfo.Operations[i].BodyContains) {
+		if !strings.Contains(string(res.Result[i]), testInfo.Operations[i].BodyContains) {
 			t.Fatalf("Test failed. Response body does not contain %s. Body: %s",
-				testInfo.Operations[i].BodyContains, string(res[i]))
+				testInfo.Operations[i].BodyContains, string(res.Result[i]))
 		}
 	}
 }
 
 func validateBatchResponseValues(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string, isBinaryData bool) {
-	var res []struct {
-		Code int
-		Body json.RawMessage
+	var res ds.BatchResponse
+	err := json.Unmarshal([]byte(resp), &res)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal batch response. Error %v", err)
 	}
-	json.Unmarshal([]byte(resp), &res)
 
 	for o := 0; o < len(testInfo.Operations); o++ {
-		if res[o].Code != http.StatusOK {
+		if *(*res.Result)[o].Code != http.StatusOK {
 			continue // data is null if the status is not OK
 		}
 
 		operation := testInfo.Operations[o]
+		pkresponse := (*res.Result)[o].Body
 		for i := 0; i < len(operation.RespKVs); i++ {
 			key := string(operation.RespKVs[i].(string))
-			bodyGot := string(res[o].Body)
-			jsonVal, found := getColumnDataFromJson(t, key, bodyGot)
+			jsonVal, found := getColumnDataFromJson(t, key, pkresponse)
 			if !found {
 				t.Fatalf("Key not found in the response. Key %s", key)
 			}
@@ -568,9 +568,12 @@ func validateBatchResponseValues(t testing.TB, testInfo ds.BatchOperationTestInf
 				t.Fatalf("%v", err)
 			}
 
-			if *jsonVal != *dbVal {
+			if (jsonVal == nil || dbVal == nil) && !(jsonVal == nil && dbVal == nil) { // if one of prts is nill
+				t.Fatalf("The read value for key %s does not match. Got from REST Server ptr: %d, Got from MYSQL Server ptr: %d", key, jsonVal, dbVal)
+			}
 
-				t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, jsonVal, dbVal)
+			if !((jsonVal == nil && dbVal == nil) || (*jsonVal == *dbVal)) {
+				t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, *jsonVal, *dbVal)
 			}
 		}
 	}

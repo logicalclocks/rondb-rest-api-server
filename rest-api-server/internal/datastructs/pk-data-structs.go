@@ -81,6 +81,11 @@ type PKReadResponse struct {
 	Data        *[]Column `json:"data"           form:"data"            binding:"omitempty"`
 }
 
+type PKReadResponseWithCode struct {
+	Code *int32          `json:"code"    form:"code"    binding:"required"`
+	Body *PKReadResponse `json:"body"    form:"body"    binding:"required"`
+}
+
 // For testing only
 type PKTestInfo struct {
 	PkReq        PKReadBody

@@ -17,6 +17,7 @@
 package batchops
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -79,11 +80,31 @@ func BatchOpsHandler(c *gin.Context) {
 	}
 }
 
-func setResponseBodyUnsafe(c *gin.Context, code int, resp *dal.NativeBuffer, appendComma bool) {
-	c.Writer.WriteHeader(code)
-	c.Writer.Write(([]byte)(common.ProcessResponse(resp.Buffer)))
-	if appendComma {
-		c.Writer.Write(([]byte)(string(",")))
+func setResponseBodyUnsafe(c *gin.Context, code uint32, resp []*dal.NativeBuffer) {
+	var response ds.BatchResponse
+	subResponses := []ds.PKReadResponseWithCode{}
+	for _, respBuff := range resp {
+		subRespCode, subResp, err := pkread.ProcessPKReadResponse(respBuff, true)
+		if err != nil {
+			c.Writer.WriteHeader(http.StatusInternalServerError)
+			c.Writer.Write([]byte(fmt.Sprintf("Failed to created response for batch op. Error: %v", err)))
+			return
+		}
+		var subRespWCode ds.PKReadResponseWithCode
+		subRespWCode.Code = &subRespCode
+		subRespWCode.Body = subResp
+		subResponses = append(subResponses, subRespWCode)
+	}
+	response.Result = &subResponses
+
+	bytes, err := json.Marshal(response)
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		c.Writer.Write([]byte(fmt.Sprintf("Failed to marshall batch op  response. Error: %v", err)))
+		return
+	} else {
+		c.Writer.WriteHeader(int(code))
+		c.Writer.Write(bytes)
 	}
 }
 
@@ -160,11 +181,7 @@ func processRequestNSetStatus(c *gin.Context, pkOperations *[]ds.PKReadParams) *
 		return dalErr
 
 	} else {
-		c.Writer.Write(([]byte)(string("[")))
-		for i := uint32(0); i < noOps; i++ {
-			setResponseBodyUnsafe(c, http.StatusOK, respPtrs[i], i != (noOps-1))
-		}
-		c.Writer.Write(([]byte)(string("]")))
+		setResponseBodyUnsafe(c, http.StatusOK, respPtrs)
 	}
 
 	return nil

@@ -186,7 +186,7 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	//xxd.Print(0, bBuf[:])
 	return request, response, nil
 }
-func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (uint32, *ds.PKReadResponse, error) {
+func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (int32, *ds.PKReadResponse, error) {
 
 	iBuf := unsafe.Slice((*uint32)(response.Buffer), response.Size)
 	var retValue ds.PKReadResponse
@@ -214,7 +214,7 @@ func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (uint32, *ds
 	}
 	retValue.OperationID = opID
 
-	status := iBuf[C.PK_RESP_OP_STATUS_IDX]
+	status := int32(iBuf[C.PK_RESP_OP_STATUS_IDX])
 	if status == http.StatusOK { //
 		colIDX := iBuf[C.PK_RESP_COLS_IDX]
 		colCount := *(*uint32)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(colIDX)))

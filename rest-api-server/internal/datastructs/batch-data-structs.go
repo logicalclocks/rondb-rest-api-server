@@ -26,6 +26,10 @@ type BatchOperation struct {
 	Operations *[]BatchSubOperation `json:"operations" binding:"required,min=1,max=4096,unique,dive"`
 }
 
+type BatchResponse struct {
+	Result *[]PKReadResponseWithCode `json:"result" binding:"required"`
+}
+
 type BatchSubOperation struct {
 	Method      *string     `json:"method"        binding:"required,oneof=POST"`
 	RelativeURL *string     `json:"relative-url"  binding:"required,min=1"`
