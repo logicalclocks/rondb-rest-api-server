@@ -82,13 +82,6 @@ func ProcessHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	}
 	respBody := string(respBodyBtyes)
 
-	// var prettyJSON bytes.Buffer
-	// err := json.Indent(&prettyJSON, resp.Body.Bytes(), "", "\t")
-	// if err != nil {
-	// log.Infof("Error %v \n", err)
-	// }
-	// log.Infof("Response Body. %s\n", string(prettyJSON.Bytes()))
-
 	if respCode != expectedStatus || !strings.Contains(respBody, expectedMsg) {
 		if respCode != expectedStatus {
 			t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, respCode, respBody)
