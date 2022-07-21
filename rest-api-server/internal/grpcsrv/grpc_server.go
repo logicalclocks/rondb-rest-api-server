@@ -18,33 +18,33 @@ package grpcsrv
 
 import (
 	context "context"
+	"encoding/json"
 	"fmt"
+
+	ds "hopsworks.ai/rdrs/internal/datastructs"
 )
 
 type GRPCServer struct {
 }
 
 func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*PKReadResponseProto, error) {
-	//	req := ConvertPKReadRequestProto(reqProto)
-	//	fmt.Println("**** PKRead Called ****")
-	//	bytes, _ := json.MarshalIndent(req, "", " ")
-	//	fmt.Printf("Req %s \n", string(bytes))
-	//
-	//	data := []ds.Column{}
-	//	name := "col_name"
-	//	value := "123"
-	//	byte_value := json.RawMessage([]byte(value))
-	//	column := ds.Column{&name, &byte_value}
-	//	data = append(data, column)
-	//
-	//	resp := ds.PKReadResponse{}
-	//	resp.OperationID = req.OperationID
-	//	resp.Data = &data
-	//
-	//	respProto := ConvertPKReadResponse(&resp)
-	//
-	// return respProto, nil
-	return &PKReadResponseProto{}, nil
+	req := ConvertPKReadRequestProto(reqProto)
+	fmt.Println("**** PKRead Called ****")
+	bytes, _ := json.MarshalIndent(req, "", " ")
+	fmt.Printf("Req %s \n", string(bytes))
+
+	data := make(map[string]*string)
+	name := "col_name"
+	value := "123"
+	data[name] = &value
+
+	resp := ds.PKReadResponseGRPC{}
+	resp.OperationID = req.OperationID
+	resp.Data = &data
+
+	respProto := ConvertPKReadResponse(&resp)
+
+	return respProto, nil
 }
 
 func (s *GRPCServer) Batch(context.Context, *BatchRequestProto) (*BatchResponseProto, error) {

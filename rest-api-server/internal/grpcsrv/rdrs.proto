@@ -22,7 +22,7 @@ option go_package = "./../grpcsrv";
 //__________________  PK Read Request __________________
 message FilterProto {
   required string Column = 1;
-  required bytes Value = 2;
+  required string Value = 2;
 }
 
 message ReadColumnProto {
@@ -39,14 +39,13 @@ message PKReadRequestProto {
 }
 
 //__________________  PK Read Response __________________
-message ColumnProto {
-  required string Name = 1;
-  required bytes Value = 2;
+message ColumnValueProto {
+  optional string Name = 1;
 }
 
 message PKReadResponseProto {
   optional string OperationID = 1;
-  repeated ColumnProto Data = 2;
+  map<string, ColumnValueProto> Data = 2;
 }
 
 //__________________  Batch Request __________________
