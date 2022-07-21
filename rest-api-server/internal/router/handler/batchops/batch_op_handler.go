@@ -81,18 +81,25 @@ func BatchOpsHandler(c *gin.Context) {
 }
 
 func setResponseBodyUnsafe(c *gin.Context, code uint32, resp []*dal.NativeBuffer) {
-	var response ds.BatchResponse
-	subResponses := []ds.PKReadResponseWithCode{}
+	var response ds.BatchResponseJSON
+	subResponses := []ds.PKReadResponseWithCodeJSON{}
 	for _, respBuff := range resp {
-		subRespCode, subResp, err := pkread.ProcessPKReadResponse(respBuff, true)
+		subResp, subRespCode, err := pkread.ProcessPKReadResponse(respBuff, true)
 		if err != nil {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			c.Writer.Write([]byte(fmt.Sprintf("Failed to created response for batch op. Error: %v", err)))
 			return
 		}
-		var subRespWCode ds.PKReadResponseWithCode
+		var subRespWCode ds.PKReadResponseWithCodeJSON
 		subRespWCode.Code = &subRespCode
-		subRespWCode.Body = subResp
+
+		subRespJson, ok := subResp.(*ds.PKReadResponseJSON)
+		if !ok {
+			c.Writer.WriteHeader(http.StatusInternalServerError)
+			c.Writer.Write(([]byte)(fmt.Sprintf("Wrong object type. Expecting PKReadResponseJSON ")))
+			return
+		}
+		subRespWCode.Body = subRespJson
 		subResponses = append(subResponses, subRespWCode)
 	}
 	response.Result = &subResponses

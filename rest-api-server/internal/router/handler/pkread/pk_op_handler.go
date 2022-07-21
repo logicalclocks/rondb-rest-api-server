@@ -29,6 +29,7 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
+	"hopsworks.ai/rdrs/internal/datastructs"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
@@ -75,11 +76,13 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *da
 	defer dal.ReturnBuffer(respBuff)
 
 	dalErr := dal.RonDBPKRead(reqBuff, respBuff)
-
-	// buf := unsafe.Slice((*byte)(response.Buffer), response.Size)
-	// xxd.Print(0, buf)
-
-	_, response, err := ProcessPKReadResponse(respBuff, true)
+	r, _, err := ProcessPKReadResponse(respBuff, true)
+	response, ok := r.(*datastructs.PKReadResponseJSON)
+	if !ok {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		c.Writer.Write(([]byte)(fmt.Sprintf("Wrong object type. Expecting PKReadResponseJSON. Got: %T ", *response)))
+		return nil
+	}
 
 	var message string
 	if dalErr != nil {
@@ -103,7 +106,7 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *da
 	return nil
 }
 
-func setResponseBodyUnsafe(c *gin.Context, code int, response *ds.PKReadResponse) {
+func setResponseBodyUnsafe(c *gin.Context, code int, response *ds.PKReadResponseJSON) {
 	responseBytes, err := json.Marshal(response)
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)

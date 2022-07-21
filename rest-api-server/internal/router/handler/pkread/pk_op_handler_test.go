@@ -18,18 +18,14 @@
 package pkread
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"google.golang.org/grpc"
 	"hopsworks.ai/rdrs/internal/common"
-	"hopsworks.ai/rdrs/internal/config"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
-	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/router/handler"
 	tu "hopsworks.ai/rdrs/internal/router/handler/utils"
 )
@@ -283,46 +279,46 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 }
 
 // Testing GRPC
-func TestGRPC(t *testing.T) {
-
-	db := "DB002"
-	table := "table_1"
-	tu.WithDBs(t, []string{db},
-		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
-
-			conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
-				config.Configuration().RestServer.GRPCServerIP,
-				config.Configuration().RestServer.GRPCServerPort),
-				grpc.WithInsecure())
-			defer conn.Close()
-
-			if err != nil {
-				t.Fatalf("Failed to connect to server %v", err)
-			}
-
-			client := grpcsrv.NewRonDBRestServerClient(conn)
-
-			// ------------
-			pkReadParams := ds.PKReadParams{
-				DB:      &db,
-				Table:   &table,
-				Filters: tu.NewFilters("id", 1),
-				// ReadColumns: tu.NewReadColumn("col_0"),
-				// OperationID: tu.NewOperationID(64),
-			}
-
-			reqProto := grpcsrv.ConvertPKReadParams(&pkReadParams)
-
-			respProto, err := client.PKRead(context.Background(), reqProto)
-			if err != nil {
-				t.Fatalf("Failed to send request to server %v", err)
-			}
-
-			resp := grpcsrv.ConvertPKReadResponseProto(respProto)
-			bytes, err := json.Marshal(resp)
-			if err != nil {
-				t.Fatalf("Failed to marshal %v", err)
-			}
-			fmt.Printf("Response got form server %s \n", string(bytes))
-		})
-}
+//func TestGRPC(t *testing.T) {
+//
+//	db := "DB002"
+//	table := "table_1"
+//	tu.WithDBs(t, []string{db},
+//		[]handler.RegisterTestHandler{RegisterPKTestHandler}, func(tc common.TestContext) {
+//
+//			conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
+//				config.Configuration().RestServer.GRPCServerIP,
+//				config.Configuration().RestServer.GRPCServerPort),
+//				grpc.WithInsecure())
+//			defer conn.Close()
+//
+//			if err != nil {
+//				t.Fatalf("Failed to connect to server %v", err)
+//			}
+//
+//			client := grpcsrv.NewRonDBRestServerClient(conn)
+//
+//			// ------------
+//			pkReadParams := ds.PKReadParams{
+//				DB:      &db,
+//				Table:   &table,
+//				Filters: tu.NewFilters("id", 1),
+//				// ReadColumns: tu.NewReadColumn("col_0"),
+//				// OperationID: tu.NewOperationID(64),
+//			}
+//
+//			reqProto := grpcsrv.ConvertPKReadParams(&pkReadParams)
+//
+//			respProto, err := client.PKRead(context.Background(), reqProto)
+//			if err != nil {
+//				t.Fatalf("Failed to send request to server %v", err)
+//			}
+//
+//			resp := grpcsrv.ConvertPKReadResponseProto(respProto)
+//			bytes, err := json.Marshal(resp)
+//			if err != nil {
+//				t.Fatalf("Failed to marshal %v", err)
+//			}
+//			fmt.Printf("Response got form server %s \n", string(bytes))
+//		})
+//}

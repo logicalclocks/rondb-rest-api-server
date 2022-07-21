@@ -33,7 +33,6 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
-	"hopsworks.ai/rdrs/internal/log"
 )
 
 // Also checkout internal/router/handler/pkread/encoding-scheme.png
@@ -186,40 +185,48 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	//xxd.Print(0, bBuf[:])
 	return request, response, nil
 }
-func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (int32, *ds.PKReadResponse, error) {
+func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (interface{}, int32, error) {
 
 	iBuf := unsafe.Slice((*uint32)(response.Buffer), response.Size)
-	var retValue ds.PKReadResponse
+	var retValueJSON ds.PKReadResponseJSON
+	var retValueGRPC ds.PKReadResponseGRPC
 
 	responseType := iBuf[C.PK_RESP_OP_TYPE_IDX]
 	if responseType != C.RDRS_PK_RESP_ID {
-		return http.StatusInternalServerError, nil, fmt.Errorf("Wrong resonse type")
+		return nil, http.StatusInternalServerError, fmt.Errorf("Wrong resonse type")
 	}
 
 	// some sanity checks
 	capacity := iBuf[C.PK_RESP_CAPACITY_IDX]
 	dataLength := iBuf[C.PK_RESP_LENGTH_IDX]
 	if response.Size != capacity || !(dataLength < capacity) {
-		return http.StatusInternalServerError, nil,
+		return nil, http.StatusInternalServerError,
 			fmt.Errorf("Response buffer may be corrupt. Buffer capacity: %d, Buffer data lenght: %d", capacity, dataLength)
 	}
 
 	opIDX := iBuf[C.PK_RESP_OP_ID_IDX]
-	var opID *string
-	if opIDX == 0 {
-		opID = nil
-	} else {
+	if opIDX != 0 {
 		goOpID := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(opIDX))))
-		opID = &goOpID
+		if isJson {
+			retValueJSON.OperationID = &goOpID
+		} else {
+			retValueGRPC.OperationID = &goOpID
+		}
 	}
-	retValue.OperationID = opID
 
 	status := int32(iBuf[C.PK_RESP_OP_STATUS_IDX])
+	var dataMapJSON map[string]*json.RawMessage
+	var dataMapGRPC map[string]*string
+	if isJson {
+		dataMapJSON = make(map[string]*json.RawMessage)
+	} else {
+		dataMapGRPC = make(map[string]*string)
+	}
+
 	if status == http.StatusOK { //
 		colIDX := iBuf[C.PK_RESP_COLS_IDX]
 		colCount := *(*uint32)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(colIDX)))
 
-		columns := make([]ds.Column, colCount)
 		for i := uint32(0); i < colCount; i++ {
 			colHeaderStart := (*uint32)(unsafe.Pointer(
 				uintptr(response.Buffer) +
@@ -237,32 +244,38 @@ func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (int32, *ds.
 			isNull := colHeader[2]
 			dataType := colHeader[3]
 
-			columns[i].Name = &name
-
 			if isNull == 0 {
 				value := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(valueAdd))))
-				columns[i].Value = convertToJsonRaw(dataType, &value, isJson)
+				if isJson {
+					dataMapJSON[name] = convertToJsonRaw(dataType, &value)
+				} else {
+					dataMapGRPC[name] = &value
+				}
+			} else {
+				if isJson {
+					dataMapJSON[name] = nil
+				} else {
+					dataMapGRPC[name] = nil
+				}
 			}
-
 		}
-		retValue.Data = &columns
+
+		if isJson {
+			retValueJSON.Data = &dataMapJSON
+		} else {
+			retValueGRPC.Data = &dataMapGRPC
+		}
 	}
 
-	if log.IsTrace() {
-		dbIDX := iBuf[C.PK_RESP_DB_IDX]
-		dbPtr := (*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(dbIDX)))
-
-		tableIDX := iBuf[C.PK_RESP_TABLE_IDX]
-		tablePtr := (*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(tableIDX)))
-
-		log.Tracef("Response: DB: %s, Table: %s, Response: %v", C.GoString(dbPtr), C.GoString(tablePtr), retValue)
+	if isJson {
+		return &retValueJSON, status, nil
+	} else {
+		return &retValueGRPC, status, nil
 	}
-
-	return status, &retValue, nil
 }
 
-func convertToJsonRaw(dataType uint32, value *string, quoteStrings bool) *json.RawMessage {
-	if (quoteStrings && dataType == C.RDRS_INTEGER_DATATYPE || dataType == C.RDRS_FLOAT_DATATYPE) || !quoteStrings {
+func convertToJsonRaw(dataType uint32, value *string) *json.RawMessage {
+	if dataType == C.RDRS_INTEGER_DATATYPE || dataType == C.RDRS_FLOAT_DATATYPE {
 		valueBytes := json.RawMessage(*value)
 		return &valueBytes
 	} else {

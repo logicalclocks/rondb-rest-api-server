@@ -124,7 +124,7 @@ func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isB
 	for i := 0; i < len(testInfo.RespKVs); i++ {
 		key := string(testInfo.RespKVs[i].(string))
 
-		var pkResponse ds.PKReadResponse
+		var pkResponse ds.PKReadResponseJSON
 		err := json.Unmarshal([]byte(resp), &pkResponse)
 		if err != nil {
 			t.Fatalf("Failed to unmarshal response object %v", err)
@@ -151,13 +151,13 @@ func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isB
 	}
 }
 
-func getColumnDataFromJson(t testing.TB, colName string, pkResponse *ds.PKReadResponse) (*string, bool) {
+func getColumnDataFromJson(t testing.TB, colName string, pkResponse *ds.PKReadResponseJSON) (*string, bool) {
 	t.Helper()
 
 	kvMap := make(map[string]*string)
-	for _, col := range *pkResponse.Data {
-		if col.Value != nil {
-			value := string([]byte(*col.Value))
+	for colName, colValue := range *pkResponse.Data {
+		if colValue != nil {
+			value := string([]byte(*colValue))
 			var err error
 			if value[0] == '"' {
 				value, err = strconv.Unquote(value)
@@ -165,9 +165,9 @@ func getColumnDataFromJson(t testing.TB, colName string, pkResponse *ds.PKReadRe
 					t.Fatal(err)
 				}
 			}
-			kvMap[*col.Name] = &value
+			kvMap[colName] = &value
 		} else {
-			kvMap[*col.Name] = nil
+			kvMap[colName] = nil
 		}
 	}
 
@@ -493,7 +493,7 @@ func validateBatchResponse(t testing.TB, testInfo ds.BatchOperationTestInfo, res
 }
 
 func validateBatchResponseOpIdsNCode(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string) {
-	var res ds.BatchResponse
+	var res ds.BatchResponseJSON
 	err := json.Unmarshal([]byte(resp), &res)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal batch response. Error %v", err)
@@ -536,7 +536,7 @@ func validateBatchResponseMsg(t testing.TB, testInfo ds.BatchOperationTestInfo, 
 }
 
 func validateBatchResponseValues(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string, isBinaryData bool) {
-	var res ds.BatchResponse
+	var res ds.BatchResponseJSON
 	err := json.Unmarshal([]byte(resp), &res)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal batch response. Error %v", err)

@@ -76,14 +76,24 @@ type Column struct {
 	Value *json.RawMessage `json:"value"    form:"value"    binding:"required"`
 }
 
-type PKReadResponse struct {
-	OperationID *string   `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
-	Data        *[]Column `json:"data"           form:"data"            binding:"omitempty"`
+type PKReadResponseGRPC struct {
+	OperationID *string             `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
+	Data        *map[string]*string `json:"data"           form:"data"            binding:"omitempty"`
 }
 
-type PKReadResponseWithCode struct {
-	Code *int32          `json:"code"    form:"code"    binding:"required"`
-	Body *PKReadResponse `json:"body"    form:"body"    binding:"required"`
+type PKReadResponseJSON struct {
+	OperationID *string                      `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
+	Data        *map[string]*json.RawMessage `json:"data"           form:"data"            binding:"omitempty"`
+}
+
+type PKReadResponseWithCodeJSON struct {
+	Code *int32              `json:"code"    form:"code"    binding:"required"`
+	Body *PKReadResponseJSON `json:"body"    form:"body"    binding:"required"`
+}
+
+type PKReadResponseWithCodeGRPC struct {
+	Code *int32              `json:"code"    form:"code"    binding:"required"`
+	Body *PKReadResponseGRPC `json:"body"    form:"body"    binding:"required"`
 }
 
 // For testing only
