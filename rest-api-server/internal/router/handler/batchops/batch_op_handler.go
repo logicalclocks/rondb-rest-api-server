@@ -125,16 +125,8 @@ func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string, respons
 func processResponses(respBuffs *[]*dal.NativeBuffer, response ds.BatchResponse) (int, error) {
 	for _, respBuff := range *respBuffs {
 
-		subResponse := response.CreateNewSubResponse()
-		pkReadResponseWithCode, ok := subResponse.(ds.PKReadResponseWithCode)
-		if !ok {
-			return http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting PKReadResponseWithCode")
-		}
-
-		pkReadResponse, ok := (pkReadResponseWithCode.GetPKReadResponse()).(ds.PKReadResponse)
-		if !ok {
-			return http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting PKReadResponse")
-		}
+		pkReadResponseWithCode := response.CreateNewSubResponse()
+		pkReadResponse := pkReadResponseWithCode.GetPKReadResponse()
 
 		subRespCode, err := pkread.ProcessPKReadResponse(respBuff, pkReadResponse)
 		if err != nil {

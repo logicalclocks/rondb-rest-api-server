@@ -146,7 +146,7 @@ var _ PKReadResponse = (*PKReadResponseJSON)(nil)
 
 type PKReadResponseWithCode interface {
 	Init()
-	GetPKReadResponse() interface{}
+	GetPKReadResponse() PKReadResponse
 	SetCode(code *int32)
 }
 
@@ -165,7 +165,7 @@ func (p *PKReadResponseWithCodeJSON) Init() {
 	p.Body.Init()
 }
 
-func (p *PKReadResponseWithCodeJSON) GetPKReadResponse() interface{} {
+func (p *PKReadResponseWithCodeJSON) GetPKReadResponse() PKReadResponse {
 	return p.Body
 }
 
@@ -178,7 +178,7 @@ func (p *PKReadResponseWithCodeGRPC) Init() {
 	p.Body.Init()
 }
 
-func (p *PKReadResponseWithCodeGRPC) GetPKReadResponse() interface{} {
+func (p *PKReadResponseWithCodeGRPC) GetPKReadResponse() PKReadResponse {
 	return p.Body
 }
 

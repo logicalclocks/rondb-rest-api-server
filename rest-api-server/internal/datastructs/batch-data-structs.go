@@ -40,12 +40,12 @@ type BatchSubOperation struct {
 // Response
 type BatchResponse interface {
 	Init()
-	CreateNewSubResponse() interface{}
-	AppendSubResponse(subResp interface{}) error
+	CreateNewSubResponse() PKReadResponseWithCode
+	AppendSubResponse(subResp PKReadResponseWithCode) error
 }
 
-var _ BatchResponse = (*BatchResponseGRPC)(nil)
 var _ BatchResponse = (*BatchResponseJSON)(nil)
+var _ BatchResponse = (*BatchResponseGRPC)(nil)
 
 type BatchResponseJSON struct {
 	Result *[]*PKReadResponseWithCodeJSON `json:"result" binding:"required"`
@@ -60,16 +60,16 @@ func (b *BatchResponseJSON) Init() {
 	b.Result = &subResponses
 }
 
-func (b *BatchResponseJSON) CreateNewSubResponse() interface{} {
+func (b *BatchResponseJSON) CreateNewSubResponse() PKReadResponseWithCode {
 	subResponse := PKReadResponseWithCodeJSON{}
 	subResponse.Init()
 	return &subResponse
 }
 
-func (b *BatchResponseJSON) AppendSubResponse(subResp interface{}) error {
+func (b *BatchResponseJSON) AppendSubResponse(subResp PKReadResponseWithCode) error {
 	subRespJson, ok := subResp.(*PKReadResponseWithCodeJSON)
 	if !ok {
-		return fmt.Errorf("Wrong object type. Expecting PKReadResponseJSON ")
+		return fmt.Errorf("Wrong object type. Expecting PKReadResponseWithCodeJSON ")
 	}
 
 	newList := append(*b.Result, subRespJson)
@@ -82,16 +82,16 @@ func (b *BatchResponseGRPC) Init() {
 	b.Result = &subResponses
 }
 
-func (b *BatchResponseGRPC) CreateNewSubResponse() interface{} {
+func (b *BatchResponseGRPC) CreateNewSubResponse() PKReadResponseWithCode {
 	subResponse := PKReadResponseWithCodeGRPC{}
 	subResponse.Init()
 	return &subResponse
 }
 
-func (b *BatchResponseGRPC) AppendSubResponse(subResp interface{}) error {
+func (b *BatchResponseGRPC) AppendSubResponse(subResp PKReadResponseWithCode) error {
 	subRespGRPC, ok := subResp.(*PKReadResponseWithCodeGRPC)
 	if !ok {
-		return fmt.Errorf("Wrong object type. Expecting PKReadResponseGRPC ")
+		return fmt.Errorf("Wrong object type. Expecting PKReadResponseWithCodeGRPC ")
 	}
 
 	newList := append(*b.Result, subRespGRPC)
