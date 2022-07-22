@@ -21,7 +21,8 @@ package common
 import "C"
 import (
 	"encoding/json"
-	"unsafe"
+	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,11 +31,20 @@ type ErrorResponse struct {
 	Error string `json:"error"    form:"error"    binding:"required"`
 }
 
-func ProcessResponse(buffer unsafe.Pointer) string {
-	return C.GoString((*C.char)(buffer))
+func SetResponseBodyError(c *gin.Context, code int, err error) {
+	errstruct := ErrorResponse{Error: fmt.Sprintf("%v", err)}
+	b, _ := json.Marshal(errstruct)
+	c.Writer.WriteHeader(code)
+	c.Writer.Write(b)
 }
 
-func SetResponseError(c *gin.Context, code int, resp ErrorResponse) {
-	b, _ := json.Marshal(resp)
-	c.String(code, string(b))
+func SetResponseBody(c *gin.Context, code int, response interface{}) {
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		c.Writer.Write(([]byte)(fmt.Sprintf("Unable to marshall response %v.  obj: %v", err, response)))
+	} else {
+		c.Writer.WriteHeader(code)
+		c.Writer.Write(responseBytes)
+	}
 }

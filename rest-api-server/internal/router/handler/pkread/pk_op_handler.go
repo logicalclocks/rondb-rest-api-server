@@ -19,7 +19,6 @@
 package pkread
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -49,72 +48,61 @@ func PkReadHandler(c *gin.Context) {
 			body, _ := ioutil.ReadAll(c.Request.Body)
 			log.Debugf("Unable to parse request. Error: %v. Body: %s\n", err, body)
 		}
-		c.AbortWithError(http.StatusBadRequest, err)
-		common.SetResponseError(c, http.StatusBadRequest, common.ErrorResponse{Error: fmt.Sprintf("%-v", err)})
+		common.SetResponseBodyError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	err = checkAPIKey(c, pkReadParams.DB)
-	if err != nil {
-		c.AbortWithError(http.StatusUnauthorized, err)
-		return
-	}
-
-	dalErr := processRequestNSetStatus(c, &pkReadParams)
-	if dalErr != nil && log.IsDebug() {
-		log.Debugf("Unable to perform pk-read request. Body: %-v. Error: %v\n", pkReadParams, err)
-	}
+	apiKey := getAPIKey(c)
+	processRequestNSetStatus(c, &pkReadParams, apiKey)
 }
 
-func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams) *dal.DalError {
-	reqBuff, respBuff, err := CreateNativeRequest(pkReadParams)
+func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, apiKey string) {
+	r, status, err := ProcessPKReadRequest(pkReadParams, apiKey)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"OK": false, "msg": fmt.Sprintf("%v", err)})
-		return nil
+		common.SetResponseBodyError(c, status, err)
+		return
 	}
+
+	var response *datastructs.PKReadResponseJSON
+	var ok bool
+	if r != nil {
+		response, ok = r.(*datastructs.PKReadResponseJSON)
+		if !ok {
+			common.SetResponseBodyError(c, http.StatusInternalServerError,
+				fmt.Errorf("Wrong object type. Expecting PKReadResponseJSON. Got: %T ", *response))
+			return
+		}
+	}
+
+	common.SetResponseBody(c, status, response)
+}
+
+func ProcessPKReadRequest(pkReadParams *ds.PKReadParams, apiKey string) (interface{}, int, error) {
+
+	err := checkAPIKey(apiKey, pkReadParams.DB)
+	if err != nil {
+		return nil, http.StatusUnauthorized, err
+	}
+
+	reqBuff, respBuff, err := CreateNativeRequest(pkReadParams)
 	defer dal.ReturnBuffer(reqBuff)
 	defer dal.ReturnBuffer(respBuff)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
 
 	dalErr := dal.RonDBPKRead(reqBuff, respBuff)
-	r, _, err := ProcessPKReadResponse(respBuff, true)
-	response, ok := r.(*datastructs.PKReadResponseJSON)
-	if !ok {
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		c.Writer.Write(([]byte)(fmt.Sprintf("Wrong object type. Expecting PKReadResponseJSON. Got: %T ", *response)))
-		return nil
+	if dalErr != nil && dalErr.HttpCode != http.StatusNotFound { // any other error return immediately
+		return nil, dalErr.HttpCode, dalErr
 	}
 
-	var message string
-	if dalErr != nil {
-
-		if dalErr.HttpCode == http.StatusNotFound {
-			setResponseBodyUnsafe(c, http.StatusNotFound, response)
-		} else {
-			if dalErr.HttpCode >= http.StatusInternalServerError {
-				message = fmt.Sprintf("%v File: %v, Line: %v ", dalErr.Message, dalErr.ErrFileName, dalErr.ErrLineNo)
-			} else {
-				message = fmt.Sprintf("%v", dalErr.Message)
-			}
-			common.SetResponseError(c, dalErr.HttpCode, common.ErrorResponse{Error: message})
-		}
-
-		return dalErr
-	} else {
-		setResponseBodyUnsafe(c, http.StatusOK, response)
-	}
-
-	return nil
-}
-
-func setResponseBodyUnsafe(c *gin.Context, code int, response *ds.PKReadResponseJSON) {
-	responseBytes, err := json.Marshal(response)
+	r, status, err := ProcessPKReadResponse(respBuff, true)
 	if err != nil {
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		c.Writer.Write(([]byte)(fmt.Sprintf("Unable to marshall response %v.  obj: %v", err, response)))
-	} else {
-		c.Writer.WriteHeader(code)
-		c.Writer.Write(responseBytes)
+		return nil, http.StatusInternalServerError, err
 	}
+
+	return r, int(status), nil
 }
 
 func parseRequest(c *gin.Context, pkReadParams *ds.PKReadParams) error {
@@ -135,6 +123,12 @@ func parseRequest(c *gin.Context, pkReadParams *ds.PKReadParams) error {
 	pkReadParams.Filters = body.Filters
 	pkReadParams.ReadColumns = body.ReadColumns
 	pkReadParams.OperationID = body.OperationID
+
+	err := ValidatePKReadRequest(pkReadParams)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -145,16 +139,10 @@ func ParseBody(req *http.Request, params *ds.PKReadBody) error {
 	if err != nil {
 		return err
 	}
-
-	err = ValidateBody(params)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func ValidateBody(params *ds.PKReadBody) error {
+func ValidateBody(params *ds.PKReadParams) error {
 
 	for _, filter := range *params.Filters {
 		// make sure filter columns are valid
@@ -207,15 +195,6 @@ func parseURI(c *gin.Context, resource *ds.PKReadPP) error {
 	if err != nil {
 		return err
 	}
-
-	if err = validateDBIdentifier(*resource.DB); err != nil {
-		return err
-	}
-
-	if err = validateDBIdentifier(*resource.Table); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -233,14 +212,35 @@ func validateDBIdentifier(identifier string) error {
 	return nil
 }
 
-func checkAPIKey(c *gin.Context, db *string) error {
+func getAPIKey(c *gin.Context) string {
+	return c.GetHeader(ds.API_KEY_NAME)
+}
+
+func checkAPIKey(apiKey string, db *string) error {
 	// check for Hopsworks api keys
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
-		xapikey := c.GetHeader(ds.API_KEY_NAME)
-		if xapikey == "" { // not set
+		if apiKey == "" { // not set
 			return fmt.Errorf("Unauthorized. No API key supplied")
 		}
-		return apikey.ValidateAPIKey(xapikey, *db)
+		return apikey.ValidateAPIKey(apiKey, *db)
 	}
+	return nil
+}
+
+func ValidatePKReadRequest(req *ds.PKReadParams) error {
+
+	if err := validateDBIdentifier(*req.DB); err != nil {
+		return err
+	}
+
+	if err := validateDBIdentifier(*req.Table); err != nil {
+		return err
+	}
+
+	err := ValidateBody(req)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

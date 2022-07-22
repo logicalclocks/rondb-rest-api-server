@@ -18,7 +18,6 @@
 package stat
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,8 +36,7 @@ func RegisterStatTestHandler(engine *gin.Engine) {
 func StatHandler(c *gin.Context) {
 	stats, err := Stats()
 	if err != nil {
-		common.SetResponseError(c, http.StatusInternalServerError,
-			common.ErrorResponse{Error: fmt.Sprintf("%-v", err)})
+		common.SetResponseBodyError(c, http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(200, stats)

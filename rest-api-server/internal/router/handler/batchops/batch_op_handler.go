@@ -17,7 +17,6 @@
 package batchops
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -47,12 +46,12 @@ func BatchOpsHandler(c *gin.Context) {
 			body, _ := ioutil.ReadAll(c.Request.Body)
 			log.Debugf("Unable to parse request. Error: %v. Body: %s\n", err, body)
 		}
-		c.JSON(http.StatusBadRequest, gin.H{"OK": false, "msg": fmt.Sprintf("%-v", err)})
+		common.SetResponseBodyError(c, http.StatusBadRequest, err)
 		return
 	}
 
 	if operations.Operations == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"OK": false, "msg": "No valid operations found"})
+		common.SetResponseBodyError(c, http.StatusBadRequest, fmt.Errorf("No valid operations found"))
 		return
 	}
 
@@ -63,56 +62,85 @@ func BatchOpsHandler(c *gin.Context) {
 			if log.IsDebug() {
 				log.Debugf("Error: %v", err)
 			}
-			c.JSON(http.StatusBadRequest, gin.H{"OK": false, "msg": fmt.Sprintf("%-v", err)})
+			common.SetResponseBodyError(c, http.StatusBadRequest, err)
 			return
 		}
 	}
 
-	err = checkAPIKey(c, &pkOperations)
+	response, status, err := ProcessBatchRequest(&pkOperations, getAPIKey(c))
 	if err != nil {
-		c.AbortWithError(http.StatusUnauthorized, err)
+		common.SetResponseBodyError(c, status, err)
+	}
+
+	batchResponseJSON, ok := response.(*ds.BatchResponseJSON)
+	if !ok {
+		common.SetResponseBodyError(c, http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting BatchResponseJSON "))
 		return
 	}
 
-	dalErr := processRequestNSetStatus(c, &pkOperations)
-	if dalErr != nil && log.IsDebug() {
-		log.Debugf("Unable to perform batch request. Body: %-v. Error: %v\n", operations, err)
-	}
+	common.SetResponseBody(c, status, batchResponseJSON)
 }
 
-func setResponseBodyUnsafe(c *gin.Context, code uint32, resp []*dal.NativeBuffer) {
+func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string) (interface{}, int, error) {
+
+	err := checkAPIKey(pkOperations, apiKey)
+	if err != nil {
+		return nil, http.StatusUnauthorized, err
+	}
+
+	noOps := uint32(len(*pkOperations))
+	reqPtrs := make([]*dal.NativeBuffer, noOps)
+	respPtrs := make([]*dal.NativeBuffer, noOps)
+
+	for i, pkOp := range *pkOperations {
+		reqPtrs[i], respPtrs[i], err = pkread.CreateNativeRequest(&pkOp)
+		defer dal.ReturnBuffer(reqPtrs[i])
+		defer dal.ReturnBuffer(respPtrs[i])
+		if err != nil {
+			return nil, http.StatusInternalServerError, err
+		}
+	}
+
+	dalErr := dal.RonDBBatchedPKRead(noOps, reqPtrs, respPtrs)
+	var message string
+	if dalErr != nil {
+		if dalErr.HttpCode >= http.StatusInternalServerError {
+			message = fmt.Sprintf("%v File: %v, Line: %v ", dalErr.Message, dalErr.ErrFileName, dalErr.ErrLineNo)
+		} else {
+			message = fmt.Sprintf("%v", dalErr.Message)
+		}
+		return nil, dalErr.HttpCode, fmt.Errorf("%s", message)
+	}
+
+	response, status, err := processResponses(&respPtrs)
+	if err != nil {
+		return nil, status, err
+	}
+
+	return response, http.StatusOK, nil
+}
+
+func processResponses(resp *[]*dal.NativeBuffer) (interface{}, int, error) {
 	var response ds.BatchResponseJSON
 	subResponses := []ds.PKReadResponseWithCodeJSON{}
-	for _, respBuff := range resp {
+	for _, respBuff := range *resp {
 		subResp, subRespCode, err := pkread.ProcessPKReadResponse(respBuff, true)
 		if err != nil {
-			c.Writer.WriteHeader(http.StatusInternalServerError)
-			c.Writer.Write([]byte(fmt.Sprintf("Failed to created response for batch op. Error: %v", err)))
-			return
+			return nil, int(subRespCode), err
 		}
+
 		var subRespWCode ds.PKReadResponseWithCodeJSON
 		subRespWCode.Code = &subRespCode
-
 		subRespJson, ok := subResp.(*ds.PKReadResponseJSON)
 		if !ok {
-			c.Writer.WriteHeader(http.StatusInternalServerError)
-			c.Writer.Write(([]byte)(fmt.Sprintf("Wrong object type. Expecting PKReadResponseJSON ")))
-			return
+			return nil, http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting PKReadResponseJSON ")
 		}
 		subRespWCode.Body = subRespJson
 		subResponses = append(subResponses, subRespWCode)
 	}
 	response.Result = &subResponses
 
-	bytes, err := json.Marshal(response)
-	if err != nil {
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		c.Writer.Write([]byte(fmt.Sprintf("Failed to marshall batch op  response. Error: %v", err)))
-		return
-	} else {
-		c.Writer.WriteHeader(int(code))
-		c.Writer.Write(bytes)
-	}
+	return &response, http.StatusOK, nil
 }
 
 func parseOperation(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) error {
@@ -145,60 +173,23 @@ func parsePKRead(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) 
 		return fmt.Errorf("Failed to extract database and table information from relative url")
 	}
 
-	err := pkread.ValidateBody(&params)
-	if err != nil {
-		return err
-	}
-
 	pkReadarams.DB = &splits[0]
 	pkReadarams.Table = &splits[1]
 	pkReadarams.Filters = params.Filters
 	pkReadarams.ReadColumns = params.ReadColumns
 	pkReadarams.OperationID = params.OperationID
-	return nil
-}
-
-func processRequestNSetStatus(c *gin.Context, pkOperations *[]ds.PKReadParams) *dal.DalError {
-
-	noOps := uint32(len(*pkOperations))
-	reqPtrs := make([]*dal.NativeBuffer, noOps)
-	respPtrs := make([]*dal.NativeBuffer, noOps)
-
-	var err error
-	for i, pkOp := range *pkOperations {
-		reqPtrs[i], respPtrs[i], err = pkread.CreateNativeRequest(&pkOp)
-		defer dal.ReturnBuffer(reqPtrs[i])
-		defer dal.ReturnBuffer(respPtrs[i])
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"OK": false, "msg": fmt.Sprintf("%v", err)})
-			return &dal.DalError{HttpCode: http.StatusInternalServerError, Message: fmt.Sprintf("%v", err)}
-		}
-	}
-
-	dalErr := dal.RonDBBatchedPKRead(noOps, reqPtrs, respPtrs)
-
-	var message string
-	if dalErr != nil {
-		if dalErr.HttpCode >= http.StatusInternalServerError {
-			message = fmt.Sprintf("%v File: %v, Line: %v ", dalErr.Message, dalErr.ErrFileName, dalErr.ErrLineNo)
-		} else {
-			message = fmt.Sprintf("%v", dalErr.Message)
-		}
-		common.SetResponseError(c, dalErr.HttpCode, common.ErrorResponse{Error: message})
-		return dalErr
-
-	} else {
-		setResponseBodyUnsafe(c, http.StatusOK, respPtrs)
-	}
 
 	return nil
 }
 
-func checkAPIKey(c *gin.Context, pkOperations *[]ds.PKReadParams) error {
+func getAPIKey(c *gin.Context) string {
+	return c.GetHeader(ds.API_KEY_NAME)
+}
+
+func checkAPIKey(pkOperations *[]ds.PKReadParams, apiKey string) error {
 	// check for Hopsworks api keys
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
-		xapikey := c.GetHeader(ds.API_KEY_NAME)
-		if xapikey == "" { // not set
+		if apiKey == "" { // not set
 			return fmt.Errorf("Unauthorized. No API key supplied")
 		}
 
@@ -213,7 +204,7 @@ func checkAPIKey(c *gin.Context, pkOperations *[]ds.PKReadParams) error {
 			dbArr = append(dbArr, dbKey)
 		}
 
-		return apikey.ValidateAPIKey(xapikey, dbArr...)
+		return apikey.ValidateAPIKey(apiKey, dbArr...)
 	}
 	return nil
 }

@@ -125,6 +125,11 @@ func ReturnBuffer(buffer *NativeBuffer) {
 	if !initialized {
 		panic(fmt.Sprintf("Native buffers are not initialized"))
 	}
+
+	if buffer == nil {
+		return
+	}
+
 	mutex.Lock()
 	defer mutex.Unlock()
 

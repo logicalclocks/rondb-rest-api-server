@@ -31,14 +31,14 @@ func TestHeap(t *testing.T) {
 	}
 
 	allocations := stats.FreeBuffers + 100
-	c := make(chan *NativeBuffer)
+	c := make(chan *NativeBuffer, 1)
 	for i := uint64(0); i < allocations; i++ {
 		go allocateBuffTest(t, c)
 	}
 
 	myBuffers := make([]*NativeBuffer, allocations)
 	for i := uint64(0); i < allocations; i++ {
-		myBuffers = append(myBuffers, <-c)
+		myBuffers[i] = <-c
 	}
 
 	stats = GetNativeBuffersStats()
