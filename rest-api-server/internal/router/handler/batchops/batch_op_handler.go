@@ -67,7 +67,9 @@ func BatchOpsHandler(c *gin.Context) {
 		}
 	}
 
-	response, status, err := ProcessBatchRequest(&pkOperations, getAPIKey(c))
+	var response ds.BatchResponse = (ds.BatchResponse)(&ds.BatchResponseJSON{})
+	response.Init()
+	status, err := ProcessBatchRequest(&pkOperations, getAPIKey(c), response)
 	if err != nil {
 		common.SetResponseBodyError(c, status, err)
 	}
@@ -81,11 +83,11 @@ func BatchOpsHandler(c *gin.Context) {
 	common.SetResponseBody(c, status, batchResponseJSON)
 }
 
-func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string) (interface{}, int, error) {
+func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string, response ds.BatchResponse) (int, error) {
 
 	err := checkAPIKey(pkOperations, apiKey)
 	if err != nil {
-		return nil, http.StatusUnauthorized, err
+		return http.StatusUnauthorized, err
 	}
 
 	noOps := uint32(len(*pkOperations))
@@ -97,7 +99,7 @@ func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string) (interf
 		defer dal.ReturnBuffer(reqPtrs[i])
 		defer dal.ReturnBuffer(respPtrs[i])
 		if err != nil {
-			return nil, http.StatusInternalServerError, err
+			return http.StatusInternalServerError, err
 		}
 	}
 
@@ -109,38 +111,43 @@ func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string) (interf
 		} else {
 			message = fmt.Sprintf("%v", dalErr.Message)
 		}
-		return nil, dalErr.HttpCode, fmt.Errorf("%s", message)
+		return dalErr.HttpCode, fmt.Errorf("%s", message)
 	}
 
-	response, status, err := processResponses(&respPtrs)
+	status, err := processResponses(&respPtrs, response)
 	if err != nil {
-		return nil, status, err
+		return status, err
 	}
 
-	return response, http.StatusOK, nil
+	return http.StatusOK, nil
 }
 
-func processResponses(resp *[]*dal.NativeBuffer) (interface{}, int, error) {
-	var response ds.BatchResponseJSON
-	subResponses := []ds.PKReadResponseWithCodeJSON{}
-	for _, respBuff := range *resp {
-		subResp, subRespCode, err := pkread.ProcessPKReadResponse(respBuff, true)
-		if err != nil {
-			return nil, int(subRespCode), err
-		}
+func processResponses(respBuffs *[]*dal.NativeBuffer, response ds.BatchResponse) (int, error) {
+	for _, respBuff := range *respBuffs {
 
-		var subRespWCode ds.PKReadResponseWithCodeJSON
-		subRespWCode.Code = &subRespCode
-		subRespJson, ok := subResp.(*ds.PKReadResponseJSON)
+		subResponse := response.CreateNewSubResponse()
+		pkReadResponseWithCode, ok := subResponse.(ds.PKReadResponseWithCode)
 		if !ok {
-			return nil, http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting PKReadResponseJSON ")
+			return http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting PKReadResponseWithCode")
 		}
-		subRespWCode.Body = subRespJson
-		subResponses = append(subResponses, subRespWCode)
-	}
-	response.Result = &subResponses
 
-	return &response, http.StatusOK, nil
+		pkReadResponse, ok := (pkReadResponseWithCode.GetPKReadResponse()).(ds.PKReadResponse)
+		if !ok {
+			return http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting PKReadResponse")
+		}
+
+		subRespCode, err := pkread.ProcessPKReadResponse(respBuff, pkReadResponse)
+		if err != nil {
+			return int(subRespCode), err
+		}
+
+		pkReadResponseWithCode.SetCode(&subRespCode)
+		err = response.AppendSubResponse(pkReadResponseWithCode)
+		if err != nil {
+			return http.StatusInternalServerError, err
+		}
+	}
+	return http.StatusOK, nil
 }
 
 func parseOperation(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) error {

@@ -16,28 +16,87 @@
  */
 package datastructs
 
-import "hopsworks.ai/rdrs/version"
+import (
+	"fmt"
+
+	"hopsworks.ai/rdrs/version"
+)
 
 const DBS_OPS_EP_GROUP = "/" + version.API_VERSION + "/"
 const BATCH_OPERATION = "batch"
 const BATCH_HTTP_VERB = "POST"
 
+// Request
 type BatchOperation struct {
 	Operations *[]BatchSubOperation `json:"operations" binding:"required,min=1,max=4096,unique,dive"`
-}
-
-type BatchResponseJSON struct {
-	Result *[]PKReadResponseWithCodeJSON `json:"result" binding:"required"`
-}
-
-type BatchResponseGRPC struct {
-	Result *[]PKReadResponseWithCodeGRPC `json:"result" binding:"required"`
 }
 
 type BatchSubOperation struct {
 	Method      *string     `json:"method"        binding:"required,oneof=POST"`
 	RelativeURL *string     `json:"relative-url"  binding:"required,min=1"`
 	Body        *PKReadBody `json:"body"          binding:"required,min=1"`
+}
+
+// Response
+type BatchResponse interface {
+	Init()
+	CreateNewSubResponse() interface{}
+	AppendSubResponse(subResp interface{}) error
+}
+
+var _ BatchResponse = (*BatchResponseGRPC)(nil)
+var _ BatchResponse = (*BatchResponseJSON)(nil)
+
+type BatchResponseJSON struct {
+	Result *[]*PKReadResponseWithCodeJSON `json:"result" binding:"required"`
+}
+
+type BatchResponseGRPC struct {
+	Result *[]*PKReadResponseWithCodeGRPC `json:"result" binding:"required"`
+}
+
+func (b *BatchResponseJSON) Init() {
+	subResponses := []*PKReadResponseWithCodeJSON{}
+	b.Result = &subResponses
+}
+
+func (b *BatchResponseJSON) CreateNewSubResponse() interface{} {
+	subResponse := PKReadResponseWithCodeJSON{}
+	subResponse.Init()
+	return &subResponse
+}
+
+func (b *BatchResponseJSON) AppendSubResponse(subResp interface{}) error {
+	subRespJson, ok := subResp.(*PKReadResponseWithCodeJSON)
+	if !ok {
+		return fmt.Errorf("Wrong object type. Expecting PKReadResponseJSON ")
+	}
+
+	newList := append(*b.Result, subRespJson)
+	b.Result = &newList
+	return nil
+}
+
+func (b *BatchResponseGRPC) Init() {
+	subResponses := []*PKReadResponseWithCodeGRPC{}
+	b.Result = &subResponses
+}
+
+func (b *BatchResponseGRPC) CreateNewSubResponse() interface{} {
+	subResponse := PKReadResponseWithCodeGRPC{}
+	subResponse.Init()
+	return &subResponse
+}
+
+func (b *BatchResponseGRPC) AppendSubResponse(subResp interface{}) error {
+	subRespGRPC, ok := subResp.(*PKReadResponseWithCodeGRPC)
+	if !ok {
+		return fmt.Errorf("Wrong object type. Expecting PKReadResponseGRPC ")
+	}
+
+	newList := append(*b.Result, subRespGRPC)
+	b.Result = &newList
+	return nil
 }
 
 // data structs for testing

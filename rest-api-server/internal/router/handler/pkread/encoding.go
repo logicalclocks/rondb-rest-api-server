@@ -185,51 +185,37 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	//xxd.Print(0, bBuf[:])
 	return request, response, nil
 }
-func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (interface{}, int32, error) {
+func ProcessPKReadResponse(respBuff *dal.NativeBuffer, response ds.PKReadResponse) (int32, error) {
 
-	iBuf := unsafe.Slice((*uint32)(response.Buffer), response.Size)
-	var retValueJSON ds.PKReadResponseJSON
-	var retValueGRPC ds.PKReadResponseGRPC
+	iBuf := unsafe.Slice((*uint32)(respBuff.Buffer), respBuff.Size)
 
 	responseType := iBuf[C.PK_RESP_OP_TYPE_IDX]
 	if responseType != C.RDRS_PK_RESP_ID {
-		return nil, http.StatusInternalServerError, fmt.Errorf("Wrong resonse type")
+		return http.StatusInternalServerError, fmt.Errorf("Wrong resonse type")
 	}
 
 	// some sanity checks
 	capacity := iBuf[C.PK_RESP_CAPACITY_IDX]
 	dataLength := iBuf[C.PK_RESP_LENGTH_IDX]
-	if response.Size != capacity || !(dataLength < capacity) {
-		return nil, http.StatusInternalServerError,
+	if respBuff.Size != capacity || !(dataLength < capacity) {
+		return http.StatusInternalServerError,
 			fmt.Errorf("Response buffer may be corrupt. Buffer capacity: %d, Buffer data lenght: %d", capacity, dataLength)
 	}
 
 	opIDX := iBuf[C.PK_RESP_OP_ID_IDX]
 	if opIDX != 0 {
-		goOpID := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(opIDX))))
-		if isJson {
-			retValueJSON.OperationID = &goOpID
-		} else {
-			retValueGRPC.OperationID = &goOpID
-		}
+		goOpID := C.GoString((*C.char)(unsafe.Pointer(uintptr(respBuff.Buffer) + uintptr(opIDX))))
+		response.SetOperationID(&goOpID)
 	}
 
 	status := int32(iBuf[C.PK_RESP_OP_STATUS_IDX])
-	var dataMapJSON map[string]*json.RawMessage
-	var dataMapGRPC map[string]*string
-	if isJson {
-		dataMapJSON = make(map[string]*json.RawMessage)
-	} else {
-		dataMapGRPC = make(map[string]*string)
-	}
-
 	if status == http.StatusOK { //
 		colIDX := iBuf[C.PK_RESP_COLS_IDX]
-		colCount := *(*uint32)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(colIDX)))
+		colCount := *(*uint32)(unsafe.Pointer(uintptr(respBuff.Buffer) + uintptr(colIDX)))
 
 		for i := uint32(0); i < colCount; i++ {
 			colHeaderStart := (*uint32)(unsafe.Pointer(
-				uintptr(response.Buffer) +
+				uintptr(respBuff.Buffer) +
 					uintptr(colIDX+
 						uint32(C.ADDRESS_SIZE)+ // +1 for skipping the column count
 						(i*4*C.ADDRESS_SIZE)))) // 4 number of header fieldse
@@ -237,7 +223,7 @@ func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (interface{}
 			colHeader := unsafe.Slice((*uint32)(colHeaderStart), 4)
 
 			nameAdd := colHeader[0]
-			name := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(nameAdd))))
+			name := C.GoString((*C.char)(unsafe.Pointer(uintptr(respBuff.Buffer) + uintptr(nameAdd))))
 
 			valueAdd := colHeader[1]
 
@@ -245,33 +231,15 @@ func ProcessPKReadResponse(response *dal.NativeBuffer, isJson bool) (interface{}
 			dataType := colHeader[3]
 
 			if isNull == 0 {
-				value := C.GoString((*C.char)(unsafe.Pointer(uintptr(response.Buffer) + uintptr(valueAdd))))
-				if isJson {
-					dataMapJSON[name] = convertToJsonRaw(dataType, &value)
-				} else {
-					dataMapGRPC[name] = &value
-				}
+				value := C.GoString((*C.char)(unsafe.Pointer(uintptr(respBuff.Buffer) + uintptr(valueAdd))))
+				response.SetColumnData(&name, &value, dataType)
 			} else {
-				if isJson {
-					dataMapJSON[name] = nil
-				} else {
-					dataMapGRPC[name] = nil
-				}
+				response.SetColumnData(&name, nil, dataType)
 			}
 		}
-
-		if isJson {
-			retValueJSON.Data = &dataMapJSON
-		} else {
-			retValueGRPC.Data = &dataMapGRPC
-		}
 	}
 
-	if isJson {
-		return &retValueJSON, status, nil
-	} else {
-		return &retValueGRPC, status, nil
-	}
+	return status, nil
 }
 
 func convertToJsonRaw(dataType uint32, value *string) *json.RawMessage {

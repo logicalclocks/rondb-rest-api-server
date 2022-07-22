@@ -16,7 +16,15 @@
  */
 package datastructs
 
-import "encoding/json"
+/*
+#include "./../../../data-access-rondb/src/rdrs-const.h"
+#include "./../../../data-access-rondb/src/rdrs-dal.h"
+*/
+import "C"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 const PK_DB_OPERATION = "pk-read"
 const PK_HTTP_VERB = "POST"
@@ -76,6 +84,12 @@ type Column struct {
 	Value *json.RawMessage `json:"value"    form:"value"    binding:"required"`
 }
 
+type PKReadResponse interface {
+	Init()
+	SetOperationID(opID *string)
+	SetColumnData(column, value *string, valueType uint32)
+}
+
 type PKReadResponseGRPC struct {
 	OperationID *string             `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
 	Data        *map[string]*string `json:"data"           form:"data"            binding:"omitempty"`
@@ -84,6 +98,56 @@ type PKReadResponseGRPC struct {
 type PKReadResponseJSON struct {
 	OperationID *string                      `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
 	Data        *map[string]*json.RawMessage `json:"data"           form:"data"            binding:"omitempty"`
+}
+
+func (r *PKReadResponseGRPC) Init() {
+	m := make(map[string]*string)
+	(*r).Data = &m
+}
+
+func (r *PKReadResponseGRPC) SetOperationID(opID *string) {
+	r.OperationID = opID
+}
+
+func (r *PKReadResponseGRPC) SetColumnData(column, value *string, valueType uint32) {
+	if value == nil {
+		(*(*r).Data)[*column] = nil
+	} else {
+		(*(*r).Data)[*column] = value
+	}
+}
+
+func (r *PKReadResponseJSON) Init() {
+	m := make(map[string]*json.RawMessage)
+	(*r).Data = &m
+}
+
+func (r *PKReadResponseJSON) SetOperationID(opID *string) {
+	r.OperationID = opID
+}
+
+func (r *PKReadResponseJSON) SetColumnData(column, value *string, dataType uint32) {
+	if value == nil {
+		(*(*r).Data)[*column] = nil
+	} else {
+		if dataType == C.RDRS_INTEGER_DATATYPE || dataType == C.RDRS_FLOAT_DATATYPE {
+			valueBytes := json.RawMessage(*value)
+			(*(*r).Data)[*column] = &valueBytes
+		} else {
+			quotedString := fmt.Sprintf("\"%s\"", *value)
+			valueBytes := json.RawMessage(quotedString)
+			(*(*r).Data)[*column] = &valueBytes
+		}
+	}
+}
+
+var _ PKReadResponse = (*PKReadResponseGRPC)(nil)
+var _ PKReadResponse = (*PKReadResponseJSON)(nil)
+
+type PKReadResponseWithCode interface {
+	Init()
+	GetPKReadResponse() interface{}
+	SetCode(code *int32)
 }
 
 type PKReadResponseWithCodeJSON struct {
@@ -95,6 +159,35 @@ type PKReadResponseWithCodeGRPC struct {
 	Code *int32              `json:"code"    form:"code"    binding:"required"`
 	Body *PKReadResponseGRPC `json:"body"    form:"body"    binding:"required"`
 }
+
+func (p *PKReadResponseWithCodeJSON) Init() {
+	p.Body = &PKReadResponseJSON{}
+	p.Body.Init()
+}
+
+func (p *PKReadResponseWithCodeJSON) GetPKReadResponse() interface{} {
+	return p.Body
+}
+
+func (p *PKReadResponseWithCodeJSON) SetCode(code *int32) {
+	p.Code = code
+}
+
+func (p *PKReadResponseWithCodeGRPC) Init() {
+	p.Body = &PKReadResponseGRPC{}
+	p.Body.Init()
+}
+
+func (p *PKReadResponseWithCodeGRPC) GetPKReadResponse() interface{} {
+	return p.Body
+}
+
+func (p *PKReadResponseWithCodeGRPC) SetCode(code *int32) {
+	p.Code = code
+}
+
+var _ PKReadResponseWithCode = (*PKReadResponseWithCodeJSON)(nil)
+var _ PKReadResponseWithCode = (*PKReadResponseWithCodeGRPC)(nil)
 
 // For testing only
 type PKTestInfo struct {

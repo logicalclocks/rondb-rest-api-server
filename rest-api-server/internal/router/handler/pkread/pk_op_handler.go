@@ -28,7 +28,6 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	"hopsworks.ai/rdrs/internal/datastructs"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
@@ -57,52 +56,44 @@ func PkReadHandler(c *gin.Context) {
 }
 
 func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, apiKey string) {
-	r, status, err := ProcessPKReadRequest(pkReadParams, apiKey)
+	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseJSON{})
+	response.Init()
+
+	status, err := ProcessPKReadRequest(pkReadParams, apiKey, response)
 
 	if err != nil {
 		common.SetResponseBodyError(c, status, err)
 		return
 	}
 
-	var response *datastructs.PKReadResponseJSON
-	var ok bool
-	if r != nil {
-		response, ok = r.(*datastructs.PKReadResponseJSON)
-		if !ok {
-			common.SetResponseBodyError(c, http.StatusInternalServerError,
-				fmt.Errorf("Wrong object type. Expecting PKReadResponseJSON. Got: %T ", *response))
-			return
-		}
-	}
-
 	common.SetResponseBody(c, status, response)
 }
 
-func ProcessPKReadRequest(pkReadParams *ds.PKReadParams, apiKey string) (interface{}, int, error) {
+func ProcessPKReadRequest(pkReadParams *ds.PKReadParams, apiKey string, response ds.PKReadResponse) (int, error) {
 
 	err := checkAPIKey(apiKey, pkReadParams.DB)
 	if err != nil {
-		return nil, http.StatusUnauthorized, err
+		return http.StatusUnauthorized, err
 	}
 
 	reqBuff, respBuff, err := CreateNativeRequest(pkReadParams)
 	defer dal.ReturnBuffer(reqBuff)
 	defer dal.ReturnBuffer(respBuff)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return http.StatusInternalServerError, err
 	}
 
 	dalErr := dal.RonDBPKRead(reqBuff, respBuff)
 	if dalErr != nil && dalErr.HttpCode != http.StatusNotFound { // any other error return immediately
-		return nil, dalErr.HttpCode, dalErr
+		return dalErr.HttpCode, dalErr
 	}
 
-	r, status, err := ProcessPKReadResponse(respBuff, true)
+	status, err := ProcessPKReadResponse(respBuff, response)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return http.StatusInternalServerError, err
 	}
 
-	return r, int(status), nil
+	return int(status), nil
 }
 
 func parseRequest(c *gin.Context, pkReadParams *ds.PKReadParams) error {
