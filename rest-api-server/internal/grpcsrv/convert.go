@@ -25,7 +25,7 @@ import (
 )
 
 // Converters for PK Read Request
-func ConvertPKReadParams(req *ds.PKReadParams) (*PKReadRequestProto, error) {
+func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) (*PKReadRequestProto, error) {
 
 	pkReadRequestProto := PKReadRequestProto{}
 
@@ -71,11 +71,12 @@ func ConvertPKReadParams(req *ds.PKReadParams) (*PKReadRequestProto, error) {
 	pkReadRequestProto.DB = req.DB
 	pkReadRequestProto.Table = req.Table
 	pkReadRequestProto.OperationID = req.OperationID
+	pkReadRequestProto.APIKey = apiKey
 
 	return &pkReadRequestProto, nil
 }
 
-func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) *ds.PKReadParams {
+func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) (*ds.PKReadParams, string) {
 	pkReadParams := ds.PKReadParams{}
 
 	pkReadParams.DB = reqProto.DB
@@ -117,7 +118,7 @@ func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) *ds.PKReadParams {
 		pkReadParams.Filters = nil
 	}
 
-	return &pkReadParams
+	return &pkReadParams, reqProto.GetAPIKey() /*may return empty string*/
 }
 
 // Converters for PK Read Response

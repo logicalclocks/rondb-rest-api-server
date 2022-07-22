@@ -35,7 +35,7 @@ type UserDBs struct {
 var key2UserDBs = make(map[string]UserDBs)
 var key2UserDBsMutex sync.Mutex
 
-func ValidateAPIKey(apiKey string, dbs ...string) error {
+func ValidateAPIKey(apiKey *string, dbs ...*string) error {
 
 	if len(dbs) == 0 {
 		return fmt.Errorf("Unauthorized")
@@ -65,13 +65,13 @@ func ValidateAPIKey(apiKey string, dbs ...string) error {
 	}
 }
 
-func findAndValidateCache(apiKey string, dbs ...string) (keyFoundInCache, allowedAccess bool) {
+func findAndValidateCache(apiKey *string, dbs ...*string) (keyFoundInCache, allowedAccess bool) {
 
 	keyFoundInCache = false
 	allowedAccess = false
 
 	key2UserDBsMutex.Lock()
-	userDBs, ok := key2UserDBs[apiKey]
+	userDBs, ok := key2UserDBs[*apiKey]
 	key2UserDBsMutex.Unlock()
 
 	// found in cache
@@ -79,7 +79,12 @@ func findAndValidateCache(apiKey string, dbs ...string) (keyFoundInCache, allowe
 		keyFoundInCache = true
 
 		for _, db := range dbs {
-			if _, found := userDBs.uDBs[db]; !found {
+			if db == nil {
+				allowedAccess = false
+				return
+			}
+
+			if _, found := userDBs.uDBs[*db]; !found {
 				allowedAccess = false
 				return
 			}
@@ -89,9 +94,9 @@ func findAndValidateCache(apiKey string, dbs ...string) (keyFoundInCache, allowe
 	return
 }
 
-func GetUserDatabases(apiKey string) ([]string, error) {
+func GetUserDatabases(apiKey *string) ([]string, error) {
 
-	splits := strings.Split(apiKey, ".")
+	splits := strings.Split(*apiKey, ".")
 	prefix := splits[0]
 	secret := splits[1]
 
@@ -125,7 +130,7 @@ func GetUserDatabases(apiKey string) ([]string, error) {
 		expires: time.Now().Add(time.Duration(config.Configuration().Security.HopsWorksAPIKeysCacheValiditySec) * time.Second)}
 
 	key2UserDBsMutex.Lock()
-	key2UserDBs[apiKey] = userDBs
+	key2UserDBs[*apiKey] = userDBs
 	key2UserDBsMutex.Unlock()
 
 	return dbs, nil

@@ -55,7 +55,7 @@ func PkReadHandler(c *gin.Context) {
 	processRequestNSetStatus(c, &pkReadParams, apiKey)
 }
 
-func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, apiKey string) {
+func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, apiKey *string) {
 	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseJSON{})
 	response.Init()
 
@@ -69,7 +69,7 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, api
 	common.SetResponseBody(c, status, response)
 }
 
-func ProcessPKReadRequest(pkReadParams *ds.PKReadParams, apiKey string, response ds.PKReadResponse) (int, error) {
+func ProcessPKReadRequest(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error) {
 
 	err := checkAPIKey(apiKey, pkReadParams.DB)
 	if err != nil {
@@ -203,17 +203,18 @@ func validateDBIdentifier(identifier string) error {
 	return nil
 }
 
-func getAPIKey(c *gin.Context) string {
-	return c.GetHeader(ds.API_KEY_NAME)
+func getAPIKey(c *gin.Context) *string {
+	apiKey := c.GetHeader(ds.API_KEY_NAME)
+	return &apiKey
 }
 
-func checkAPIKey(apiKey string, db *string) error {
+func checkAPIKey(apiKey *string, db *string) error {
 	// check for Hopsworks api keys
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
-		if apiKey == "" { // not set
+		if apiKey == nil || *apiKey == "" { // not set
 			return fmt.Errorf("Unauthorized. No API key supplied")
 		}
-		return apikey.ValidateAPIKey(apiKey, *db)
+		return apikey.ValidateAPIKey(apiKey, db)
 	}
 	return nil
 }

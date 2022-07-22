@@ -311,7 +311,7 @@ func TestGRPC(t *testing.T) {
 				OperationID: tu.NewOperationID(64),
 			}
 
-			reqProto, err := grpcsrv.ConvertPKReadParams(&pkReadParams)
+			reqProto, err := grpcsrv.ConvertPKReadParams(&pkReadParams, nil)
 			if err != nil {
 				t.Fatalf("Failed to convert request %v", err)
 			}
@@ -328,4 +328,25 @@ func TestGRPC(t *testing.T) {
 			}
 			fmt.Printf("Response got form server %s \n", string(bytes))
 		})
+}
+
+func TestGRPC2(t *testing.T) {
+
+	testTable := "int_table"
+	testDb := "DB004"
+	validateColumns := []interface{}{"col0", "col1"}
+	tests := map[string]ds.PKTestInfo{
+		"simple": {
+			PkReq: ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 0),
+				ReadColumns: tu.NewReadColumns("col", 2),
+				OperationID: tu.NewOperationID(64),
+			},
+			Table:        testTable,
+			Db:           testDb,
+			HttpCode:     http.StatusOK,
+			BodyContains: "",
+			RespKVs:      validateColumns,
+		},
+	}
+	tu.PkTest(t, tests, false, RegisterPKTestHandler)
 }

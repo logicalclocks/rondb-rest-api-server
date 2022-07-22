@@ -31,11 +31,12 @@ message ReadColumnProto {
 }
 
 message PKReadRequestProto {
-  required string DB = 1;
-  required string Table = 2;
-  repeated FilterProto Filters = 3;
-  repeated ReadColumnProto ReadColumns = 4;
-  optional string OperationID = 5;
+  optional string APIKey = 1;
+  required string DB = 2;
+  required string Table = 3;
+  repeated FilterProto Filters = 4;
+  repeated ReadColumnProto ReadColumns = 5;
+  optional string OperationID = 6;
 }
 
 //__________________  PK Read Response __________________

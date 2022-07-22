@@ -69,21 +69,16 @@ func BatchOpsHandler(c *gin.Context) {
 
 	var response ds.BatchResponse = (ds.BatchResponse)(&ds.BatchResponseJSON{})
 	response.Init()
+
 	status, err := ProcessBatchRequest(&pkOperations, getAPIKey(c), response)
 	if err != nil {
 		common.SetResponseBodyError(c, status, err)
 	}
 
-	batchResponseJSON, ok := response.(*ds.BatchResponseJSON)
-	if !ok {
-		common.SetResponseBodyError(c, http.StatusInternalServerError, fmt.Errorf("Wrong object type. Expecting BatchResponseJSON "))
-		return
-	}
-
-	common.SetResponseBody(c, status, batchResponseJSON)
+	common.SetResponseBody(c, status, response)
 }
 
-func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey string, response ds.BatchResponse) (int, error) {
+func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey *string, response ds.BatchResponse) (int, error) {
 
 	err := checkAPIKey(pkOperations, apiKey)
 	if err != nil {
@@ -181,26 +176,27 @@ func parsePKRead(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) 
 	return nil
 }
 
-func getAPIKey(c *gin.Context) string {
-	return c.GetHeader(ds.API_KEY_NAME)
+func getAPIKey(c *gin.Context) *string {
+	apiKey := c.GetHeader(ds.API_KEY_NAME)
+	return &apiKey
 }
 
-func checkAPIKey(pkOperations *[]ds.PKReadParams, apiKey string) error {
+func checkAPIKey(pkOperations *[]ds.PKReadParams, apiKey *string) error {
 	// check for Hopsworks api keys
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
-		if apiKey == "" { // not set
+		if apiKey == nil || *apiKey == "" { // not set
 			return fmt.Errorf("Unauthorized. No API key supplied")
 		}
 
 		dbMap := make(map[string]bool)
-		dbArr := []string{}
+		dbArr := []*string{}
 
 		for _, op := range *pkOperations {
 			dbMap[*op.DB] = true
 		}
 
 		for dbKey := range dbMap {
-			dbArr = append(dbArr, dbKey)
+			dbArr = append(dbArr, &dbKey)
 		}
 
 		return apikey.ValidateAPIKey(apiKey, dbArr...)

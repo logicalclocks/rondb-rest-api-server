@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/tls"
 	"database/sql"
 	"encoding/base64"
@@ -31,10 +32,12 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc"
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/router/handler"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
@@ -434,15 +437,61 @@ func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, reg
 			dbs = append(dbs, testInfo.Db)
 
 			WithDBs(t, dbs, registerHandler, func(tc common.TestContext) {
-				url := NewPKReadURL(testInfo.Db, testInfo.Table)
-				body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
-				httpCode, res := ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
-					string(body), testInfo.HttpCode, testInfo.BodyContains)
-				if httpCode == http.StatusOK {
-					ValidateResArrayData(t, testInfo, res, isBinaryData)
-				}
+				pkRESTTest(t, testInfo, tc, isBinaryData)
+				pkGRPCTest(t, testInfo, tc, isBinaryData)
 			})
 		})
+	}
+}
+
+func pkGRPCTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
+	// Create gRPC client
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
+		config.Configuration().RestServer.GRPCServerIP,
+		config.Configuration().RestServer.GRPCServerPort),
+		grpc.WithInsecure())
+	defer conn.Close()
+
+	if err != nil {
+		t.Fatalf("Failed to connect to server %v", err)
+	}
+	client := grpcsrv.NewRonDBRestServerClient(conn)
+
+	// Create Request
+	pkReadParams := ds.PKReadParams{}
+	pkReadParams.DB = &testInfo.Db
+	pkReadParams.Table = &testInfo.Table
+	pkReadParams.Filters = testInfo.PkReq.Filters
+	pkReadParams.OperationID = testInfo.PkReq.OperationID
+	pkReadParams.ReadColumns = testInfo.PkReq.ReadColumns
+
+	apiKey := "adf"
+	reqProto, err := grpcsrv.ConvertPKReadParams(&pkReadParams, &apiKey)
+	if err != nil {
+		t.Fatalf("Failed to convert request %v", err)
+	}
+
+	respProto, err := client.PKRead(context.Background(), reqProto)
+	if err != nil {
+		t.Fatalf("Failed to send request to server %v", err)
+	}
+
+	resp := grpcsrv.ConvertPKReadResponseProto(respProto)
+	bytes, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("Failed to marshal %v", err)
+	}
+	fmt.Printf("Response got form server %s \n", string(bytes))
+
+}
+
+func pkRESTTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
+	url := NewPKReadURL(testInfo.Db, testInfo.Table)
+	body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
+	httpCode, res := ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
+		string(body), testInfo.HttpCode, testInfo.BodyContains)
+	if httpCode == http.StatusOK {
+		ValidateResArrayData(t, testInfo, res, isBinaryData)
 	}
 }
 

@@ -37,38 +37,55 @@ func TestAPIKey(t *testing.T) {
 	common.CreateDatabases(t, []string{"DB001", "DB002"}...)
 	defer common.DropDatabases(t, []string{"DB001", "DB002"}...)
 
-	err := ValidateAPIKey("bkYjEz6OTZyevbqT.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub", "")
+	apiKey := "bkYjEz6OTZyevbqT.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub"
+	err := ValidateAPIKey(&apiKey, nil)
 	if err == nil {
 		t.Fatalf("Supplied wrong prefix. This should have failed. ")
 	}
 
-	err = ValidateAPIKey("bkYjEz6OTZyevbqT.")
+	apiKey = "bkYjEz6OTZyevbqT."
+	err = ValidateAPIKey(&apiKey)
 	if err == nil {
 		t.Fatalf("No secret. This should have failed")
 	}
 
-	err = ValidateAPIKey("bkYjEz6OTZyevbq.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub")
+	apiKey = "bkYjEz6OTZyevbq.ocHajJhnE0ytBh8zbYj3IXupyMqeMZp8PW464eTxzxqP5afBjodEQUgY0lmL33ub"
+	err = ValidateAPIKey(&apiKey)
 	if err == nil {
 		t.Fatalf("Wrong length prefix. This should have failed")
 	}
 
 	// correct api key but wrong db. this api key can not access test3 db
-	err = ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "test3")
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	db1 := "test3"
+	err = ValidateAPIKey(&apiKey, &db1)
 	if err == nil {
 		t.Fatalf("This should have failed")
 	}
 
 	// correct api key
-	err = ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB001")
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	db1 = "DB001"
+	err = ValidateAPIKey(&apiKey, &db1)
 	if err != nil {
 		t.Fatalf("No error expected")
 	}
 
-	err = ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB001", "DB002")
+	// valid api key but no db
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	err = ValidateAPIKey(&apiKey, nil)
+	if err == nil {
+		t.Fatalf("This should have failed")
+	}
+
+	// no errors
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	db1 = "DB001"
+	db2 := "DB002"
+	err = ValidateAPIKey(&apiKey, &db1, &db2)
 	if err != nil {
 		t.Fatalf("No error expected")
 	}
-
 }
 
 // check that cache is updated every N secs
@@ -83,14 +100,18 @@ func TestAPIKeyCache1(t *testing.T) {
 	common.CreateDatabases(t, []string{"DB001", "DB002"}...)
 	defer common.DropDatabases(t, []string{"DB001", "DB002"}...)
 
-	err := ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB001")
+	apiKey := common.HOPSWORKS_TEST_API_KEY
+	db1 := "DB001"
+	err := ValidateAPIKey(&apiKey, &db1)
 	if err != nil {
 		t.Fatalf("No error expected")
 	}
 
 	lastUpdated1 := cacheUpdateTime(common.HOPSWORKS_TEST_API_KEY)
 
-	err = ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB001")
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	db1 = "DB001"
+	err = ValidateAPIKey(&apiKey, &db1)
 	if err != nil {
 		t.Fatalf("No error expected")
 	}
@@ -102,7 +123,10 @@ func TestAPIKeyCache1(t *testing.T) {
 	}
 
 	time.Sleep(time.Duration(config.Configuration().Security.HopsWorksAPIKeysCacheValiditySec))
-	err = ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB001")
+
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	db1 = "DB001"
+	err = ValidateAPIKey(&apiKey, &db1)
 	if err != nil {
 		t.Fatalf("No error expected")
 	}
@@ -128,14 +152,18 @@ func TestAPIKeyCache2(t *testing.T) {
 	common.CreateDatabases(t, []string{"DB001", "DB002"}...)
 	defer common.DropDatabases(t, []string{"DB001", "DB002"}...)
 
-	err := ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB003")
+	apiKey := common.HOPSWORKS_TEST_API_KEY
+	db3 := "DB003"
+	err := ValidateAPIKey(&apiKey, &db3)
 	if err == nil {
 		t.Fatalf("Expected it to fail")
 	}
 
 	lastUpdated1 := cacheUpdateTime(common.HOPSWORKS_TEST_API_KEY)
 
-	err = ValidateAPIKey(common.HOPSWORKS_TEST_API_KEY, "DB001")
+	apiKey = common.HOPSWORKS_TEST_API_KEY
+	db1 := "DB001"
+	err = ValidateAPIKey(&apiKey, &db1)
 	if err != nil {
 		t.Fatalf("No error expected")
 	}
