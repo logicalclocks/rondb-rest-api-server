@@ -26,11 +26,11 @@ import (
 	"syscall"
 
 	"hopsworks.ai/rdrs/internal/config"
+	"hopsworks.ai/rdrs/internal/handlers"
+	"hopsworks.ai/rdrs/internal/handlers/batchops"
+	"hopsworks.ai/rdrs/internal/handlers/pkread"
+	"hopsworks.ai/rdrs/internal/handlers/stat"
 	"hopsworks.ai/rdrs/internal/log"
-	"hopsworks.ai/rdrs/internal/router/handler"
-	"hopsworks.ai/rdrs/internal/router/handler/batchops"
-	"hopsworks.ai/rdrs/internal/router/handler/pkread"
-	"hopsworks.ai/rdrs/internal/router/handler/stat"
 	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
@@ -60,7 +60,7 @@ func main() {
 
 	router := router.CreateRouterContext()
 
-	handlers := []handler.RegisterTestHandler{pkread.RegisterPKTestHandler,
+	handlers := []handlers.RegisterTestHandler{pkread.RegisterPKTestHandler,
 		stat.RegisterStatTestHandler,
 		batchops.RegisterBatchTestHandler}
 

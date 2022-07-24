@@ -30,8 +30,8 @@ import (
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
+	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
-	"hopsworks.ai/rdrs/internal/router/handler"
 	"hopsworks.ai/rdrs/internal/security/apikey"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
 	"hopsworks.ai/rdrs/version"
@@ -39,7 +39,7 @@ import (
 )
 
 type Router interface {
-	SetupRouter(registerHandlers []handler.RegisterTestHandler) error
+	SetupRouter(registerHandlers []handlers.RegisterTestHandler) error
 	StartRouter() error
 	StopRouter() error
 	GetServer() (*http.Server, *grpc.Server)
@@ -65,7 +65,7 @@ type RouterConext struct {
 
 var _ Router = (*RouterConext)(nil)
 
-func (rc *RouterConext) SetupRouter(handlers []handler.RegisterTestHandler) error {
+func (rc *RouterConext) SetupRouter(handlers []handlers.RegisterTestHandler) error {
 	gin.SetMode(gin.ReleaseMode)
 	rc.Engine = gin.New()
 
