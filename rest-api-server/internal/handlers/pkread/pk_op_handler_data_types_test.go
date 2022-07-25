@@ -43,7 +43,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusNotFound,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -55,7 +55,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -66,7 +66,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -75,7 +75,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -86,7 +86,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        "int_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      []interface{}{},
 		},
 
@@ -98,7 +98,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -110,7 +110,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -123,7 +123,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      []interface{}{},
 		},
 
@@ -135,7 +135,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      []interface{}{},
 		},
 
@@ -147,7 +147,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      []interface{}{},
 		},
 
@@ -160,7 +160,7 @@ func TestDataTypesInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -185,7 +185,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -197,7 +197,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -209,7 +209,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -222,7 +222,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -234,7 +234,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -246,7 +246,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -259,7 +259,7 @@ func TestDataTypesBigInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -282,7 +282,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -294,7 +294,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -306,7 +306,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -319,7 +319,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -331,7 +331,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -343,7 +343,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -356,7 +356,7 @@ func TestDataTypesTinyInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -379,7 +379,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -391,7 +391,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -403,7 +403,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -416,7 +416,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -428,7 +428,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -440,7 +440,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -453,7 +453,7 @@ func TestDataTypesSmallInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -476,7 +476,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -488,7 +488,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -500,7 +500,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -513,7 +513,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -525,7 +525,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -537,7 +537,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -550,7 +550,7 @@ func TestDataTypesMediumInt(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -573,7 +573,7 @@ func TestDataTypesFloat(t *testing.T) {
 			Table:        "float_table2",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_017(),
+			ErrMsgContains: common.ERROR_017(),
 		},
 
 		"simple": {
@@ -584,7 +584,7 @@ func TestDataTypesFloat(t *testing.T) {
 			Table:        "float_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -596,7 +596,7 @@ func TestDataTypesFloat(t *testing.T) {
 			Table:        "float_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -609,7 +609,7 @@ func TestDataTypesFloat(t *testing.T) {
 			Table:        "float_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -632,7 +632,7 @@ func TestDataTypesDouble(t *testing.T) {
 			Table:        "double_table2",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_017(),
+			ErrMsgContains: common.ERROR_017(),
 		},
 
 		"simple": {
@@ -643,7 +643,7 @@ func TestDataTypesDouble(t *testing.T) {
 			Table:        "double_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -655,7 +655,7 @@ func TestDataTypesDouble(t *testing.T) {
 			Table:        "double_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -668,7 +668,7 @@ func TestDataTypesDouble(t *testing.T) {
 			Table:        "double_table1",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -691,7 +691,7 @@ func TestDataTypesDecimal(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -704,7 +704,7 @@ func TestDataTypesDecimal(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -717,7 +717,7 @@ func TestDataTypesDecimal(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -729,7 +729,7 @@ func TestDataTypesDecimal(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 	}
@@ -750,7 +750,7 @@ func TestDataTypesBlobs(t *testing.T) {
 			Table:        "blob_table",
 			Db:           testDb,
 			HttpCode:     http.StatusInternalServerError,
-			BodyContains: common.ERROR_026(),
+			ErrMsgContains: common.ERROR_026(),
 			RespKVs:      []interface{}{},
 		},
 
@@ -763,7 +763,7 @@ func TestDataTypesBlobs(t *testing.T) {
 			Table:        "blob_table",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      []interface{}{"col1"},
 		},
 
@@ -776,7 +776,7 @@ func TestDataTypesBlobs(t *testing.T) {
 			Table:        "text_table",
 			Db:           testDb,
 			HttpCode:     http.StatusInternalServerError,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      []interface{}{},
 		},
 
@@ -789,7 +789,7 @@ func TestDataTypesBlobs(t *testing.T) {
 			Table:        "text_table",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      []interface{}{"col1"},
 		},
 	}
@@ -837,7 +837,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusNotFound,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -850,7 +850,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_008(),
+			ErrMsgContains: common.ERROR_008(),
 			RespKVs:      validateColumns,
 		},
 
@@ -863,7 +863,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -876,7 +876,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -889,7 +889,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -902,7 +902,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -915,7 +915,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -928,7 +928,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -941,7 +941,7 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}
@@ -965,7 +965,7 @@ func TestDataTypesDateColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -978,7 +978,7 @@ func TestDataTypesDateColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -991,7 +991,7 @@ func TestDataTypesDateColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_008(),
+			ErrMsgContains: common.ERROR_008(),
 			RespKVs:      []interface{}{},
 		},
 
@@ -1004,7 +1004,7 @@ func TestDataTypesDateColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_008(),
+			ErrMsgContains: common.ERROR_008(),
 			RespKVs:      []interface{}{},
 		},
 
@@ -1017,7 +1017,7 @@ func TestDataTypesDateColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1030,7 +1030,7 @@ func TestDataTypesDateColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 	}
@@ -1052,7 +1052,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"validpk1_pre3": {
@@ -1064,7 +1064,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"validpk1_pre6": {
@@ -1076,7 +1076,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1089,7 +1089,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1102,7 +1102,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1115,7 +1115,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1128,7 +1128,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"nulltest_pre3": {
@@ -1140,7 +1140,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"nulltest_pre6": {
@@ -1152,7 +1152,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1165,7 +1165,7 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 			Table:        "date_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 	}
@@ -1187,7 +1187,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"validpk1_pre3": {
@@ -1199,7 +1199,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"validpk1_pre6": {
@@ -1211,7 +1211,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1224,7 +1224,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1237,7 +1237,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1250,7 +1250,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"nulltest_pre3": {
@@ -1262,7 +1262,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"nulltest_pre6": {
@@ -1274,7 +1274,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1287,7 +1287,7 @@ func TestDataTypesTimeColumn(t *testing.T) {
 			Table:        "time_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 	}
@@ -1309,7 +1309,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 
@@ -1322,7 +1322,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 
@@ -1335,7 +1335,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 
@@ -1348,7 +1348,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"validpk1_pre3": {
@@ -1360,7 +1360,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"validpk1_pre6": {
@@ -1372,7 +1372,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1385,7 +1385,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1398,7 +1398,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1411,7 +1411,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1424,7 +1424,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"nulltest_pre3": {
@@ -1436,7 +1436,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table3",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"nulltest_pre6": {
@@ -1448,7 +1448,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table6",
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1461,7 +1461,7 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 			Table:        "ts_table0",
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_027(),
+			ErrMsgContains: common.ERROR_027(),
 			RespKVs:      validateColumns,
 		},
 	}
@@ -1485,7 +1485,7 @@ func TestDataTypesYearColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1498,7 +1498,7 @@ func TestDataTypesYearColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusNotFound,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1511,7 +1511,7 @@ func TestDataTypesYearColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusNotFound,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1524,7 +1524,7 @@ func TestDataTypesYearColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1537,7 +1537,7 @@ func TestDataTypesYearColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 
@@ -1550,7 +1550,7 @@ func TestDataTypesYearColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusBadRequest,
-			BodyContains: common.ERROR_015(),
+			ErrMsgContains: common.ERROR_015(),
 			RespKVs:      validateColumns,
 		},
 	}
@@ -1573,7 +1573,7 @@ func TestDataTypesBitColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 		"simple2": {
@@ -1585,7 +1585,7 @@ func TestDataTypesBitColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 
@@ -1598,7 +1598,7 @@ func TestDataTypesBitColumn(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusOK,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}

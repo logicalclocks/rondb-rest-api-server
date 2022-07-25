@@ -195,6 +195,6 @@ type PKTestInfo struct {
 	Table        string
 	Db           string
 	HttpCode     int
-	BodyContains string
+	ErrMsgContains string
 	RespKVs      []interface{}
 }

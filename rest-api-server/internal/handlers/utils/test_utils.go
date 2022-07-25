@@ -85,14 +85,13 @@ func SendHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	}
 	respBody := string(respBodyBtyes)
 
-	if respCode != expectedStatus || !strings.Contains(respBody, expectedMsg) {
-		if respCode != expectedStatus {
-			t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, respCode, respBody)
-		}
-		if !strings.Contains(respBody, expectedMsg) {
-			t.Fatalf("Test failed. Response body does not contain %s. Body: %s", expectedMsg, respBody)
-		}
-	}
+  if respCode != expectedStatus {
+  	t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, respCode, respBody)
+  }
+  
+  if respCode != http.StatusOK && !strings.Contains(respBody, expectedMsg) {
+  	t.Fatalf("Test failed. Response error body does not contain %s. Body: %s", expectedMsg, respBody)
+  }
 
 	return respCode, respBody
 }
@@ -530,16 +529,15 @@ func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext
 		errStr = fmt.Sprintf("%v", err)
 	}
 
-	if respCode != expectedStatus || !strings.Contains(errStr, testInfo.BodyContains) {
-		if respCode != expectedStatus {
-			t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
-		}
-		if !strings.Contains(errStr, testInfo.BodyContains) {
-			t.Fatalf("Test failed. Error does not contain string: %s. Complete Error Message: %s", testInfo.BodyContains, errStr)
-		}
+	if respCode != expectedStatus {
+		t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
 	}
 
-	if respCode == 200 {
+	if respCode != http.StatusOK && !strings.Contains(errStr, testInfo.ErrMsgContains) {
+		t.Fatalf("Test failed. Error does not contain string: %s. Complete Error Message: %s", testInfo.ErrMsgContains, errStr)
+	}
+
+	if respCode == http.StatusOK {
 		resp := grpcsrv.ConvertPKReadResponseProto(respProto)
 		return respCode, resp
 	} else {
@@ -570,7 +568,7 @@ func pkRESTTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isB
 	url := NewPKReadURL(testInfo.Db, testInfo.Table)
 	body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
 	httpCode, res := SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
-		string(body), testInfo.HttpCode, testInfo.BodyContains)
+		string(body), testInfo.HttpCode, testInfo.ErrMsgContains)
 	if httpCode == http.StatusOK {
 		ValidateResHttp(t, testInfo, res, isBinaryData)
 	}
@@ -658,9 +656,9 @@ func validateBatchResponseMsg(t testing.TB, testInfo ds.BatchOperationTestInfo, 
 	}
 	json.Unmarshal([]byte(resp), &res)
 	for i := 0; i < len(testInfo.Operations); i++ {
-		if !strings.Contains(string(res.Result[i]), testInfo.Operations[i].BodyContains) {
+		if !strings.Contains(string(res.Result[i]), testInfo.Operations[i].ErrMsgContains) {
 			t.Fatalf("Test failed. Response body does not contain %s. Body: %s",
-				testInfo.Operations[i].BodyContains, string(res.Result[i]))
+				testInfo.Operations[i].ErrMsgContains, string(res.Result[i]))
 		}
 	}
 }

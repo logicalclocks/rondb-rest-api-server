@@ -105,7 +105,7 @@ type BatchSubOperationTestInfo struct {
 	Table        string
 	DB           string
 	HttpCode     int
-	BodyContains string
+	ErrMsgContains string
 	RespKVs      []interface{}
 }
 

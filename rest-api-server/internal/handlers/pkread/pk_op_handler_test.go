@@ -292,7 +292,7 @@ func TestGRPC2(t *testing.T) {
 			Table:        testTable,
 			Db:           testDb,
 			HttpCode:     http.StatusNotFound,
-			BodyContains: "",
+			ErrMsgContains: "",
 			RespKVs:      validateColumns,
 		},
 	}

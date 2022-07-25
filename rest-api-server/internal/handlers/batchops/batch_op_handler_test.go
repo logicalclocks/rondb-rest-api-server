@@ -46,7 +46,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "int_table",
 					DB:           "DB004",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 			},
@@ -67,7 +67,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "int_table",
 					DB:           "DB004",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 				ds.BatchSubOperationTestInfo{
@@ -83,7 +83,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "bigint_table",
 					DB:           "DB005",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 			},
@@ -104,7 +104,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "int_table",
 					DB:           "DB004",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 				ds.BatchSubOperationTestInfo{
@@ -120,7 +120,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "bigint_table",
 					DB:           "DB005",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 				ds.BatchSubOperationTestInfo{
@@ -136,7 +136,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "tinyint_table",
 					DB:           "DB006",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 				ds.BatchSubOperationTestInfo{
@@ -152,7 +152,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "smallint_table",
 					DB:           "DB007",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 				ds.BatchSubOperationTestInfo{
@@ -168,7 +168,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "smallint_table",
 					DB:           "DB007",
 					HttpCode:     http.StatusOK,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 			},
@@ -189,7 +189,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "int_table",
 					DB:           "DB004",
 					HttpCode:     http.StatusNotFound,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 				ds.BatchSubOperationTestInfo{
@@ -205,7 +205,7 @@ func TestBatchSimple1(t *testing.T) {
 					Table:        "bigint_table",
 					DB:           "DB005",
 					HttpCode:     http.StatusNotFound,
-					BodyContains: "",
+					ErrMsgContains: "",
 					RespKVs:      []interface{}{"col0", "col1"},
 				},
 			},
@@ -327,7 +327,7 @@ func createSubOperation(t *testing.T, table string, database string, pk string, 
 		Table:        table,
 		DB:           database,
 		HttpCode:     expectedStatus,
-		BodyContains: "",
+		ErrMsgContains: "",
 		RespKVs:      respKVs,
 	}
 }
@@ -419,7 +419,7 @@ func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBi
 		Table:        table,
 		DB:           database,
 		HttpCode:     expectedStatus,
-		BodyContains: "",
+		ErrMsgContains: "",
 		RespKVs:      respKVs,
 	}
 }
