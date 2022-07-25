@@ -20,28 +20,39 @@ import (
 	"context"
 
 	"fmt"
-	// ds "hopsworks.ai/rdrs/internal/datastructs"
-	// "hopsworks.ai/rdrs/internal/handlers/pkread"
+
+	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/handlers"
 )
 
 type GRPCServer struct {
 }
 
+var server GRPCServer
+var pkReadHandler handlers.PKReader
+
+func GetGRPCServer() *GRPCServer {
+	return &server
+
+}
+
+func (s *GRPCServer) RegisterPKReadHandler(handler handlers.PKReader) {
+	pkReadHandler = handler
+}
+
 func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*PKReadResponseProto, error) {
-	//	req, apiKey := ConvertPKReadRequestProto(reqProto)
-	//	fmt.Println("**** GRPC Server ****")
-	//
-	//	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseGRPC{})
-	//	response.Init()
-	//
-	//	_, err := pkread.ProcessPKReadRequest(req, &apiKey, response)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-	//	respProto := ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))
-	//	return respProto, nil
-	return nil, nil
+	req, apiKey := ConvertPKReadRequestProto(reqProto)
+
+	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseGRPC{})
+	response.Init()
+
+	_, err := pkReadHandler.PkReadHandler(req, &apiKey, response)
+	if err != nil {
+		return nil, err
+	}
+
+	respProto := ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))
+	return respProto, nil
 }
 
 func (s *GRPCServer) Batch(context.Context, *BatchRequestProto) (*BatchResponseProto, error) {

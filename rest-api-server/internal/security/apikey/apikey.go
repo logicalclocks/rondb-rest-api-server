@@ -97,12 +97,12 @@ func findAndValidateCache(apiKey *string, dbs ...*string) (keyFoundInCache, allo
 func GetUserDatabases(apiKey *string) ([]string, error) {
 
 	splits := strings.Split(*apiKey, ".")
-	prefix := splits[0]
-	secret := splits[1]
-
 	if len(splits) != 2 || len(splits[0]) != 16 {
 		return []string{}, fmt.Errorf("Wrong API Key")
 	}
+
+	prefix := splits[0]
+	secret := splits[1]
 
 	key, err := dal.GetAPIKey(prefix)
 	if err != nil {

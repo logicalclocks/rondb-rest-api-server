@@ -68,6 +68,7 @@ func main() {
 	if err != nil {
 		log.Panic(fmt.Sprintf("Unable to setup router: Error: %v", err))
 	}
+
 	err = router.StartRouter()
 	if err != nil {
 		log.Panic(fmt.Sprintf("Unable to start router: Error: %v", err))

@@ -77,7 +77,7 @@ func performPkOp(t *testing.T, tc common.TestContext, db string, table string, c
 	body, _ := json.MarshalIndent(param, "", "\t")
 
 	url := tu.NewPKReadURL(db, table)
-	tu.ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+	tu.SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 
 	ch <- 0
 }
@@ -85,7 +85,7 @@ func performPkOp(t *testing.T, tc common.TestContext, db string, table string, c
 func getStats(t *testing.T, tc common.TestContext) ds.StatInfo {
 	body := ""
 	url := tu.NewStatURL()
-	_, respBody := tu.ProcessHttpRequest(t, tc, ds.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
+	_, respBody := tu.SendHttpRequest(t, tc, ds.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
 
 	var stats ds.StatInfo
 	err := json.Unmarshal([]byte(respBody), &stats)

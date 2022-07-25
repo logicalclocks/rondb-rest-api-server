@@ -29,16 +29,29 @@ import (
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/grpcsrv"
+	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
 )
 
+type PKRead struct{}
+
+var _ handlers.PKReader = (*PKRead)(nil)
+
+var pkRead PKRead
+
 func RegisterPKTestHandler(e *gin.Engine) {
 	group := e.Group(ds.DB_OPS_EP_GROUP)
-	group.POST(ds.PK_DB_OPERATION, PkReadHandler)
+	group.POST(ds.PK_DB_OPERATION, pkRead.PkReadHttpHandler)
+	grpcsrv.GetGRPCServer().RegisterPKReadHandler(&pkRead)
 }
 
-func PkReadHandler(c *gin.Context) {
+func GetPKReader() handlers.PKReader {
+	return &pkRead
+}
+
+func (p *PKRead) PkReadHttpHandler(c *gin.Context) {
 	pkReadParams := ds.PKReadParams{}
 
 	err := parseRequest(c, &pkReadParams)
@@ -59,7 +72,7 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, api
 	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseJSON{})
 	response.Init()
 
-	status, err := ProcessPKReadRequest(pkReadParams, apiKey, response)
+	status, err := pkRead.PkReadHandler(pkReadParams, apiKey, response)
 
 	if err != nil {
 		common.SetResponseBodyError(c, status, err)
@@ -69,8 +82,7 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, api
 	common.SetResponseBody(c, status, response)
 }
 
-func ProcessPKReadRequest(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error) {
-
+func (p *PKRead) PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error) {
 	err := checkAPIKey(apiKey, pkReadParams.DB)
 	if err != nil {
 		return http.StatusUnauthorized, err

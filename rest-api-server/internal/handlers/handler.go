@@ -17,6 +17,18 @@
 
 package handlers
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	ds "hopsworks.ai/rdrs/internal/datastructs"
+)
 
 type RegisterTestHandler func(*gin.Engine)
+
+type PKReader interface {
+	PkReadHttpHandler(c *gin.Context)
+	PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error)
+}
+
+type BatchOp interface {
+	ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey *string, response ds.BatchResponse) (int, error)
+}

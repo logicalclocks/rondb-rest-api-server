@@ -90,14 +90,14 @@ type PKReadResponse interface {
 	SetColumnData(column, value *string, valueType uint32)
 }
 
-type PKReadResponseGRPC struct {
-	OperationID *string             `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
-	Data        *map[string]*string `json:"data"           form:"data"            binding:"omitempty"`
-}
-
 type PKReadResponseJSON struct {
 	OperationID *string                      `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
 	Data        *map[string]*json.RawMessage `json:"data"           form:"data"            binding:"omitempty"`
+}
+
+type PKReadResponseGRPC struct {
+	OperationID *string             `json:"operationId"    form:"operation-id"    binding:"omitempty,min=1,max=64"`
+	Data        *map[string]*string `json:"data"           form:"data"            binding:"omitempty"`
 }
 
 func (r *PKReadResponseGRPC) Init() {

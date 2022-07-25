@@ -45,7 +45,7 @@ import (
 	"hopsworks.ai/rdrs/version"
 )
 
-func ProcessHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
+func SendHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	url string, body string, expectedStatus int, expectedMsg string) (int, string) {
 	t.Helper()
 
@@ -121,7 +121,7 @@ func setupClient(tc common.TestContext) *http.Client {
 	return c
 }
 
-func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isBinaryData bool) {
+func ValidateResHttp(t testing.TB, testInfo ds.PKTestInfo, resp string, isBinaryData bool) {
 	t.Helper()
 
 	for i := 0; i < len(testInfo.RespKVs); i++ {
@@ -138,19 +138,48 @@ func ValidateResArrayData(t testing.TB, testInfo ds.PKTestInfo, resp string, isB
 			t.Fatalf("Key not found in the response. Key %s", key)
 		}
 
-		dbVal, err := getColumnDataFromDB(t, testInfo.Db, testInfo.Table,
-			testInfo.PkReq.Filters, key, isBinaryData)
-		if err != nil {
-			t.Fatalf("%v", err)
+		compareDataWithDB(t, testInfo, &key, jsonVal, isBinaryData)
+	}
+}
+
+func ValidateResGRPC(t testing.TB, testInfo ds.PKTestInfo, resp *ds.PKReadResponseGRPC, isBinaryData bool) {
+	t.Helper()
+
+	for i := 0; i < len(testInfo.RespKVs); i++ {
+		key := string(testInfo.RespKVs[i].(string))
+
+		val, found := getColumnDataFromGRPC(t, key, resp)
+		if !found {
+			t.Fatalf("Key not found in the response. Key %s", key)
 		}
 
-		if (jsonVal == nil || dbVal == nil) && !(jsonVal == nil && dbVal == nil) { // if one of prts is nill
-			t.Fatalf("The read value for key %s does not match. Got from REST Server ptr: %d, Got from MYSQL Server ptr: %d", key, jsonVal, dbVal)
-		}
+		compareDataWithDB(t, testInfo, &key, val, isBinaryData)
+	}
+}
 
-		if !((jsonVal == nil && dbVal == nil) || (*jsonVal == *dbVal)) {
-			t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, *jsonVal, *dbVal)
-		}
+func compareDataWithDB(t testing.TB, testInfo ds.PKTestInfo, colName *string, colDataFromRestServer *string, isBinaryData bool) {
+	dbVal, err := getColumnDataFromDB(t, testInfo.Db, testInfo.Table,
+		testInfo.PkReq.Filters, *colName, isBinaryData)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if (colDataFromRestServer == nil || dbVal == nil) && !(colDataFromRestServer == nil && dbVal == nil) { // if one of prts is nill
+		t.Fatalf("The read value for key %s does not match.", *colName)
+	}
+
+	if !((colDataFromRestServer == nil && dbVal == nil) || (*colDataFromRestServer == *dbVal)) {
+		t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", *colName, *colDataFromRestServer, *dbVal)
+	}
+}
+
+func getColumnDataFromGRPC(t testing.TB, colName string, pkResponse *ds.PKReadResponseGRPC) (*string, bool) {
+	t.Helper()
+	val, ok := (*pkResponse.Data)[colName]
+	if !ok {
+		return nil, ok
+	} else {
+		return val, ok
 	}
 }
 
@@ -404,6 +433,7 @@ func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterTes
 
 	routerCtx := router.CreateRouterContext()
 	routerCtx.SetupRouter(registerHandlers)
+
 	err := routerCtx.StartRouter()
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -445,6 +475,17 @@ func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, reg
 }
 
 func pkGRPCTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
+	resp, err := sendGRPCRequest(t, testInfo, tc, isBinaryData)
+	if err != nil {
+		t.Fatalf("Error %v", err)
+	}
+
+	// if httpCode == http.StatusOK {
+	ValidateResGRPC(t, testInfo, resp, isBinaryData)
+	// }
+}
+
+func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) (*ds.PKReadResponseGRPC, error) {
 	// Create gRPC client
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
 		config.Configuration().RestServer.GRPCServerIP,
@@ -465,7 +506,7 @@ func pkGRPCTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isB
 	pkReadParams.OperationID = testInfo.PkReq.OperationID
 	pkReadParams.ReadColumns = testInfo.PkReq.ReadColumns
 
-	apiKey := "adf"
+	apiKey := common.HOPSWORKS_TEST_API_KEY
 	reqProto, err := grpcsrv.ConvertPKReadParams(&pkReadParams, &apiKey)
 	if err != nil {
 		t.Fatalf("Failed to convert request %v", err)
@@ -477,21 +518,16 @@ func pkGRPCTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isB
 	}
 
 	resp := grpcsrv.ConvertPKReadResponseProto(respProto)
-	bytes, err := json.Marshal(resp)
-	if err != nil {
-		t.Fatalf("Failed to marshal %v", err)
-	}
-	fmt.Printf("Response got form server %s \n", string(bytes))
-
+	return resp, nil
 }
 
 func pkRESTTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
 	url := NewPKReadURL(testInfo.Db, testInfo.Table)
 	body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
-	httpCode, res := ProcessHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
+	httpCode, res := SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
 		string(body), testInfo.HttpCode, testInfo.BodyContains)
 	if httpCode == http.StatusOK {
-		ValidateResArrayData(t, testInfo, res, isBinaryData)
+		ValidateResHttp(t, testInfo, res, isBinaryData)
 	}
 }
 
@@ -523,7 +559,7 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 			WithDBs(t, dbNamesArr, registerHandlers, func(tc common.TestContext) {
 				url := NewBatchReadURL()
 				body, _ := json.MarshalIndent(batch, "", "\t")
-				httpCode, res := ProcessHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
+				httpCode, res := SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
 					string(body), testInfo.HttpCode, "")
 				if httpCode == http.StatusOK {
 					validateBatchResponse(t, testInfo, res, isBinaryData)
