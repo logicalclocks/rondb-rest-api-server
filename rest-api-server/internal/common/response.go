@@ -32,7 +32,7 @@ type ErrorResponse struct {
 }
 
 func SetResponseBodyError(c *gin.Context, code int, err error) {
-	errstruct := ErrorResponse{Error: fmt.Sprintf("%v", err)}
+	errstruct := ErrorResponse{Error: fmt.Sprintf("Error Code: %d, Error: %v", code, err)}
 	b, _ := json.Marshal(errstruct)
 	c.Writer.WriteHeader(code)
 	c.Writer.Write(b)

@@ -291,7 +291,7 @@ func TestGRPC2(t *testing.T) {
 			},
 			Table:        testTable,
 			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			HttpCode:     http.StatusNotFound,
 			BodyContains: "",
 			RespKVs:      validateColumns,
 		},

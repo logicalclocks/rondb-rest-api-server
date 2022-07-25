@@ -18,6 +18,7 @@ package grpcsrv
 
 import (
 	"context"
+	"net/http"
 
 	"fmt"
 
@@ -46,9 +47,13 @@ func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*P
 	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseGRPC{})
 	response.Init()
 
-	_, err := pkReadHandler.PkReadHandler(req, &apiKey, response)
+	status, err := pkReadHandler.PkReadHandler(req, &apiKey, response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error code: %d, Error: %v ", status, err)
+	}
+
+	if status != http.StatusOK {
+		return nil, fmt.Errorf("Error code: %d", status)
 	}
 
 	respProto := ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))

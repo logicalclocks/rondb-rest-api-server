@@ -153,6 +153,15 @@ func ValidateResGRPC(t testing.TB, testInfo ds.PKTestInfo, resp *ds.PKReadRespon
 			t.Fatalf("Key not found in the response. Key %s", key)
 		}
 
+		var err error
+		if val != nil {
+			quotedVal := fmt.Sprintf("\"%s\"", *val) // you have to surround the string with "s
+			*val, err = strconv.Unquote(quotedVal)
+			if err != nil {
+				t.Fatalf("Unquote failed %v\n", err)
+			}
+		}
+
 		compareDataWithDB(t, testInfo, &key, val, isBinaryData)
 	}
 }
@@ -212,11 +221,13 @@ func getColumnDataFromJson(t testing.TB, colName string, pkResponse *ds.PKReadRe
 }
 
 func getColumnDataFromDB(t testing.TB, db string, table string, filters *[]ds.Filter, col string, isBinary bool) (*string, error) {
+
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/",
 		config.Configuration().MySQLServer.User,
 		config.Configuration().MySQLServer.Password,
 		config.Configuration().MySQLServer.IP,
 		config.Configuration().MySQLServer.Port)
+
 	dbConn, err := sql.Open("mysql", connectionString)
 	defer dbConn.Close()
 	if err != nil {
@@ -248,6 +259,7 @@ func getColumnDataFromDB(t testing.TB, db string, table string, filters *[]ds.Fi
 
 	command = fmt.Sprintf(" %s %s\n ", command, where)
 	rows, err := dbConn.Query(command)
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -475,17 +487,14 @@ func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, reg
 }
 
 func pkGRPCTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
-	resp, err := sendGRPCRequest(t, testInfo, tc, isBinaryData)
-	if err != nil {
-		t.Fatalf("Error %v", err)
-	}
+	respCode, resp := sendGRPCRequest(t, testInfo, tc, isBinaryData)
 
-	// if httpCode == http.StatusOK {
-	ValidateResGRPC(t, testInfo, resp, isBinaryData)
-	// }
+	if respCode == http.StatusOK {
+		ValidateResGRPC(t, testInfo, resp, isBinaryData)
+	}
 }
 
-func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) (*ds.PKReadResponseGRPC, error) {
+func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) (int, *ds.PKReadResponseGRPC) {
 	// Create gRPC client
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
 		config.Configuration().RestServer.GRPCServerIP,
@@ -512,13 +521,49 @@ func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext
 		t.Fatalf("Failed to convert request %v", err)
 	}
 
+	expectedStatus := testInfo.HttpCode
+	respCode := 200
+	var errStr string
 	respProto, err := client.PKRead(context.Background(), reqProto)
 	if err != nil {
-		t.Fatalf("Failed to send request to server %v", err)
+		respCode = getErrorCode(t, err)
+		errStr = fmt.Sprintf("%v", err)
 	}
 
-	resp := grpcsrv.ConvertPKReadResponseProto(respProto)
-	return resp, nil
+	if respCode != expectedStatus || !strings.Contains(errStr, testInfo.BodyContains) {
+		if respCode != expectedStatus {
+			t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
+		}
+		if !strings.Contains(errStr, testInfo.BodyContains) {
+			t.Fatalf("Test failed. Error does not contain string: %s. Complete Error Message: %s", testInfo.BodyContains, errStr)
+		}
+	}
+
+	if respCode == 200 {
+		resp := grpcsrv.ConvertPKReadResponseProto(respProto)
+		return respCode, resp
+	} else {
+		return respCode, nil
+	}
+}
+
+func getErrorCode(t *testing.T, errGot error) int {
+	errStr := fmt.Sprintf("%v", errGot)
+	// error code is sandwiched b/w these two substrings
+	subStr1 := "Error code: "
+
+	if !strings.Contains(errStr, subStr1) {
+		t.Fatalf("Invalid GRPC Error message: %s\n", errStr)
+	}
+
+	numStartIdx := strings.LastIndex(errStr, subStr1) + len(subStr1)
+	numStr := errStr[numStartIdx : numStartIdx+3]
+	errCode, err := strconv.Atoi(numStr)
+	if err != nil {
+		t.Fatalf("Invalid GRPC Error message. Unable to convert error code to int. Error msg: \"%s\". Error:%v ", errStr, err)
+	}
+
+	return errCode
 }
 
 func pkRESTTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {

@@ -147,7 +147,9 @@ func parseOperation(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParam
 
 	match, err := regexp.MatchString("^[a-zA-Z0-9$_]+/[a-zA-Z0-9$_]+/pk-read",
 		*operation.RelativeURL)
-	if !match || err != nil {
+	if err != nil {
+		return fmt.Errorf("Error parsing relative URL: %v", err)
+	} else if !match {
 		return fmt.Errorf("Invalid Relative URL: %s", *operation.RelativeURL)
 	} else {
 		err := parsePKRead(operation, pkReadarams)
