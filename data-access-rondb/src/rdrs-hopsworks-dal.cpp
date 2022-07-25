@@ -537,7 +537,7 @@ RS_Status find_all_projects(int uid, char ***projects, int *count) {
   char **ease = *projects;
   for (Uint32 i = 0; i < project_vec.size(); i++) {
     ease[i] = (char *)malloc(sizeof(dummy.porjectname) * sizeof(char));
-    memcpy(ease[i], project_vec[i].porjectname, strlen(project_vec[i].porjectname)+1);
+    memcpy(ease[i], project_vec[i].porjectname, strlen(project_vec[i].porjectname) + 1);
   }
   return RS_OK;
 }
