@@ -285,7 +285,7 @@ func TestGRPC2(t *testing.T) {
 	validateColumns := []interface{}{"col0", "col1"}
 	tests := map[string]ds.PKTestInfo{
 		"simple": {
-			PkReq: ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 0),
+			PkReq: ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 100),
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
