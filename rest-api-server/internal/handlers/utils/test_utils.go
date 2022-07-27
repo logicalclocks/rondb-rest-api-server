@@ -304,7 +304,7 @@ func RawBytes(a interface{}) json.RawMessage {
 	case int8, int16, int32, int64, int, uint8, uint16, uint32, uint64, uint, float32, float64:
 		value = []byte(fmt.Sprintf("%v", a))
 	case string:
-		value = []byte(fmt.Sprintf("\"%v\"", a))
+		value = []byte(strconv.Quote(a.(string)))
 	default:
 		panic(fmt.Errorf("Unsupported data type. Type: %v", reflect.TypeOf(a)))
 	}
@@ -433,8 +433,8 @@ func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterTes
 
 	tc := common.TestContext{}
 
-	// set log level to warn for testing
-	log.SetLevel("WARN")
+	// init logger
+	log.InitLogger(config.Configuration().Log)
 
 	if config.Configuration().Security.EnableTLS {
 		tlsutils.SetupCerts(&tc)
@@ -566,7 +566,11 @@ func getErrorCode(t *testing.T, errGot error) int {
 
 func pkRESTTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
 	url := NewPKReadURL(testInfo.Db, testInfo.Table)
-	body, _ := json.MarshalIndent(testInfo.PkReq, "", "\t")
+	body, err := json.MarshalIndent(testInfo.PkReq, "", "\t")
+	if err != nil {
+		t.Fatalf("Failed to marshall test request %v", err)
+	}
+
 	httpCode, res := SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
 		string(body), testInfo.HttpCode, testInfo.ErrMsgContains)
 	if httpCode == http.StatusOK {
@@ -670,7 +674,10 @@ func batchRESTTest(t *testing.T, testInfo ds.BatchOperationTestInfo, tc common.T
 	batch := ds.BatchOpRequest{Operations: &subOps}
 
 	url := NewBatchReadURL()
-	body, _ := json.MarshalIndent(batch, "", "\t")
+	body, err := json.MarshalIndent(batch, "", "\t")
+	if err != nil {
+		t.Fatalf("Failed to marshall test request %v", err)
+	}
 	httpCode, res := SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
 		string(body), testInfo.HttpCode, testInfo.ErrMsgContains)
 	if httpCode == http.StatusOK {
@@ -797,7 +804,6 @@ func validateBatchResponseValuesGRPC(t testing.TB, testInfo ds.BatchOperationTes
 }
 
 func Encode(data string, binary bool, colWidth int, padding bool) string {
-
 	if binary {
 
 		newData := []byte(data)

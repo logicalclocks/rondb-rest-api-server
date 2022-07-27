@@ -100,7 +100,7 @@ func init() {
 	}
 
 	log := log.LogConfig{
-		Level:      "info",
+		Level:      "warn",
 		FilePath:   "",
 		MaxSizeMB:  100,
 		MaxBackups: 10,

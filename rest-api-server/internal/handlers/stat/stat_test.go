@@ -45,7 +45,7 @@ func TestStat(t *testing.T) {
 	}
 
 	tu.WithDBs(t, []string{db},
-		[]handlers.RegisterTestHandler{pkread.RegisterPKTestHandler, RegisterStatTestHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterTestHandler{pkread.RegisterPKHandler, RegisterStatTestHandler}, func(tc common.TestContext) {
 			for i := uint32(0); i < numOps; i++ {
 				go performPkOp(t, tc, db, table, ch)
 			}

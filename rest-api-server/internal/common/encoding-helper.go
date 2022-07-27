@@ -20,6 +20,7 @@ package common
 
 import (
 	"fmt"
+	"strconv"
 	"unsafe"
 
 	"hopsworks.ai/rdrs/internal/dal"
@@ -58,7 +59,12 @@ func CopyGoStrToNDBStr(src []byte, dst *dal.NativeBuffer, offset uint32) (uint32
 	// remove the quotation marks from string
 	str := string(src)
 	if str[0:1] == "\"" && str[len(str)-1:] == "\"" {
-		src = []byte(str[1 : len(str)-1])
+		// it is quoted string,
+		uqSrc, err := strconv.Unquote(string(src))
+		if err != nil {
+			return 0, fmt.Errorf("Failed to unquote string %v", err)
+		}
+		src = []byte(uqSrc)
 	}
 
 	if offset+uint32(len(src))+1+2 > dst.Size {

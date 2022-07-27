@@ -944,6 +944,19 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 			ErrMsgContains: "",
 			RespKVs:        validateColumns,
 		},
+
+		"quotedPK": {
+			PkReq: ds.PKReadBody{
+				Filters:     tu.NewFiltersKVs("id0", tu.Encode("\"7\"", isBinary, colWidth, padding)),
+				ReadColumns: tu.NewReadColumns("col", 1),
+				OperationID: tu.NewOperationID(5),
+			},
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
+			ErrMsgContains: "",
+			RespKVs:        validateColumns,
+		},
 	}
 
 	tu.PkTest(t, tests, isBinary, RegisterPKHandler)

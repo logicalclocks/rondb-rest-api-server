@@ -8,26 +8,12 @@ import (
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
-func init() {
-	InitLogger(NewLogConfig())
-}
-
 type LogConfig struct {
 	Level      string
 	FilePath   string
 	MaxSizeMB  int
 	MaxBackups int
 	MaxAge     int
-}
-
-func NewLogConfig() LogConfig {
-	return LogConfig{
-		Level:      "info",
-		FilePath:   "",
-		MaxSizeMB:  100,
-		MaxBackups: 10,
-		MaxAge:     30,
-	}
 }
 
 var currentLevel log.Level
@@ -62,6 +48,7 @@ func SetLevel(levelStr string) {
 		log.Errorf("Invlid log level %s ", levelStr)
 		lvl = log.ErrorLevel
 	}
+	log.SetLevel(lvl)
 
 	currentLevel = lvl
 }

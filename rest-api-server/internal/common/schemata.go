@@ -615,6 +615,7 @@ func SchemaTextualColumns(colType string, db string, length int) [][]string {
 				`INSERT INTO  table1 VALUES("4","ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïð")`, // some chars
 				`INSERT INTO  table1 set id0=5`,
 				`INSERT INTO  table1 VALUES("6","\"\\\b\f\n\r\t$%_?")`, // in mysql \f is replaced by f
+				`INSERT INTO  table1 VALUES("\"7\"","abc")`,            // testing quoted primary key
 			},
 
 			{ // clean up commands
