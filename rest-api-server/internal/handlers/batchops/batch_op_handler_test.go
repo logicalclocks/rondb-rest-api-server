@@ -22,9 +22,10 @@ import (
 	"testing"
 
 	"hopsworks.ai/rdrs/internal/common"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/handlers"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 func TestBatchSimple(t *testing.T) {
@@ -35,8 +36,8 @@ func TestBatchSimple(t *testing.T) {
 			Operations: []ds.BatchSubOperationTestInfo{
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB004/int_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -56,8 +57,8 @@ func TestBatchSimple(t *testing.T) {
 			Operations: []ds.BatchSubOperationTestInfo{
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB004/int_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -71,8 +72,8 @@ func TestBatchSimple(t *testing.T) {
 				},
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB005/bigint_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB005/bigint_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -92,8 +93,8 @@ func TestBatchSimple(t *testing.T) {
 			Operations: []ds.BatchSubOperationTestInfo{
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB004/int_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -107,8 +108,8 @@ func TestBatchSimple(t *testing.T) {
 				},
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB005/bigint_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB005/bigint_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -122,8 +123,8 @@ func TestBatchSimple(t *testing.T) {
 				},
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB006/tinyint_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB006/tinyint_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", -128, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -137,8 +138,8 @@ func TestBatchSimple(t *testing.T) {
 				},
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB007/smallint_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB007/smallint_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 32767, "id1", 65535),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -152,8 +153,8 @@ func TestBatchSimple(t *testing.T) {
 				},
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB007/smallint_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB007/smallint_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 1, "id1", 1),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -173,8 +174,8 @@ func TestBatchSimple(t *testing.T) {
 			Operations: []ds.BatchSubOperationTestInfo{
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB004/int_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 100, "id1", 100),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -188,8 +189,8 @@ func TestBatchSimple(t *testing.T) {
 				},
 				ds.BatchSubOperationTestInfo{
 					SubOperation: ds.BatchSubOp{
-						Method:      &[]string{ds.PK_HTTP_VERB}[0],
-						RelativeURL: &[]string{string("DB005/bigint_table/" + ds.PK_DB_OPERATION)}[0],
+						Method:      &[]string{config.PK_HTTP_VERB}[0],
+						RelativeURL: &[]string{string("DB005/bigint_table/" + config.PK_DB_OPERATION)}[0],
 						Body: &ds.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 100, "id1", 100),
 							ReadColumns: tu.NewReadColumns("col", 2),
@@ -314,8 +315,8 @@ func createSubOperation(t *testing.T, table string, database string, pk string, 
 	respKVs := []interface{}{"col0"}
 	return ds.BatchSubOperationTestInfo{
 		SubOperation: ds.BatchSubOp{
-			Method:      &[]string{ds.PK_HTTP_VERB}[0],
-			RelativeURL: &[]string{string(database + "/" + table + "/" + ds.PK_DB_OPERATION)}[0],
+			Method:      &[]string{config.PK_HTTP_VERB}[0],
+			RelativeURL: &[]string{string(database + "/" + table + "/" + config.PK_DB_OPERATION)}[0],
 			Body: &ds.PKReadBody{
 				Filters:     tu.NewFiltersKVs("id0", pk),
 				ReadColumns: tu.NewReadColumns("col", 1),
@@ -407,8 +408,8 @@ func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBi
 	respKVs := []interface{}{"col0"}
 	return ds.BatchSubOperationTestInfo{
 		SubOperation: ds.BatchSubOp{
-			Method:      &[]string{ds.PK_HTTP_VERB}[0],
-			RelativeURL: &[]string{string(database + "/" + table + "/" + ds.PK_DB_OPERATION)}[0],
+			Method:      &[]string{config.PK_HTTP_VERB}[0],
+			RelativeURL: &[]string{string(database + "/" + table + "/" + config.PK_DB_OPERATION)}[0],
 			Body: &ds.PKReadBody{
 				Filters:     tu.NewFiltersKVs("id0", tu.Encode(pk, isBinary, colWidth, padding)),
 				ReadColumns: tu.NewReadColumns("col", 1),
@@ -431,7 +432,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].Method = nil
 			operationsWrapper := ds.BatchOpRequest{Operations: &operations}
 			body, _ := json.Marshal(operationsWrapper)
-			tu.SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Method' failed ")
 
 			// Test missing relative URL
@@ -439,7 +440,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].RelativeURL = nil
 			operationsWrapper = ds.BatchOpRequest{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'RelativeURL' failed ")
 
 			// Test missing body
@@ -447,7 +448,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			operations[1].Body = nil
 			operationsWrapper = ds.BatchOpRequest{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Body' failed ")
 
 			// Test missing filter in an operation
@@ -455,7 +456,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			*&operations[1].Body.Filters = nil
 			operationsWrapper = ds.BatchOpRequest{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
-			tu.SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
+			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Filters' failed")
 		})
 }

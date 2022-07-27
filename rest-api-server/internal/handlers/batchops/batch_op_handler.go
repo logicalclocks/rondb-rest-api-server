@@ -27,12 +27,12 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 	"hopsworks.ai/rdrs/version"
 )
 
@@ -42,7 +42,7 @@ var _ handlers.Batcher = (*Batch)(nil)
 var batch Batch
 
 func RegisterBatchHandler(engine *gin.Engine) {
-	engine.POST("/"+version.API_VERSION+"/"+ds.BATCH_OPERATION, batch.BatchOpsHttpHandler)
+	engine.POST("/"+version.API_VERSION+"/"+config.BATCH_OPERATION, batch.BatchOpsHttpHandler)
 	grpcsrv.GetGRPCServer().RegisterBatchOpHandler(&batch)
 }
 
@@ -188,7 +188,7 @@ func makePKReadParams(operation *ds.BatchSubOp, pkReadarams *ds.PKReadParams) er
 }
 
 func getAPIKey(c *gin.Context) *string {
-	apiKey := c.GetHeader(ds.API_KEY_NAME)
+	apiKey := c.GetHeader(config.API_KEY_NAME)
 	return &apiKey
 }
 

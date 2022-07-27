@@ -32,7 +32,7 @@ import (
 
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 // Also checkout internal/router/handler/pkread/encoding-scheme.png

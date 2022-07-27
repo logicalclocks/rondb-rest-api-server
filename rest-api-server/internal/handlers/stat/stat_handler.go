@@ -22,10 +22,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"hopsworks.ai/rdrs/internal/common"
+	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 	"hopsworks.ai/rdrs/version"
 )
 
@@ -38,7 +39,7 @@ var stat Stat
 var _ handlers.Stater = (*Stat)(nil)
 
 func RegisterStatTestHandler(engine *gin.Engine) {
-	engine.GET("/"+version.API_VERSION+"/"+ds.STAT_OPERATION, stat.StatOpsHttpHandler)
+	engine.GET("/"+version.API_VERSION+"/"+config.STAT_OPERATION, stat.StatOpsHttpHandler)
 	grpcsrv.GetGRPCServer().RegisterStatOpHandler(&stat)
 }
 

@@ -18,13 +18,7 @@ package datastructs
 
 import (
 	"fmt"
-
-	"hopsworks.ai/rdrs/version"
 )
-
-const DBS_OPS_EP_GROUP = "/" + version.API_VERSION + "/"
-const BATCH_OPERATION = "batch"
-const BATCH_HTTP_VERB = "POST"
 
 // Request
 type BatchOpRequest struct {

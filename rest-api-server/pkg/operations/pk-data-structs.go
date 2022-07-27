@@ -26,14 +26,6 @@ import (
 	"fmt"
 )
 
-const PK_DB_OPERATION = "pk-read"
-const PK_HTTP_VERB = "POST"
-
-// Primary key column filter
-const FILTER_PARAM_NAME = "filters"
-const READ_COL_PARAM_NAME = "read-columns"
-const OPERATION_ID_PARAM_NAME = "operation-id"
-
 // Request
 type PKReadParams struct {
 	DB          *string       `json:"db" `
@@ -191,10 +183,10 @@ var _ PKReadResponseWithCode = (*PKReadResponseWithCodeGRPC)(nil)
 
 // For testing only
 type PKTestInfo struct {
-	PkReq        PKReadBody
-	Table        string
-	Db           string
-	HttpCode     int
+	PkReq          PKReadBody
+	Table          string
+	Db             string
+	HttpCode       int
 	ErrMsgContains string
-	RespKVs      []interface{}
+	RespKVs        []interface{}
 }

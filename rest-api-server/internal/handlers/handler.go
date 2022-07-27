@@ -19,7 +19,7 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 type RegisterTestHandler func(*gin.Engine)

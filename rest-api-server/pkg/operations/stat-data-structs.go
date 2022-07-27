@@ -15,3 +15,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package datastructs
+
+import "hopsworks.ai/rdrs/internal/dal"
+
+type StatRequest struct {
+}
+
+type StatResponse struct {
+	MemoryStats dal.MemoryStats
+	RonDBStats  dal.RonDBStats
+}

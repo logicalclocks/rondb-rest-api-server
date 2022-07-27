@@ -14,17 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package datastructs
 
-import "hopsworks.ai/rdrs/internal/dal"
+package config
 
+import "hopsworks.ai/rdrs/version"
+
+const API_KEY_NAME = "X-API-KEY"
+
+const DB_PP = "db"
+const TABLE_PP = "table"
+const DB_OPS_EP_GROUP = "/" + version.API_VERSION + "/:" + DB_PP + "/:" + TABLE_PP + "/"
+const DBS_OPS_EP_GROUP = "/" + version.API_VERSION + "/"
+
+const PK_DB_OPERATION = "pk-read"
+const BATCH_OPERATION = "batch"
 const STAT_OPERATION = "stat"
+
+const PK_HTTP_VERB = "POST"
+const BATCH_HTTP_VERB = "POST"
 const STAT_HTTP_VERB = "GET"
-
-type StatRequest struct {
-}
-
-type StatResponse struct {
-	MemoryStats dal.MemoryStats
-	RonDBStats  dal.RonDBStats
-}

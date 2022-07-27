@@ -23,8 +23,8 @@ import (
 
 	_ "github.com/ianlancetaylor/cgosymbolizer"
 	"hopsworks.ai/rdrs/internal/common"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 // INT TESTS

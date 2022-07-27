@@ -22,8 +22,8 @@ import (
 
 	"fmt"
 
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/handlers"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 type GRPCServer struct {

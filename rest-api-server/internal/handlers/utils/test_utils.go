@@ -36,11 +36,11 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
@@ -70,7 +70,7 @@ func SendHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	}
 
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
-		req.Header.Set(ds.API_KEY_NAME, common.HOPSWORKS_TEST_API_KEY)
+		req.Header.Set(config.API_KEY_NAME, common.HOPSWORKS_TEST_API_KEY)
 	}
 
 	resp, err = client.Do(req)
@@ -334,9 +334,9 @@ func NewPKReadURL(db string, table string) string {
 
 	url := fmt.Sprintf("%s:%d%s%s", config.Configuration().RestServer.RESTServerIP,
 		config.Configuration().RestServer.RESTServerPort,
-		ds.DB_OPS_EP_GROUP, ds.PK_DB_OPERATION)
-	url = strings.Replace(url, ":"+ds.DB_PP, db, 1)
-	url = strings.Replace(url, ":"+ds.TABLE_PP, table, 1)
+		config.DB_OPS_EP_GROUP, config.PK_DB_OPERATION)
+	url = strings.Replace(url, ":"+config.DB_PP, db, 1)
+	url = strings.Replace(url, ":"+config.TABLE_PP, table, 1)
 	appendURLProtocol(&url)
 	return url
 }
@@ -344,7 +344,7 @@ func NewPKReadURL(db string, table string) string {
 func NewBatchReadURL() string {
 	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.RESTServerIP,
 		config.Configuration().RestServer.RESTServerPort,
-		version.API_VERSION, ds.BATCH_OPERATION)
+		version.API_VERSION, config.BATCH_OPERATION)
 	appendURLProtocol(&url)
 	return url
 }
@@ -352,7 +352,7 @@ func NewBatchReadURL() string {
 func NewStatURL() string {
 	url := fmt.Sprintf("%s:%d/%s/%s", config.Configuration().RestServer.RESTServerIP,
 		config.Configuration().RestServer.RESTServerPort,
-		version.API_VERSION, ds.STAT_OPERATION)
+		version.API_VERSION, config.STAT_OPERATION)
 	appendURLProtocol(&url)
 	return url
 }
@@ -571,7 +571,7 @@ func pkRESTTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isB
 		t.Fatalf("Failed to marshall test request %v", err)
 	}
 
-	httpCode, res := SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url,
+	httpCode, res := SendHttpRequest(t, tc, config.PK_HTTP_VERB, url,
 		string(body), testInfo.HttpCode, testInfo.ErrMsgContains)
 	if httpCode == http.StatusOK {
 		ValidateResHttp(t, testInfo, res, isBinaryData)
@@ -678,7 +678,7 @@ func batchRESTTest(t *testing.T, testInfo ds.BatchOperationTestInfo, tc common.T
 	if err != nil {
 		t.Fatalf("Failed to marshall test request %v", err)
 	}
-	httpCode, res := SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
+	httpCode, res := SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url,
 		string(body), testInfo.HttpCode, testInfo.ErrMsgContains)
 	if httpCode == http.StatusOK {
 		validateBatchResponseHttp(t, testInfo, res, isBinaryData)

@@ -25,11 +25,12 @@ import (
 	"time"
 
 	"hopsworks.ai/rdrs/internal/common"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/stat"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
 	"hopsworks.ai/rdrs/internal/log"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 // go test  -test.bench BenchmarkSimple -test.run=thisexpressionwontmatchanytest  ./internal/router/handler/pkread/
@@ -60,7 +61,7 @@ func BenchmarkSimple(t *testing.B) {
 			reqBody := createReq(maxRows, opCount, operationId)
 
 			for bp.Next() {
-				tu.SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
+				tu.SendHttpRequest(t, tc, config.PK_HTTP_VERB, url, reqBody, http.StatusOK, "")
 			}
 		})
 		t.StopTimer()
@@ -143,7 +144,7 @@ func consumer1(b testing.TB, tc common.TestContext, id int, db string, table str
 		}
 		body, _ := json.Marshal(param)
 
-		tu.SendHttpRequest(b, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+		tu.SendHttpRequest(b, tc, config.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 		// stats, _ := stat.Stats()
 		// fmt.Printf("Thread %d, Stats: %v\n", id, *stats)
 	}

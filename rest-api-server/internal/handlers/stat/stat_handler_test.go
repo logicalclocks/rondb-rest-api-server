@@ -27,11 +27,11 @@ import (
 	"google.golang.org/grpc"
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 func TestStat(t *testing.T) {
@@ -88,7 +88,7 @@ func performPkOp(t *testing.T, tc common.TestContext, db string, table string, c
 	body, _ := json.MarshalIndent(param, "", "\t")
 
 	url := tu.NewPKReadURL(db, table)
-	tu.SendHttpRequest(t, tc, ds.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
+	tu.SendHttpRequest(t, tc, config.PK_HTTP_VERB, url, string(body), http.StatusOK, "")
 
 	ch <- 0
 }
@@ -96,7 +96,7 @@ func performPkOp(t *testing.T, tc common.TestContext, db string, table string, c
 func getStatsHttp(t *testing.T, tc common.TestContext) *ds.StatResponse {
 	body := ""
 	url := tu.NewStatURL()
-	_, respBody := tu.SendHttpRequest(t, tc, ds.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
+	_, respBody := tu.SendHttpRequest(t, tc, config.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
 
 	var stats ds.StatResponse
 	err := json.Unmarshal([]byte(respBody), &stats)

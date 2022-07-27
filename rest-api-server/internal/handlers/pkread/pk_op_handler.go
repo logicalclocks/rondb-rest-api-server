@@ -28,11 +28,11 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 type PKRead struct{}
@@ -42,8 +42,8 @@ var _ handlers.PKReader = (*PKRead)(nil)
 var pkRead PKRead
 
 func RegisterPKHandler(e *gin.Engine) {
-	group := e.Group(ds.DB_OPS_EP_GROUP)
-	group.POST(ds.PK_DB_OPERATION, pkRead.PkReadHttpHandler)
+	group := e.Group(config.DB_OPS_EP_GROUP)
+	group.POST(config.PK_DB_OPERATION, pkRead.PkReadHttpHandler)
 	grpcsrv.GetGRPCServer().RegisterPKReadHandler(&pkRead)
 }
 
@@ -216,7 +216,7 @@ func validateDBIdentifier(identifier string) error {
 }
 
 func getAPIKey(c *gin.Context) *string {
-	apiKey := c.GetHeader(ds.API_KEY_NAME)
+	apiKey := c.GetHeader(config.API_KEY_NAME)
 	return &apiKey
 }
 

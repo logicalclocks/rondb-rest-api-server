@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/internal/datastructs"
+	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 // Converters for PK Read Request
