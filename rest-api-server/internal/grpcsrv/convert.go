@@ -19,13 +19,12 @@ package grpcsrv
 
 import (
 	"encoding/json"
-	"strconv"
 
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 )
 
 // Converters for PK Read Request
-func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) (*PKReadRequestProto, error) {
+func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) *PKReadRequestProto {
 
 	pkReadRequestProto := PKReadRequestProto{}
 
@@ -38,13 +37,6 @@ func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) (*PKReadRequestPr
 			// remove quotes if any
 			if *fillter.Value != nil {
 				valueStr := string([]byte(*fillter.Value))
-				var err error
-				if valueStr[0] == '"' {
-					valueStr, err = strconv.Unquote(valueStr)
-					if err != nil {
-						return nil, err
-					}
-				}
 				filterProto.Value = &valueStr
 			}
 
@@ -73,7 +65,7 @@ func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) (*PKReadRequestPr
 	pkReadRequestProto.OperationID = req.OperationID
 	pkReadRequestProto.APIKey = apiKey
 
-	return &pkReadRequestProto, nil
+	return &pkReadRequestProto
 }
 
 func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) (*ds.PKReadParams, string) {
@@ -160,4 +152,49 @@ func ConvertPKReadResponse(resp *ds.PKReadResponseGRPC) *PKReadResponseProto {
 
 	respProto.OperationID = resp.OperationID
 	return &respProto
+}
+
+func ConvertBatchRequestProto(reqProto *BatchRequestProto) ([]*ds.PKReadParams, string) {
+	operations := make([]*ds.PKReadParams, len(reqProto.Operations))
+	for i, operation := range reqProto.Operations {
+		operations[i], _ = ConvertPKReadRequestProto(operation)
+	}
+	return operations, reqProto.GetAPIKey()
+}
+
+func ConvertBatchOpRequest(readParams []*ds.PKReadParams, apiKey *string) *BatchRequestProto {
+	readParamsProto := make([]*PKReadRequestProto, len(readParams))
+
+	for i, readParam := range readParams {
+		readParamsProto[i] = ConvertPKReadParams(readParam, nil) // no need to set api key here
+	}
+
+	var batchRequestProto BatchRequestProto
+	batchRequestProto.APIKey = apiKey
+	batchRequestProto.Operations = readParamsProto
+
+	return &batchRequestProto
+}
+
+func ConvertBatchResponseProto(responsesProto *BatchResponseProto) *ds.BatchResponseGRPC {
+	pkResponsesWCode := make([]*ds.PKReadResponseWithCodeGRPC, len(responsesProto.Responses))
+	for i, respProto := range responsesProto.Responses {
+		pkResponsesWCode[i] = &ds.PKReadResponseWithCodeGRPC{Code: respProto.Code, Body: ConvertPKReadResponseProto(respProto)}
+	}
+	batchResponse := ds.BatchResponseGRPC{Result: &pkResponsesWCode}
+	return &batchResponse
+}
+
+func ConvertBatchOpResponse(responses *ds.BatchResponseGRPC) *BatchResponseProto {
+	var batchResponse BatchResponseProto
+	if responses.Result != nil {
+		pkReadResponsesProto := make([]*PKReadResponseProto, len(*responses.Result))
+		for i, response := range *responses.Result {
+			pkReadResponseProto := ConvertPKReadResponse(response.Body)
+			pkReadResponseProto.Code = response.Code
+			pkReadResponsesProto[i] = pkReadResponseProto
+		}
+		batchResponse.Responses = pkReadResponsesProto
+	}
+	return &batchResponse
 }

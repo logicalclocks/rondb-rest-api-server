@@ -44,7 +44,7 @@ func BenchmarkSimple(t *testing.B) {
 	maxRows := 1000
 	opCount := 0
 	threadId := 0
-	tu.WithDBs(t, []string{db}, []handlers.RegisterTestHandler{RegisterPKTestHandler,
+	tu.WithDBs(t, []string{db}, []handlers.RegisterTestHandler{RegisterPKHandler,
 		stat.RegisterStatTestHandler}, func(tc common.TestContext) {
 
 		t.ResetTimer()
@@ -94,7 +94,7 @@ func BenchmarkMT(b *testing.B) {
 	table := "table_1"
 	maxRows := 1000
 	tu.WithDBs(b, []string{db},
-		[]handlers.RegisterTestHandler{RegisterPKTestHandler, stat.RegisterStatTestHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterTestHandler{RegisterPKHandler, stat.RegisterStatTestHandler}, func(tc common.TestContext) {
 
 			b.ResetTimer()
 			threads := 1

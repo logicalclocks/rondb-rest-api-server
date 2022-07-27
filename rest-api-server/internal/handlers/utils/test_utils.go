@@ -46,7 +46,7 @@ import (
 )
 
 func SendHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
-	url string, body string, expectedStatus int, expectedMsg string) (int, string) {
+	url string, body string, expectedStatus int, expectedErrMsg string) (int, string) {
 	t.Helper()
 
 	client := setupClient(tc)
@@ -85,13 +85,13 @@ func SendHttpRequest(t testing.TB, tc common.TestContext, httpVerb string,
 	}
 	respBody := string(respBodyBtyes)
 
-  if respCode != expectedStatus {
-  	t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, respCode, respBody)
-  }
-  
-  if respCode != http.StatusOK && !strings.Contains(respBody, expectedMsg) {
-  	t.Fatalf("Test failed. Response error body does not contain %s. Body: %s", expectedMsg, respBody)
-  }
+	if respCode != expectedStatus {
+		t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Response Body: %v ", expectedStatus, respCode, respBody)
+	}
+
+	if respCode != http.StatusOK && !strings.Contains(respBody, expectedErrMsg) {
+		t.Fatalf("Test failed. Response error body does not contain %s. Body: %s", expectedErrMsg, respBody)
+	}
 
 	return respCode, respBody
 }
@@ -137,11 +137,13 @@ func ValidateResHttp(t testing.TB, testInfo ds.PKTestInfo, resp string, isBinary
 			t.Fatalf("Key not found in the response. Key %s", key)
 		}
 
-		compareDataWithDB(t, testInfo, &key, jsonVal, isBinaryData)
+		compareDataWithDB(t, testInfo.Db, testInfo.Table, testInfo.PkReq.Filters,
+			&key, jsonVal, isBinaryData)
 	}
 }
 
-func ValidateResGRPC(t testing.TB, testInfo ds.PKTestInfo, resp *ds.PKReadResponseGRPC, isBinaryData bool) {
+func ValidateResGRPC(t testing.TB, testInfo ds.PKTestInfo,
+	resp *ds.PKReadResponseGRPC, isBinaryData bool) {
 	t.Helper()
 
 	for i := 0; i < len(testInfo.RespKVs); i++ {
@@ -161,13 +163,14 @@ func ValidateResGRPC(t testing.TB, testInfo ds.PKTestInfo, resp *ds.PKReadRespon
 			}
 		}
 
-		compareDataWithDB(t, testInfo, &key, val, isBinaryData)
+		compareDataWithDB(t, testInfo.Db, testInfo.Table, testInfo.PkReq.Filters,
+			&key, val, isBinaryData)
 	}
 }
 
-func compareDataWithDB(t testing.TB, testInfo ds.PKTestInfo, colName *string, colDataFromRestServer *string, isBinaryData bool) {
-	dbVal, err := getColumnDataFromDB(t, testInfo.Db, testInfo.Table,
-		testInfo.PkReq.Filters, *colName, isBinaryData)
+func compareDataWithDB(t testing.TB, db string, table string, filters *[]ds.Filter,
+	colName *string, colDataFromRestServer *string, isBinaryData bool) {
+	dbVal, err := getColumnDataFromDB(t, db, table, filters, *colName, isBinaryData)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -486,14 +489,14 @@ func PkTest(t *testing.T, tests map[string]ds.PKTestInfo, isBinaryData bool, reg
 }
 
 func pkGRPCTest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) {
-	respCode, resp := sendGRPCRequest(t, testInfo, tc, isBinaryData)
+	respCode, resp := sendGRPCPKReadRequest(t, testInfo)
 
 	if respCode == http.StatusOK {
 		ValidateResGRPC(t, testInfo, resp, isBinaryData)
 	}
 }
 
-func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext, isBinaryData bool) (int, *ds.PKReadResponseGRPC) {
+func sendGRPCPKReadRequest(t *testing.T, testInfo ds.PKTestInfo) (int, *ds.PKReadResponseGRPC) {
 	// Create gRPC client
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
 		config.Configuration().RestServer.GRPCServerIP,
@@ -515,10 +518,7 @@ func sendGRPCRequest(t *testing.T, testInfo ds.PKTestInfo, tc common.TestContext
 	pkReadParams.ReadColumns = testInfo.PkReq.ReadColumns
 
 	apiKey := common.HOPSWORKS_TEST_API_KEY
-	reqProto, err := grpcsrv.ConvertPKReadParams(&pkReadParams, &apiKey)
-	if err != nil {
-		t.Fatalf("Failed to convert request %v", err)
-	}
+	reqProto := grpcsrv.ConvertPKReadParams(&pkReadParams, &apiKey)
 
 	expectedStatus := testInfo.HttpCode
 	respCode := 200
@@ -592,35 +592,136 @@ func BatchTest(t *testing.T, tests map[string]ds.BatchOperationTestInfo, isBinar
 				dbNamesArr = append(dbNamesArr, k)
 			}
 
-			//batch operation
-			subOps := []ds.BatchSubOperation{}
-			for _, op := range testInfo.Operations {
-				subOps = append(subOps, op.SubOperation)
-			}
-			batch := ds.BatchOperation{Operations: &subOps}
-
 			WithDBs(t, dbNamesArr, registerHandlers, func(tc common.TestContext) {
-				url := NewBatchReadURL()
-				body, _ := json.MarshalIndent(batch, "", "\t")
-				httpCode, res := SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
-					string(body), testInfo.HttpCode, "")
-				if httpCode == http.StatusOK {
-					validateBatchResponse(t, testInfo, res, isBinaryData)
-				}
+				batchRESTTest(t, testInfo, tc, isBinaryData)
+				batchGRPCTest(t, testInfo, tc, isBinaryData)
 			})
 		})
 	}
 }
 
-func validateBatchResponse(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string, isBinaryData bool) {
-	t.Helper()
-	validateBatchResponseOpIdsNCode(t, testInfo, resp)
-	validateBatchResponseMsg(t, testInfo, resp)
-	validateBatchResponseValues(t, testInfo, resp, isBinaryData)
-
+func batchGRPCTest(t *testing.T, testInfo ds.BatchOperationTestInfo, tc common.TestContext, isBinaryData bool) {
+	httpCode, res := sendGRPCBatchRequest(t, testInfo)
+	if httpCode == http.StatusOK {
+		validateBatchResponseGRPC(t, testInfo, res, isBinaryData)
+	}
 }
 
-func validateBatchResponseOpIdsNCode(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string) {
+func sendGRPCBatchRequest(t *testing.T, testInfo ds.BatchOperationTestInfo) (int, *ds.BatchResponseGRPC) {
+	// Create gRPC client
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
+		config.Configuration().RestServer.GRPCServerIP,
+		config.Configuration().RestServer.GRPCServerPort),
+		grpc.WithInsecure())
+	defer conn.Close()
+
+	if err != nil {
+		t.Fatalf("Failed to connect to server %v", err)
+	}
+	client := grpcsrv.NewRonDBRestServerClient(conn)
+
+	// Create Request
+	batchOpRequest := make([]*ds.PKReadParams, len(testInfo.Operations))
+	for i := 0; i < len(testInfo.Operations); i++ {
+		op := testInfo.Operations[i]
+		pkReadParams := ds.PKReadParams{}
+		pkReadParams.DB = &op.DB
+		pkReadParams.Table = &op.Table
+		pkReadParams.Filters = op.SubOperation.Body.Filters
+		pkReadParams.OperationID = op.SubOperation.Body.OperationID
+		pkReadParams.ReadColumns = op.SubOperation.Body.ReadColumns
+		batchOpRequest[i] = &pkReadParams
+	}
+
+	apiKey := common.HOPSWORKS_TEST_API_KEY
+	batchRequestProto := grpcsrv.ConvertBatchOpRequest(batchOpRequest, &apiKey)
+
+	expectedStatus := testInfo.HttpCode
+	respCode := 200
+	var errStr string
+	respProto, err := client.Batch(context.Background(), batchRequestProto)
+	if err != nil {
+		respCode = getErrorCode(t, err)
+		errStr = fmt.Sprintf("%v", err)
+	}
+
+	if respCode != expectedStatus {
+		t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
+	}
+
+	if respCode != http.StatusOK && !strings.Contains(errStr, testInfo.ErrMsgContains) {
+		t.Fatalf("Test failed. Error does not contain string: %s. Complete Error Message: %s", testInfo.ErrMsgContains, errStr)
+	}
+
+	if respCode == http.StatusOK {
+		resp := grpcsrv.ConvertBatchResponseProto(respProto)
+		return respCode, resp
+	} else {
+		return respCode, nil
+	}
+}
+
+func batchRESTTest(t *testing.T, testInfo ds.BatchOperationTestInfo, tc common.TestContext, isBinaryData bool) {
+	//batch operation
+	subOps := []ds.BatchSubOp{}
+	for _, op := range testInfo.Operations {
+		subOps = append(subOps, op.SubOperation)
+	}
+	batch := ds.BatchOpRequest{Operations: &subOps}
+
+	url := NewBatchReadURL()
+	body, _ := json.MarshalIndent(batch, "", "\t")
+	httpCode, res := SendHttpRequest(t, tc, ds.BATCH_HTTP_VERB, url,
+		string(body), testInfo.HttpCode, testInfo.ErrMsgContains)
+	if httpCode == http.StatusOK {
+		validateBatchResponseHttp(t, testInfo, res, isBinaryData)
+	}
+}
+
+func validateBatchResponseHttp(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string, isBinaryData bool) {
+	t.Helper()
+	validateBatchResponseOpIdsNCodeHttp(t, testInfo, resp)
+	validateBatchResponseValuesHttp(t, testInfo, resp, isBinaryData)
+}
+
+func validateBatchResponseGRPC(t testing.TB, testInfo ds.BatchOperationTestInfo, resp *ds.BatchResponseGRPC, isBinaryData bool) {
+	t.Helper()
+	validateBatchResponseOpIdsNCodeGRPC(t, testInfo, resp)
+	validateBatchResponseValuesGRPC(t, testInfo, resp, isBinaryData)
+}
+
+func validateBatchResponseOpIdsNCodeGRPC(t testing.TB, testInfo ds.BatchOperationTestInfo, resp *ds.BatchResponseGRPC) {
+	if len(*resp.Result) != len(testInfo.Operations) {
+		t.Fatal("Wrong number of operation responses received")
+	}
+
+	for i, subResp := range *resp.Result {
+		checkOpIDandStatus(t, testInfo.Operations[i], subResp.Body.OperationID,
+			int(*subResp.Code))
+	}
+}
+
+func checkOpIDandStatus(t testing.TB, testInfo ds.BatchSubOperationTestInfo, opIDGot *string,
+	statusGot int) {
+
+	expctingOpID := testInfo.SubOperation.Body.OperationID
+	expectingStatus := testInfo.HttpCode
+
+	if expctingOpID != nil {
+		if *expctingOpID != *opIDGot {
+			t.Fatalf("Operation ID does not match. Expecting: %s, Got: %s. TestInfo: %v",
+				*expctingOpID, *opIDGot, testInfo)
+		}
+	}
+
+	if expectingStatus != statusGot {
+		t.Fatalf("Return code does not match. Expecting: %d, Got: %d. TestInfo: %v",
+			expectingStatus, statusGot, testInfo)
+	}
+}
+
+func validateBatchResponseOpIdsNCodeHttp(t testing.TB,
+	testInfo ds.BatchOperationTestInfo, resp string) {
 	var res ds.BatchResponseJSON
 	err := json.Unmarshal([]byte(resp), &res)
 	if err != nil {
@@ -631,39 +732,14 @@ func validateBatchResponseOpIdsNCode(t testing.TB, testInfo ds.BatchOperationTes
 		t.Fatal("Wrong number of operation responses received")
 	}
 
-	//for i := 0; i < len(*res.Result); i++ {
 	for i, subResp := range *res.Result {
-		expectingId := testInfo.Operations[i].SubOperation.Body.OperationID
-		if expectingId != nil {
-			idGot := *subResp.Body.OperationID
-			if *expectingId != idGot {
-				t.Fatalf("Operation ID does not match. Expecting: %s, Got: %s", *expectingId, idGot)
-			}
-		}
-
-		expectingCode := testInfo.Operations[i].HttpCode
-		codeGot := *subResp.Code
-		if expectingCode != int(codeGot) {
-			t.Fatalf("Return code does not match. Expecting: %d, Got: %d", expectingCode, codeGot)
-		}
+		checkOpIDandStatus(t, testInfo.Operations[i], subResp.Body.OperationID,
+			int(*subResp.Code))
 	}
 }
 
-func validateBatchResponseMsg(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string) {
-
-	var res struct {
-		Result []json.RawMessage
-	}
-	json.Unmarshal([]byte(resp), &res)
-	for i := 0; i < len(testInfo.Operations); i++ {
-		if !strings.Contains(string(res.Result[i]), testInfo.Operations[i].ErrMsgContains) {
-			t.Fatalf("Test failed. Response body does not contain %s. Body: %s",
-				testInfo.Operations[i].ErrMsgContains, string(res.Result[i]))
-		}
-	}
-}
-
-func validateBatchResponseValues(t testing.TB, testInfo ds.BatchOperationTestInfo, resp string, isBinaryData bool) {
+func validateBatchResponseValuesHttp(t testing.TB, testInfo ds.BatchOperationTestInfo,
+	resp string, isBinaryData bool) {
 	var res ds.BatchResponseJSON
 	err := json.Unmarshal([]byte(resp), &res)
 	if err != nil {
@@ -679,23 +755,43 @@ func validateBatchResponseValues(t testing.TB, testInfo ds.BatchOperationTestInf
 		pkresponse := (*res.Result)[o].Body
 		for i := 0; i < len(operation.RespKVs); i++ {
 			key := string(operation.RespKVs[i].(string))
-			jsonVal, found := getColumnDataFromJson(t, key, pkresponse)
+			val, found := getColumnDataFromJson(t, key, pkresponse)
 			if !found {
 				t.Fatalf("Key not found in the response. Key %s", key)
 			}
-			dbVal, err := getColumnDataFromDB(t, operation.DB, operation.Table,
-				operation.SubOperation.Body.Filters, key, isBinaryData)
-			if err != nil {
-				t.Fatalf("%v", err)
+
+			compareDataWithDB(t, operation.DB, operation.Table, operation.SubOperation.Body.Filters,
+				&key, val, isBinaryData)
+		}
+	}
+}
+
+func validateBatchResponseValuesGRPC(t testing.TB, testInfo ds.BatchOperationTestInfo, resp *ds.BatchResponseGRPC, isBinaryData bool) {
+	for o := 0; o < len(testInfo.Operations); o++ {
+		if *(*resp.Result)[o].Code != http.StatusOK {
+			continue // data is null if the status is not OK
+		}
+
+		operation := testInfo.Operations[o]
+		pkresponse := (*resp.Result)[o].Body
+		for i := 0; i < len(operation.RespKVs); i++ {
+			key := string(operation.RespKVs[i].(string))
+			val, found := getColumnDataFromGRPC(t, key, pkresponse)
+			if !found {
+				t.Fatalf("Key not found in the response. Key %s", key)
 			}
 
-			if (jsonVal == nil || dbVal == nil) && !(jsonVal == nil && dbVal == nil) { // if one of prts is nill
-				t.Fatalf("The read value for key %s does not match. Got from REST Server ptr: %d, Got from MYSQL Server ptr: %d", key, jsonVal, dbVal)
+			var err error
+			if val != nil {
+				quotedVal := fmt.Sprintf("\"%s\"", *val) // you have to surround the string with "s
+				*val, err = strconv.Unquote(quotedVal)
+				if err != nil {
+					t.Fatalf("Unquote failed %v\n", err)
+				}
 			}
 
-			if !((jsonVal == nil && dbVal == nil) || (*jsonVal == *dbVal)) {
-				t.Fatalf("The read value for key %s does not match. Got from REST Server: %s, Got from MYSQL Server: %s", key, *jsonVal, *dbVal)
-			}
+			compareDataWithDB(t, operation.DB, operation.Table, operation.SubOperation.Body.Filters,
+				&key, val, isBinaryData)
 		}
 	}
 }

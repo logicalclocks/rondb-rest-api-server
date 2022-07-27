@@ -28,18 +28,26 @@ import (
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/grpcsrv"
+	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
 	"hopsworks.ai/rdrs/version"
 )
 
-func RegisterBatchTestHandler(engine *gin.Engine) {
-	engine.POST("/"+version.API_VERSION+"/"+ds.BATCH_OPERATION, BatchOpsHandler)
+type Batch struct{}
+
+var _ handlers.Batcher = (*Batch)(nil)
+var batch Batch
+
+func RegisterBatchHandler(engine *gin.Engine) {
+	engine.POST("/"+version.API_VERSION+"/"+ds.BATCH_OPERATION, batch.BatchOpsHttpHandler)
+	grpcsrv.GetGRPCServer().RegisterBatchOpHandler(&batch)
 }
 
-func BatchOpsHandler(c *gin.Context) {
-	operations := ds.BatchOperation{}
+func (b *Batch) BatchOpsHttpHandler(c *gin.Context) {
+	operations := ds.BatchOpRequest{}
 	err := c.ShouldBindJSON(&operations)
 	if err != nil {
 		if log.IsDebug() {
@@ -55,9 +63,10 @@ func BatchOpsHandler(c *gin.Context) {
 		return
 	}
 
-	pkOperations := make([]ds.PKReadParams, len(*operations.Operations))
+	pkOperations := make([]*ds.PKReadParams, len(*operations.Operations))
 	for i, operation := range *operations.Operations {
-		err := parseOperation(&operation, &pkOperations[i])
+		pkOperations[i] = &ds.PKReadParams{}
+		err := parseOperation(&operation, pkOperations[i])
 		if err != nil {
 			if log.IsDebug() {
 				log.Debugf("Error: %v", err)
@@ -67,10 +76,10 @@ func BatchOpsHandler(c *gin.Context) {
 		}
 	}
 
-	var response ds.BatchResponse = (ds.BatchResponse)(&ds.BatchResponseJSON{})
+	var response ds.BatchOpResponse = (ds.BatchOpResponse)(&ds.BatchResponseJSON{})
 	response.Init()
 
-	status, err := ProcessBatchRequest(&pkOperations, getAPIKey(c), response)
+	status, err := batch.BathOpsHandler(&pkOperations, getAPIKey(c), response)
 	if err != nil {
 		common.SetResponseBodyError(c, status, err)
 	}
@@ -78,7 +87,7 @@ func BatchOpsHandler(c *gin.Context) {
 	common.SetResponseBody(c, status, response)
 }
 
-func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey *string, response ds.BatchResponse) (int, error) {
+func (b *Batch) BathOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error) {
 
 	err := checkAPIKey(pkOperations, apiKey)
 	if err != nil {
@@ -90,7 +99,7 @@ func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey *string, respon
 	respPtrs := make([]*dal.NativeBuffer, noOps)
 
 	for i, pkOp := range *pkOperations {
-		reqPtrs[i], respPtrs[i], err = pkread.CreateNativeRequest(&pkOp)
+		reqPtrs[i], respPtrs[i], err = pkread.CreateNativeRequest(pkOp)
 		defer dal.ReturnBuffer(reqPtrs[i])
 		defer dal.ReturnBuffer(respPtrs[i])
 		if err != nil {
@@ -117,7 +126,7 @@ func ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey *string, respon
 	return http.StatusOK, nil
 }
 
-func processResponses(respBuffs *[]*dal.NativeBuffer, response ds.BatchResponse) (int, error) {
+func processResponses(respBuffs *[]*dal.NativeBuffer, response ds.BatchOpResponse) (int, error) {
 	for _, respBuff := range *respBuffs {
 
 		pkReadResponseWithCode := response.CreateNewSubResponse()
@@ -137,7 +146,7 @@ func processResponses(respBuffs *[]*dal.NativeBuffer, response ds.BatchResponse)
 	return http.StatusOK, nil
 }
 
-func parseOperation(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) error {
+func parseOperation(operation *ds.BatchSubOp, pkReadarams *ds.PKReadParams) error {
 
 	//remove leading / character
 	if strings.HasPrefix(*operation.RelativeURL, "/") {
@@ -152,7 +161,7 @@ func parseOperation(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParam
 	} else if !match {
 		return fmt.Errorf("Invalid Relative URL: %s", *operation.RelativeURL)
 	} else {
-		err := parsePKRead(operation, pkReadarams)
+		err := makePKReadParams(operation, pkReadarams)
 		if err != nil {
 			return err
 		}
@@ -160,7 +169,7 @@ func parseOperation(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParam
 	return nil
 }
 
-func parsePKRead(operation *ds.BatchSubOperation, pkReadarams *ds.PKReadParams) error {
+func makePKReadParams(operation *ds.BatchSubOp, pkReadarams *ds.PKReadParams) error {
 	params := *operation.Body
 
 	//split the relative url to extract path parameters
@@ -183,7 +192,7 @@ func getAPIKey(c *gin.Context) *string {
 	return &apiKey
 }
 
-func checkAPIKey(pkOperations *[]ds.PKReadParams, apiKey *string) error {
+func checkAPIKey(pkOperations *[]*ds.PKReadParams, apiKey *string) error {
 	// check for Hopsworks api keys
 	if config.Configuration().Security.UseHopsWorksAPIKeys {
 		if apiKey == nil || *apiKey == "" { // not set

@@ -27,25 +27,25 @@ const BATCH_OPERATION = "batch"
 const BATCH_HTTP_VERB = "POST"
 
 // Request
-type BatchOperation struct {
-	Operations *[]BatchSubOperation `json:"operations" binding:"required,min=1,max=4096,unique,dive"`
+type BatchOpRequest struct {
+	Operations *[]BatchSubOp `json:"operations" binding:"required,min=1,max=4096,unique,dive"`
 }
 
-type BatchSubOperation struct {
+type BatchSubOp struct {
 	Method      *string     `json:"method"        binding:"required,oneof=POST"`
 	RelativeURL *string     `json:"relative-url"  binding:"required,min=1"`
 	Body        *PKReadBody `json:"body"          binding:"required,min=1"`
 }
 
 // Response
-type BatchResponse interface {
+type BatchOpResponse interface {
 	Init()
 	CreateNewSubResponse() PKReadResponseWithCode
 	AppendSubResponse(subResp PKReadResponseWithCode) error
 }
 
-var _ BatchResponse = (*BatchResponseJSON)(nil)
-var _ BatchResponse = (*BatchResponseGRPC)(nil)
+var _ BatchOpResponse = (*BatchResponseJSON)(nil)
+var _ BatchOpResponse = (*BatchResponseGRPC)(nil)
 
 type BatchResponseJSON struct {
 	Result *[]*PKReadResponseWithCodeJSON `json:"result" binding:"required"`
@@ -101,15 +101,15 @@ func (b *BatchResponseGRPC) AppendSubResponse(subResp PKReadResponseWithCode) er
 
 // data structs for testing
 type BatchSubOperationTestInfo struct {
-	SubOperation BatchSubOperation
+	SubOperation BatchSubOp
 	Table        string
 	DB           string
 	HttpCode     int
-	ErrMsgContains string
 	RespKVs      []interface{}
 }
 
 type BatchOperationTestInfo struct {
-	Operations []BatchSubOperationTestInfo
-	HttpCode   int
+	Operations     []BatchSubOperationTestInfo
+	HttpCode       int
+	ErrMsgContains string
 }

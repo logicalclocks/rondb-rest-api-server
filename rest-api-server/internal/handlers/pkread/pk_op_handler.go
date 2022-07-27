@@ -41,7 +41,7 @@ var _ handlers.PKReader = (*PKRead)(nil)
 
 var pkRead PKRead
 
-func RegisterPKTestHandler(e *gin.Engine) {
+func RegisterPKHandler(e *gin.Engine) {
 	group := e.Group(ds.DB_OPS_EP_GROUP)
 	group.POST(ds.PK_DB_OPERATION, pkRead.PkReadHttpHandler)
 	grpcsrv.GetGRPCServer().RegisterPKReadHandler(&pkRead)

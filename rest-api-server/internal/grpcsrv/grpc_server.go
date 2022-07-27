@@ -31,6 +31,7 @@ type GRPCServer struct {
 
 var server GRPCServer
 var pkReadHandler handlers.PKReader
+var batchOpHandler handlers.Batcher
 
 func GetGRPCServer() *GRPCServer {
 	return &server
@@ -41,6 +42,10 @@ func (s *GRPCServer) RegisterPKReadHandler(handler handlers.PKReader) {
 	pkReadHandler = handler
 }
 
+func (s *GRPCServer) RegisterBatchOpHandler(handler handlers.Batcher) {
+	batchOpHandler = handler
+}
+
 func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*PKReadResponseProto, error) {
 	req, apiKey := ConvertPKReadRequestProto(reqProto)
 
@@ -49,20 +54,42 @@ func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*P
 
 	status, err := pkReadHandler.PkReadHandler(req, &apiKey, response)
 	if err != nil {
-		return nil, fmt.Errorf("Error code: %d, Error: %v ", status, err)
+		return nil, mkError(status, err)
 	}
 
 	if status != http.StatusOK {
-		return nil, fmt.Errorf("Error code: %d", status)
+		return nil, mkError(status, nil)
 	}
 
 	respProto := ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))
 	return respProto, nil
 }
 
-func (s *GRPCServer) Batch(context.Context, *BatchRequestProto) (*BatchResponseProto, error) {
-	fmt.Println("**** Batch Called ****")
-	return &BatchResponseProto{}, nil
+func (s *GRPCServer) Batch(c context.Context, reqProto *BatchRequestProto) (*BatchResponseProto, error) {
+	req, apikey := ConvertBatchRequestProto(reqProto)
+
+	var response ds.BatchOpResponse = (ds.BatchOpResponse)(&ds.BatchResponseGRPC{})
+	response.Init()
+
+	status, err := batchOpHandler.BathOpsHandler(&req, &apikey, response)
+	if err != nil {
+		return nil, mkError(status, err)
+	}
+
+	if status != http.StatusOK {
+		return nil, mkError(status, nil)
+	}
+
+	respProto := ConvertBatchOpResponse(response.(*ds.BatchResponseGRPC))
+	return respProto, nil
+}
+
+func mkError(status int, err error) error {
+	if err != nil {
+		return fmt.Errorf("Error code: %d, Error: %v ", status, err)
+	} else {
+		return fmt.Errorf("Error code: %d", status)
+	}
 }
 
 func (s *GRPCServer) mustEmbedUnimplementedRonDBRestServerServer() {}

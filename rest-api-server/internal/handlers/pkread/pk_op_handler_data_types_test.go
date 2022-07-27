@@ -40,11 +40,11 @@ func TestDataTypesInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusNotFound,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusNotFound,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple1": {
@@ -52,42 +52,42 @@ func TestDataTypesInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple2": { //with out operation ID
 			PkReq: ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple3": { //without read columns.
-			PkReq:        ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 0)},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			PkReq:          ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 0)},
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple4": { //Table with only primary keys
 			PkReq: ds.PKReadBody{Filters: tu.NewFiltersKVs("id0", 0, "id1", 0),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        "int_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "int_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"maxValues": {
@@ -95,11 +95,11 @@ func TestDataTypesInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 2147483647, "id1", 4294967295),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"minValues": {
@@ -107,11 +107,11 @@ func TestDataTypesInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -2147483648, "id1", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assignNegativeValToUnsignedCol": {
@@ -120,11 +120,11 @@ func TestDataTypesInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"assigningBiggerVals": {
@@ -132,11 +132,11 @@ func TestDataTypesInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 2147483648, "id1", 4294967295), //bigger than the range
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"assigningSmallerVals": {
@@ -144,11 +144,11 @@ func TestDataTypesInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -2147483649, "id1", 0), //smaller than range
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"nullVals": {
@@ -157,15 +157,15 @@ func TestDataTypesInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
 
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesBigInt(t *testing.T) {
@@ -182,11 +182,11 @@ func TestDataTypesBigInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"maxValues": {
@@ -194,11 +194,11 @@ func TestDataTypesBigInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 9223372036854775807, "id1", uint64(18446744073709551615)),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"minValues": {
@@ -206,11 +206,11 @@ func TestDataTypesBigInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -9223372036854775808, "id1", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assignNegativeValToUnsignedCol": {
@@ -219,11 +219,11 @@ func TestDataTypesBigInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningBiggerVals": {
@@ -231,11 +231,11 @@ func TestDataTypesBigInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 9223372036854775807, "id1", "18446744073709551616"), //18446744073709551615+1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningSmallerVals": {
@@ -243,11 +243,11 @@ func TestDataTypesBigInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", "-9223372036854775809", "id1", 0), //-9223372036854775808-1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -256,14 +256,14 @@ func TestDataTypesBigInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesTinyInt(t *testing.T) {
@@ -279,11 +279,11 @@ func TestDataTypesTinyInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"maxValues": {
@@ -291,11 +291,11 @@ func TestDataTypesTinyInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 127, "id1", 255),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"minValues": {
@@ -303,11 +303,11 @@ func TestDataTypesTinyInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -128, "id1", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assignNegativeValToUnsignedCol": {
@@ -316,11 +316,11 @@ func TestDataTypesTinyInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningBiggerVals": {
@@ -328,11 +328,11 @@ func TestDataTypesTinyInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 127, "id1", 256), //255+1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningSmallerVals": {
@@ -340,11 +340,11 @@ func TestDataTypesTinyInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -129, "id1", 0), //-128-1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -353,14 +353,14 @@ func TestDataTypesTinyInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesSmallInt(t *testing.T) {
@@ -376,11 +376,11 @@ func TestDataTypesSmallInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"maxValues": {
@@ -388,11 +388,11 @@ func TestDataTypesSmallInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 32767, "id1", 65535),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"minValues": {
@@ -400,11 +400,11 @@ func TestDataTypesSmallInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -32768, "id1", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assignNegativeValToUnsignedCol": {
@@ -413,11 +413,11 @@ func TestDataTypesSmallInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningBiggerVals": {
@@ -425,11 +425,11 @@ func TestDataTypesSmallInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 32768, "id1", 256), //32767+1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningSmallerVals": {
@@ -437,11 +437,11 @@ func TestDataTypesSmallInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -32769, "id1", 0), //-32768-1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -450,14 +450,14 @@ func TestDataTypesSmallInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesMediumInt(t *testing.T) {
@@ -473,11 +473,11 @@ func TestDataTypesMediumInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"maxValues": {
@@ -485,11 +485,11 @@ func TestDataTypesMediumInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 8388607, "id1", 16777215),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"minValues": {
@@ -497,11 +497,11 @@ func TestDataTypesMediumInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -8388608, "id1", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assignNegativeValToUnsignedCol": {
@@ -510,11 +510,11 @@ func TestDataTypesMediumInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningBiggerVals": {
@@ -522,11 +522,11 @@ func TestDataTypesMediumInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 8388608, "id1", 256), //8388607+1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningSmallerVals": {
@@ -534,11 +534,11 @@ func TestDataTypesMediumInt(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -8388609, "id1", 0), //-8388608-1
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -547,14 +547,14 @@ func TestDataTypesMediumInt(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesFloat(t *testing.T) {
@@ -570,9 +570,9 @@ func TestDataTypesFloat(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        "float_table2",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "float_table2",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_017(),
 		},
 
@@ -581,11 +581,11 @@ func TestDataTypesFloat(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        "float_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "float_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple2": {
@@ -593,11 +593,11 @@ func TestDataTypesFloat(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", "1"),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        "float_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "float_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -606,14 +606,14 @@ func TestDataTypesFloat(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        "float_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "float_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesDouble(t *testing.T) {
@@ -629,9 +629,9 @@ func TestDataTypesDouble(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        "double_table2",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "double_table2",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_017(),
 		},
 
@@ -640,11 +640,11 @@ func TestDataTypesDouble(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 0),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        "double_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "double_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple2": {
@@ -652,11 +652,11 @@ func TestDataTypesDouble(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", 1),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        "double_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "double_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -665,14 +665,14 @@ func TestDataTypesDouble(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        "double_table1",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "double_table1",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesDecimal(t *testing.T) {
@@ -688,11 +688,11 @@ func TestDataTypesDecimal(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nullVals": {
@@ -701,11 +701,11 @@ func TestDataTypesDecimal(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assignNegativeValToUnsignedCol": {
@@ -714,11 +714,11 @@ func TestDataTypesDecimal(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(64),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"assigningBiggerVals": {
@@ -726,14 +726,14 @@ func TestDataTypesDecimal(t *testing.T) {
 				Filters:     tu.NewFiltersKVs("id0", -12345.12345, "id1", 123456789.12345),
 				ReadColumns: tu.NewReadColumns("col", 2),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesBlobs(t *testing.T) {
@@ -747,11 +747,11 @@ func TestDataTypesBlobs(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "blob_table",
-			Db:           testDb,
-			HttpCode:     http.StatusInternalServerError,
+			Table:          "blob_table",
+			Db:             testDb,
+			HttpCode:       http.StatusInternalServerError,
 			ErrMsgContains: common.ERROR_026(),
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"blob2": {
@@ -760,11 +760,11 @@ func TestDataTypesBlobs(t *testing.T) {
 				ReadColumns: tu.NewReadColumn("col1"),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "blob_table",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "blob_table",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      []interface{}{"col1"},
+			RespKVs:        []interface{}{"col1"},
 		},
 
 		"text1": {
@@ -773,11 +773,11 @@ func TestDataTypesBlobs(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 2),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "text_table",
-			Db:           testDb,
-			HttpCode:     http.StatusInternalServerError,
+			Table:          "text_table",
+			Db:             testDb,
+			HttpCode:       http.StatusInternalServerError,
 			ErrMsgContains: "",
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"text2": {
@@ -786,15 +786,15 @@ func TestDataTypesBlobs(t *testing.T) {
 				ReadColumns: tu.NewReadColumn("col1"),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "text_table",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "text_table",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      []interface{}{"col1"},
+			RespKVs:        []interface{}{"col1"},
 		},
 	}
 
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesChar(t *testing.T) {
@@ -834,11 +834,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusNotFound,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusNotFound,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"notfound2": {
@@ -847,11 +847,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_008(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple1": {
@@ -860,11 +860,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple2": {
@@ -873,11 +873,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple3": { // new line char in string
@@ -886,11 +886,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple4": {
@@ -899,11 +899,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"simple5": { //unicode pk
@@ -912,11 +912,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nulltest": {
@@ -925,11 +925,11 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"escapedChars": {
@@ -938,15 +938,15 @@ func ArrayColumnTest(t *testing.T, table string, database string, isBinary bool,
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
 
-	tu.PkTest(t, tests, isBinary, RegisterPKTestHandler)
+	tu.PkTest(t, tests, isBinary, RegisterPKHandler)
 }
 
 func TestDataTypesDateColumn(t *testing.T) {
@@ -962,11 +962,11 @@ func TestDataTypesDateColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2": {
@@ -975,11 +975,11 @@ func TestDataTypesDateColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"invalidpk": {
@@ -988,11 +988,11 @@ func TestDataTypesDateColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_008(),
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"invalidpk2": {
@@ -1001,11 +1001,11 @@ func TestDataTypesDateColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_008(),
-			RespKVs:      []interface{}{},
+			RespKVs:        []interface{}{},
 		},
 
 		"nulltest1": {
@@ -1014,11 +1014,11 @@ func TestDataTypesDateColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"error": {
@@ -1027,14 +1027,14 @@ func TestDataTypesDateColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesDatetimeColumn(t *testing.T) {
@@ -1049,11 +1049,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"validpk1_pre3": {
 			PkReq: ds.PKReadBody{
@@ -1061,11 +1061,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"validpk1_pre6": {
 			PkReq: ds.PKReadBody{
@@ -1073,11 +1073,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre0": {
@@ -1086,11 +1086,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre3": {
@@ -1099,11 +1099,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre6": {
@@ -1112,11 +1112,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nulltest_pre0": {
@@ -1125,11 +1125,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"nulltest_pre3": {
 			PkReq: ds.PKReadBody{
@@ -1137,11 +1137,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"nulltest_pre6": {
 			PkReq: ds.PKReadBody{
@@ -1149,11 +1149,11 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "date_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"wrongdate_pre0": {
@@ -1162,14 +1162,14 @@ func TestDataTypesDatetimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "date_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "date_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesTimeColumn(t *testing.T) {
@@ -1184,11 +1184,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"validpk1_pre3": {
 			PkReq: ds.PKReadBody{
@@ -1196,11 +1196,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"validpk1_pre6": {
 			PkReq: ds.PKReadBody{
@@ -1208,11 +1208,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre0": {
@@ -1221,11 +1221,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre3": {
@@ -1234,11 +1234,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nulltest_pre0": {
@@ -1247,11 +1247,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"nulltest_pre3": {
 			PkReq: ds.PKReadBody{
@@ -1259,11 +1259,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"nulltest_pre6": {
 			PkReq: ds.PKReadBody{
@@ -1271,11 +1271,11 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "time_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"wrongtime_pre0": {
@@ -1284,14 +1284,14 @@ func TestDataTypesTimeColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "time_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "time_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesTimestampColumn(t *testing.T) {
@@ -1306,11 +1306,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"badts_2": {
@@ -1319,11 +1319,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"badts_3": {
@@ -1332,11 +1332,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk1_pre0": {
@@ -1345,11 +1345,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"validpk1_pre3": {
 			PkReq: ds.PKReadBody{
@@ -1357,11 +1357,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"validpk1_pre6": {
 			PkReq: ds.PKReadBody{
@@ -1369,11 +1369,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre0": {
@@ -1382,11 +1382,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre3": {
@@ -1395,11 +1395,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"validpk2_pre6": {
@@ -1408,11 +1408,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nulltest_pre0": {
@@ -1421,11 +1421,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"nulltest_pre3": {
 			PkReq: ds.PKReadBody{
@@ -1433,11 +1433,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table3",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table3",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"nulltest_pre6": {
 			PkReq: ds.PKReadBody{
@@ -1445,11 +1445,11 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table6",
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          "ts_table6",
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"wrongdate_pre0": {
@@ -1458,14 +1458,14 @@ func TestDataTypesTimestampColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        "ts_table0",
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          "ts_table0",
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_027(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesYearColumn(t *testing.T) {
@@ -1482,11 +1482,11 @@ func TestDataTypesYearColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"notfound1": {
@@ -1495,11 +1495,11 @@ func TestDataTypesYearColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusNotFound,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusNotFound,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"notfound2": {
@@ -1508,11 +1508,11 @@ func TestDataTypesYearColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusNotFound,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusNotFound,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"nulltest": {
@@ -1521,11 +1521,11 @@ func TestDataTypesYearColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"baddate1": {
@@ -1534,11 +1534,11 @@ func TestDataTypesYearColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"baddate2": {
@@ -1547,14 +1547,14 @@ func TestDataTypesYearColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusBadRequest,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusBadRequest,
 			ErrMsgContains: common.ERROR_015(),
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, false, RegisterPKTestHandler)
+	tu.PkTest(t, tests, false, RegisterPKHandler)
 }
 
 func TestDataTypesBitColumn(t *testing.T) {
@@ -1570,11 +1570,11 @@ func TestDataTypesBitColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 5),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 		"simple2": {
 			PkReq: ds.PKReadBody{
@@ -1582,11 +1582,11 @@ func TestDataTypesBitColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 5),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 
 		"null": {
@@ -1595,12 +1595,12 @@ func TestDataTypesBitColumn(t *testing.T) {
 				ReadColumns: tu.NewReadColumns("col", 5),
 				OperationID: tu.NewOperationID(5),
 			},
-			Table:        testTable,
-			Db:           testDb,
-			HttpCode:     http.StatusOK,
+			Table:          testTable,
+			Db:             testDb,
+			HttpCode:       http.StatusOK,
 			ErrMsgContains: "",
-			RespKVs:      validateColumns,
+			RespKVs:        validateColumns,
 		},
 	}
-	tu.PkTest(t, tests, true, RegisterPKTestHandler)
+	tu.PkTest(t, tests, true, RegisterPKHandler)
 }

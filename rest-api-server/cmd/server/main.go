@@ -60,9 +60,9 @@ func main() {
 
 	router := router.CreateRouterContext()
 
-	handlers := []handlers.RegisterTestHandler{pkread.RegisterPKTestHandler,
+	handlers := []handlers.RegisterTestHandler{pkread.RegisterPKHandler,
 		stat.RegisterStatTestHandler,
-		batchops.RegisterBatchTestHandler}
+		batchops.RegisterBatchHandler}
 
 	err := router.SetupRouter(handlers)
 	if err != nil {

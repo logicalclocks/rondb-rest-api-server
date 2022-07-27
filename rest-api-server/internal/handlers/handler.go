@@ -29,6 +29,7 @@ type PKReader interface {
 	PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error)
 }
 
-type BatchOp interface {
-	ProcessBatchRequest(pkOperations *[]ds.PKReadParams, apiKey *string, response ds.BatchResponse) (int, error)
+type Batcher interface {
+	BatchOpsHttpHandler(c *gin.Context)
+	BathOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error)
 }
