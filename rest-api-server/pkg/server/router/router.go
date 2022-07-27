@@ -129,8 +129,8 @@ func (rc *RouterConext) StartRouter() error {
 			log.Fatalf("GRPC server returned. Error: %v", err)
 		}
 		rc.GRPCServer = grpc.NewServer()
-		GRPCServer := grpcsrv.GRPCServer{}
-		grpcsrv.RegisterRonDBRestServerServer(rc.GRPCServer, &GRPCServer)
+		GRPCServer := grpcsrv.GetGRPCServer()
+		grpcsrv.RegisterRonDBRestServerServer(rc.GRPCServer, GRPCServer)
 		rc.GRPCServer.Serve(lis)
 	}()
 

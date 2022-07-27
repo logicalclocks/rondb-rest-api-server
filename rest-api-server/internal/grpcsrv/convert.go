@@ -20,6 +20,7 @@ package grpcsrv
 import (
 	"encoding/json"
 
+	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
 )
 
@@ -154,12 +155,12 @@ func ConvertPKReadResponse(resp *ds.PKReadResponseGRPC) *PKReadResponseProto {
 	return &respProto
 }
 
-func ConvertBatchRequestProto(reqProto *BatchRequestProto) ([]*ds.PKReadParams, string) {
+func ConvertBatchRequestProto(reqProto *BatchRequestProto) (*[]*ds.PKReadParams, string) {
 	operations := make([]*ds.PKReadParams, len(reqProto.Operations))
 	for i, operation := range reqProto.Operations {
 		operations[i], _ = ConvertPKReadRequestProto(operation)
 	}
-	return operations, reqProto.GetAPIKey()
+	return &operations, reqProto.GetAPIKey()
 }
 
 func ConvertBatchOpRequest(readParams []*ds.PKReadParams, apiKey *string) *BatchRequestProto {
@@ -197,4 +198,51 @@ func ConvertBatchOpResponse(responses *ds.BatchResponseGRPC) *BatchResponseProto
 		batchResponse.Responses = pkReadResponsesProto
 	}
 	return &batchResponse
+}
+
+func ConvertStatRequest(req *ds.StatRequest) *StatRequestProto {
+	return &StatRequestProto{}
+}
+func ConvertStatRequestProto(reqProto *StatRequestProto) *ds.StatRequest {
+	return &ds.StatRequest{}
+}
+
+func ConvertStatResponse(resp *ds.StatResponse) *StatResponseProto {
+	respProto := StatResponseProto{}
+	memStatsProto := MemoryStatsProto{}
+	rondbStatsProto := RonDBStatsProto{}
+
+	memStatsProto.AllocationsCount = &resp.MemoryStats.AllocationsCount
+	memStatsProto.DeallocationsCount = &resp.MemoryStats.DeallocationsCount
+	memStatsProto.BuffersCount = &resp.MemoryStats.BuffersCount
+	memStatsProto.FreeBuffers = &resp.MemoryStats.FreeBuffers
+
+	rondbStatsProto.NdbObjectsCreationCount = &resp.RonDBStats.NdbObjectsCreationCount
+	rondbStatsProto.NdbObjectsDeletionCount = &resp.RonDBStats.NdbObjectsDeletionCount
+	rondbStatsProto.NdbObjectsTotalCount = &resp.RonDBStats.NdbObjectsTotalCount
+	rondbStatsProto.NdbObjectsFreeCount = &resp.RonDBStats.NdbObjectsFreeCount
+
+	respProto.RonDBStats = &rondbStatsProto
+	respProto.MemoryStats = &memStatsProto
+	return &respProto
+}
+
+func ConvertStatResponseProto(resp *StatResponseProto) *ds.StatResponse {
+	statResponse := ds.StatResponse{}
+	memoryStats := dal.MemoryStats{}
+	ronDBStats := dal.RonDBStats{}
+
+	memoryStats.AllocationsCount = *resp.MemoryStats.AllocationsCount
+	memoryStats.DeallocationsCount = *resp.MemoryStats.DeallocationsCount
+	memoryStats.BuffersCount = *resp.MemoryStats.BuffersCount
+	memoryStats.FreeBuffers = *resp.MemoryStats.FreeBuffers
+
+	ronDBStats.NdbObjectsCreationCount = *resp.RonDBStats.NdbObjectsCreationCount
+	ronDBStats.NdbObjectsDeletionCount = *resp.RonDBStats.NdbObjectsDeletionCount
+	ronDBStats.NdbObjectsTotalCount = *resp.RonDBStats.NdbObjectsTotalCount
+	ronDBStats.NdbObjectsFreeCount = *resp.RonDBStats.NdbObjectsFreeCount
+
+	statResponse.MemoryStats = memoryStats
+	statResponse.RonDBStats = ronDBStats
+	return &statResponse
 }

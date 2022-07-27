@@ -31,5 +31,10 @@ type PKReader interface {
 
 type Batcher interface {
 	BatchOpsHttpHandler(c *gin.Context)
-	BathOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error)
+	BatchOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error)
+}
+
+type Stater interface {
+	StatOpsHttpHandler(c *gin.Context)
+	StatOpsHandler(response *ds.StatResponse) (int, error)
 }

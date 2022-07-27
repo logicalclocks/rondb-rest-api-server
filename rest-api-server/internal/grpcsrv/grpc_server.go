@@ -29,9 +29,13 @@ import (
 type GRPCServer struct {
 }
 
+var _ RonDBRestServerServer = (*GRPCServer)(nil)
+
 var server GRPCServer
+
 var pkReadHandler handlers.PKReader
 var batchOpHandler handlers.Batcher
+var statOpHandler handlers.Stater
 
 func GetGRPCServer() *GRPCServer {
 	return &server
@@ -44,6 +48,10 @@ func (s *GRPCServer) RegisterPKReadHandler(handler handlers.PKReader) {
 
 func (s *GRPCServer) RegisterBatchOpHandler(handler handlers.Batcher) {
 	batchOpHandler = handler
+}
+
+func (s *GRPCServer) RegisterStatOpHandler(handler handlers.Stater) {
+	statOpHandler = handler
 }
 
 func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*PKReadResponseProto, error) {
@@ -71,7 +79,7 @@ func (s *GRPCServer) Batch(c context.Context, reqProto *BatchRequestProto) (*Bat
 	var response ds.BatchOpResponse = (ds.BatchOpResponse)(&ds.BatchResponseGRPC{})
 	response.Init()
 
-	status, err := batchOpHandler.BathOpsHandler(&req, &apikey, response)
+	status, err := batchOpHandler.BatchOpsHandler(req, &apikey, response)
 	if err != nil {
 		return nil, mkError(status, err)
 	}
@@ -81,6 +89,22 @@ func (s *GRPCServer) Batch(c context.Context, reqProto *BatchRequestProto) (*Bat
 	}
 
 	respProto := ConvertBatchOpResponse(response.(*ds.BatchResponseGRPC))
+	return respProto, nil
+}
+
+func (s *GRPCServer) Stat(ctx context.Context, reqProto *StatRequestProto) (*StatResponseProto, error) {
+
+	response := &ds.StatResponse{}
+	status, err := statOpHandler.StatOpsHandler(response)
+	if err != nil {
+		return nil, mkError(status, err)
+	}
+
+	if status != http.StatusOK {
+		return nil, mkError(status, nil)
+	}
+
+	respProto := ConvertStatResponse(response)
 	return respProto, nil
 }
 

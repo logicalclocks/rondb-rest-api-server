@@ -36,7 +36,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-//__________________  PK Read Request __________________
+//__________________  PK Read Operation __________________
 type FilterProto struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -234,7 +234,6 @@ func (x *PKReadRequestProto) GetOperationID() string {
 	return ""
 }
 
-//__________________  PK Read Response __________________
 type ColumnValueProto struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -345,7 +344,7 @@ func (x *PKReadResponseProto) GetData() map[string]*ColumnValueProto {
 	return nil
 }
 
-//__________________  Batch Request __________________
+//__________________  Batch Operation ________________________
 type BatchRequestProto struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -401,7 +400,6 @@ func (x *BatchRequestProto) GetOperations() []*PKReadRequestProto {
 	return nil
 }
 
-//__________________  Batch Response __________________
 type BatchResponseProto struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -445,6 +443,241 @@ func (*BatchResponseProto) Descriptor() ([]byte, []int) {
 func (x *BatchResponseProto) GetResponses() []*PKReadResponseProto {
 	if x != nil {
 		return x.Responses
+	}
+	return nil
+}
+
+type MemoryStatsProto struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AllocationsCount   *int64 `protobuf:"varint,1,req,name=AllocationsCount" json:"AllocationsCount,omitempty"`
+	DeallocationsCount *int64 `protobuf:"varint,2,req,name=DeallocationsCount" json:"DeallocationsCount,omitempty"`
+	BuffersCount       *int64 `protobuf:"varint,3,req,name=BuffersCount" json:"BuffersCount,omitempty"`
+	FreeBuffers        *int64 `protobuf:"varint,4,req,name=FreeBuffers" json:"FreeBuffers,omitempty"`
+}
+
+func (x *MemoryStatsProto) Reset() {
+	*x = MemoryStatsProto{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MemoryStatsProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MemoryStatsProto) ProtoMessage() {}
+
+func (x *MemoryStatsProto) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MemoryStatsProto.ProtoReflect.Descriptor instead.
+func (*MemoryStatsProto) Descriptor() ([]byte, []int) {
+	return file_internal_grpcsrv_rdrs_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MemoryStatsProto) GetAllocationsCount() int64 {
+	if x != nil && x.AllocationsCount != nil {
+		return *x.AllocationsCount
+	}
+	return 0
+}
+
+func (x *MemoryStatsProto) GetDeallocationsCount() int64 {
+	if x != nil && x.DeallocationsCount != nil {
+		return *x.DeallocationsCount
+	}
+	return 0
+}
+
+func (x *MemoryStatsProto) GetBuffersCount() int64 {
+	if x != nil && x.BuffersCount != nil {
+		return *x.BuffersCount
+	}
+	return 0
+}
+
+func (x *MemoryStatsProto) GetFreeBuffers() int64 {
+	if x != nil && x.FreeBuffers != nil {
+		return *x.FreeBuffers
+	}
+	return 0
+}
+
+type RonDBStatsProto struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	NdbObjectsCreationCount *int64 `protobuf:"varint,1,req,name=NdbObjectsCreationCount" json:"NdbObjectsCreationCount,omitempty"`
+	NdbObjectsDeletionCount *int64 `protobuf:"varint,2,req,name=NdbObjectsDeletionCount" json:"NdbObjectsDeletionCount,omitempty"`
+	NdbObjectsTotalCount    *int64 `protobuf:"varint,3,req,name=NdbObjectsTotalCount" json:"NdbObjectsTotalCount,omitempty"`
+	NdbObjectsFreeCount     *int64 `protobuf:"varint,4,req,name=NdbObjectsFreeCount" json:"NdbObjectsFreeCount,omitempty"`
+}
+
+func (x *RonDBStatsProto) Reset() {
+	*x = RonDBStatsProto{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RonDBStatsProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RonDBStatsProto) ProtoMessage() {}
+
+func (x *RonDBStatsProto) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RonDBStatsProto.ProtoReflect.Descriptor instead.
+func (*RonDBStatsProto) Descriptor() ([]byte, []int) {
+	return file_internal_grpcsrv_rdrs_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *RonDBStatsProto) GetNdbObjectsCreationCount() int64 {
+	if x != nil && x.NdbObjectsCreationCount != nil {
+		return *x.NdbObjectsCreationCount
+	}
+	return 0
+}
+
+func (x *RonDBStatsProto) GetNdbObjectsDeletionCount() int64 {
+	if x != nil && x.NdbObjectsDeletionCount != nil {
+		return *x.NdbObjectsDeletionCount
+	}
+	return 0
+}
+
+func (x *RonDBStatsProto) GetNdbObjectsTotalCount() int64 {
+	if x != nil && x.NdbObjectsTotalCount != nil {
+		return *x.NdbObjectsTotalCount
+	}
+	return 0
+}
+
+func (x *RonDBStatsProto) GetNdbObjectsFreeCount() int64 {
+	if x != nil && x.NdbObjectsFreeCount != nil {
+		return *x.NdbObjectsFreeCount
+	}
+	return 0
+}
+
+type StatRequestProto struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *StatRequestProto) Reset() {
+	*x = StatRequestProto{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StatRequestProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatRequestProto) ProtoMessage() {}
+
+func (x *StatRequestProto) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatRequestProto.ProtoReflect.Descriptor instead.
+func (*StatRequestProto) Descriptor() ([]byte, []int) {
+	return file_internal_grpcsrv_rdrs_proto_rawDescGZIP(), []int{9}
+}
+
+type StatResponseProto struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	MemoryStats *MemoryStatsProto `protobuf:"bytes,1,req,name=MemoryStats" json:"MemoryStats,omitempty"`
+	RonDBStats  *RonDBStatsProto  `protobuf:"bytes,2,req,name=RonDBStats" json:"RonDBStats,omitempty"`
+}
+
+func (x *StatResponseProto) Reset() {
+	*x = StatResponseProto{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StatResponseProto) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatResponseProto) ProtoMessage() {}
+
+func (x *StatResponseProto) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpcsrv_rdrs_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatResponseProto.ProtoReflect.Descriptor instead.
+func (*StatResponseProto) Descriptor() ([]byte, []int) {
+	return file_internal_grpcsrv_rdrs_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *StatResponseProto) GetMemoryStats() *MemoryStatsProto {
+	if x != nil {
+		return x.MemoryStats
+	}
+	return nil
+}
+
+func (x *StatResponseProto) GetRonDBStats() *RonDBStatsProto {
+	if x != nil {
+		return x.RonDBStats
 	}
 	return nil
 }
@@ -502,15 +735,54 @@ var file_internal_grpcsrv_rdrs_proto_rawDesc = []byte{
 	0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x14, 0x2e, 0x50, 0x4b, 0x52, 0x65, 0x61, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x73, 0x32, 0x78, 0x0a, 0x0f, 0x52, 0x6f, 0x6e, 0x44, 0x42, 0x52, 0x65, 0x73, 0x74, 0x53,
-	0x65, 0x72, 0x76, 0x65, 0x72, 0x12, 0x33, 0x0a, 0x06, 0x50, 0x4b, 0x52, 0x65, 0x61, 0x64, 0x12,
-	0x13, 0x2e, 0x50, 0x4b, 0x52, 0x65, 0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x2e, 0x50, 0x4b, 0x52, 0x65, 0x61, 0x64, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x30, 0x0a, 0x05, 0x42, 0x61,
-	0x74, 0x63, 0x68, 0x12, 0x12, 0x2e, 0x42, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x13, 0x2e, 0x42, 0x61, 0x74, 0x63, 0x68, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x42, 0x0e, 0x5a, 0x0c,
-	0x2e, 0x2f, 0x2e, 0x2e, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x73, 0x72, 0x76,
+	0x65, 0x73, 0x22, 0xb4, 0x01, 0x0a, 0x10, 0x4d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0x53, 0x74, 0x61,
+	0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x2a, 0x0a, 0x10, 0x41, 0x6c, 0x6c, 0x6f, 0x63,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x02, 0x28,
+	0x03, 0x52, 0x10, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x43, 0x6f,
+	0x75, 0x6e, 0x74, 0x12, 0x2e, 0x0a, 0x12, 0x44, 0x65, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x02, 0x28, 0x03, 0x52,
+	0x12, 0x44, 0x65, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x43, 0x6f,
+	0x75, 0x6e, 0x74, 0x12, 0x22, 0x0a, 0x0c, 0x42, 0x75, 0x66, 0x66, 0x65, 0x72, 0x73, 0x43, 0x6f,
+	0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x02, 0x28, 0x03, 0x52, 0x0c, 0x42, 0x75, 0x66, 0x66, 0x65,
+	0x72, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x20, 0x0a, 0x0b, 0x46, 0x72, 0x65, 0x65, 0x42,
+	0x75, 0x66, 0x66, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20, 0x02, 0x28, 0x03, 0x52, 0x0b, 0x46, 0x72,
+	0x65, 0x65, 0x42, 0x75, 0x66, 0x66, 0x65, 0x72, 0x73, 0x22, 0xeb, 0x01, 0x0a, 0x0f, 0x52, 0x6f,
+	0x6e, 0x44, 0x42, 0x53, 0x74, 0x61, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x38, 0x0a,
+	0x17, 0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x02, 0x28, 0x03, 0x52, 0x17,
+	0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x43, 0x72, 0x65, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x38, 0x0a, 0x17, 0x4e, 0x64, 0x62, 0x4f, 0x62,
+	0x6a, 0x65, 0x63, 0x74, 0x73, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x75,
+	0x6e, 0x74, 0x18, 0x02, 0x20, 0x02, 0x28, 0x03, 0x52, 0x17, 0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a,
+	0x65, 0x63, 0x74, 0x73, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x75, 0x6e,
+	0x74, 0x12, 0x32, 0x0a, 0x14, 0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x54,
+	0x6f, 0x74, 0x61, 0x6c, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x02, 0x28, 0x03, 0x52,
+	0x14, 0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x54, 0x6f, 0x74, 0x61, 0x6c,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x30, 0x0a, 0x13, 0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a, 0x65,
+	0x63, 0x74, 0x73, 0x46, 0x72, 0x65, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x02,
+	0x28, 0x03, 0x52, 0x13, 0x4e, 0x64, 0x62, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x46, 0x72,
+	0x65, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x12, 0x0a, 0x10, 0x53, 0x74, 0x61, 0x74, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7a, 0x0a, 0x11, 0x53,
+	0x74, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x12, 0x33, 0x0a, 0x0b, 0x4d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0x53, 0x74, 0x61, 0x74, 0x73, 0x18,
+	0x01, 0x20, 0x02, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x4d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0x53, 0x74,
+	0x61, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x52, 0x0b, 0x4d, 0x65, 0x6d, 0x6f, 0x72, 0x79,
+	0x53, 0x74, 0x61, 0x74, 0x73, 0x12, 0x30, 0x0a, 0x0a, 0x52, 0x6f, 0x6e, 0x44, 0x42, 0x53, 0x74,
+	0x61, 0x74, 0x73, 0x18, 0x02, 0x20, 0x02, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x52, 0x6f, 0x6e, 0x44,
+	0x42, 0x53, 0x74, 0x61, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x52, 0x0a, 0x52, 0x6f, 0x6e,
+	0x44, 0x42, 0x53, 0x74, 0x61, 0x74, 0x73, 0x32, 0xa7, 0x01, 0x0a, 0x0f, 0x52, 0x6f, 0x6e, 0x44,
+	0x42, 0x52, 0x65, 0x73, 0x74, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x12, 0x33, 0x0a, 0x06, 0x50,
+	0x4b, 0x52, 0x65, 0x61, 0x64, 0x12, 0x13, 0x2e, 0x50, 0x4b, 0x52, 0x65, 0x61, 0x64, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x2e, 0x50, 0x4b, 0x52,
+	0x65, 0x61, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x12, 0x30, 0x0a, 0x05, 0x42, 0x61, 0x74, 0x63, 0x68, 0x12, 0x12, 0x2e, 0x42, 0x61, 0x74, 0x63,
+	0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x13, 0x2e,
+	0x42, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x53, 0x74, 0x61, 0x74, 0x12, 0x11, 0x2e, 0x53, 0x74, 0x61,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x12, 0x2e,
+	0x53, 0x74, 0x61, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x42, 0x0e, 0x5a, 0x0c, 0x2e, 0x2f, 0x2e, 0x2e, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x73, 0x72,
+	0x76,
 }
 
 var (
@@ -525,7 +797,7 @@ func file_internal_grpcsrv_rdrs_proto_rawDescGZIP() []byte {
 	return file_internal_grpcsrv_rdrs_proto_rawDescData
 }
 
-var file_internal_grpcsrv_rdrs_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_internal_grpcsrv_rdrs_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_internal_grpcsrv_rdrs_proto_goTypes = []interface{}{
 	(*FilterProto)(nil),         // 0: FilterProto
 	(*ReadColumnProto)(nil),     // 1: ReadColumnProto
@@ -534,24 +806,32 @@ var file_internal_grpcsrv_rdrs_proto_goTypes = []interface{}{
 	(*PKReadResponseProto)(nil), // 4: PKReadResponseProto
 	(*BatchRequestProto)(nil),   // 5: BatchRequestProto
 	(*BatchResponseProto)(nil),  // 6: BatchResponseProto
-	nil,                         // 7: PKReadResponseProto.DataEntry
+	(*MemoryStatsProto)(nil),    // 7: MemoryStatsProto
+	(*RonDBStatsProto)(nil),     // 8: RonDBStatsProto
+	(*StatRequestProto)(nil),    // 9: StatRequestProto
+	(*StatResponseProto)(nil),   // 10: StatResponseProto
+	nil,                         // 11: PKReadResponseProto.DataEntry
 }
 var file_internal_grpcsrv_rdrs_proto_depIdxs = []int32{
-	0, // 0: PKReadRequestProto.Filters:type_name -> FilterProto
-	1, // 1: PKReadRequestProto.ReadColumns:type_name -> ReadColumnProto
-	7, // 2: PKReadResponseProto.Data:type_name -> PKReadResponseProto.DataEntry
-	2, // 3: BatchRequestProto.operations:type_name -> PKReadRequestProto
-	4, // 4: BatchResponseProto.responses:type_name -> PKReadResponseProto
-	3, // 5: PKReadResponseProto.DataEntry.value:type_name -> ColumnValueProto
-	2, // 6: RonDBRestServer.PKRead:input_type -> PKReadRequestProto
-	5, // 7: RonDBRestServer.Batch:input_type -> BatchRequestProto
-	4, // 8: RonDBRestServer.PKRead:output_type -> PKReadResponseProto
-	6, // 9: RonDBRestServer.Batch:output_type -> BatchResponseProto
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	0,  // 0: PKReadRequestProto.Filters:type_name -> FilterProto
+	1,  // 1: PKReadRequestProto.ReadColumns:type_name -> ReadColumnProto
+	11, // 2: PKReadResponseProto.Data:type_name -> PKReadResponseProto.DataEntry
+	2,  // 3: BatchRequestProto.operations:type_name -> PKReadRequestProto
+	4,  // 4: BatchResponseProto.responses:type_name -> PKReadResponseProto
+	7,  // 5: StatResponseProto.MemoryStats:type_name -> MemoryStatsProto
+	8,  // 6: StatResponseProto.RonDBStats:type_name -> RonDBStatsProto
+	3,  // 7: PKReadResponseProto.DataEntry.value:type_name -> ColumnValueProto
+	2,  // 8: RonDBRestServer.PKRead:input_type -> PKReadRequestProto
+	5,  // 9: RonDBRestServer.Batch:input_type -> BatchRequestProto
+	9,  // 10: RonDBRestServer.Stat:input_type -> StatRequestProto
+	4,  // 11: RonDBRestServer.PKRead:output_type -> PKReadResponseProto
+	6,  // 12: RonDBRestServer.Batch:output_type -> BatchResponseProto
+	10, // 13: RonDBRestServer.Stat:output_type -> StatResponseProto
+	11, // [11:14] is the sub-list for method output_type
+	8,  // [8:11] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_internal_grpcsrv_rdrs_proto_init() }
@@ -644,6 +924,54 @@ func file_internal_grpcsrv_rdrs_proto_init() {
 				return nil
 			}
 		}
+		file_internal_grpcsrv_rdrs_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MemoryStatsProto); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpcsrv_rdrs_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RonDBStatsProto); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpcsrv_rdrs_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StatRequestProto); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpcsrv_rdrs_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StatResponseProto); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -651,7 +979,7 @@ func file_internal_grpcsrv_rdrs_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_internal_grpcsrv_rdrs_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -18,13 +18,17 @@
 package stat
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
+	"google.golang.org/grpc"
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
@@ -54,19 +58,26 @@ func TestStat(t *testing.T) {
 			}
 
 			// get stats
-			stats := getStats(t, tc)
-			if stats.NativeBufferStats.AllocationsCount != uint64(expectedAllocations) ||
-				stats.NativeBufferStats.BuffersCount != uint64(expectedAllocations) ||
-				stats.NativeBufferStats.FreeBuffers != uint64(expectedAllocations) {
-				t.Fatalf("Native buffer stats do not match Got: %v", stats)
-			}
+			statsHttp := getStatsHttp(t, tc)
+			compare(t, statsHttp, int64(expectedAllocations), int64(numOps))
 
-			if stats.RonDBStats.NdbObjectsCreationCount != uint64(numOps) ||
-				stats.RonDBStats.NdbObjectsTotalCount != uint64(numOps) ||
-				stats.RonDBStats.NdbObjectsFreeCount != uint64(numOps) {
-				t.Fatalf("RonDB stats do not match. %#v", stats.RonDBStats)
-			}
+			statsGRPC := getStatsGRPC(t, tc)
+			compare(t, statsGRPC, int64(expectedAllocations), int64(numOps))
 		})
+}
+
+func compare(t *testing.T, stats *ds.StatResponse, expectedAllocations int64, numOps int64) {
+	if stats.MemoryStats.AllocationsCount != expectedAllocations ||
+		stats.MemoryStats.BuffersCount != expectedAllocations ||
+		stats.MemoryStats.FreeBuffers != expectedAllocations {
+		t.Fatalf("Native buffer stats do not match Got: %v", stats)
+	}
+
+	if stats.RonDBStats.NdbObjectsCreationCount != numOps ||
+		stats.RonDBStats.NdbObjectsTotalCount != numOps ||
+		stats.RonDBStats.NdbObjectsFreeCount != numOps {
+		t.Fatalf("RonDB stats do not match. %#v", stats.RonDBStats)
+	}
 }
 
 func performPkOp(t *testing.T, tc common.TestContext, db string, table string, ch chan int) {
@@ -82,15 +93,54 @@ func performPkOp(t *testing.T, tc common.TestContext, db string, table string, c
 	ch <- 0
 }
 
-func getStats(t *testing.T, tc common.TestContext) ds.StatInfo {
+func getStatsHttp(t *testing.T, tc common.TestContext) *ds.StatResponse {
 	body := ""
 	url := tu.NewStatURL()
 	_, respBody := tu.SendHttpRequest(t, tc, ds.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
 
-	var stats ds.StatInfo
+	var stats ds.StatResponse
 	err := json.Unmarshal([]byte(respBody), &stats)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+	return &stats
+}
+
+func getStatsGRPC(t *testing.T, tc common.TestContext) *ds.StatResponse {
+	stats := sendGRPCStatRequest(t)
 	return stats
+}
+
+func sendGRPCStatRequest(t *testing.T) *ds.StatResponse {
+	// Create gRPC client
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
+		config.Configuration().RestServer.GRPCServerIP,
+		config.Configuration().RestServer.GRPCServerPort),
+		grpc.WithInsecure())
+	defer conn.Close()
+
+	if err != nil {
+		t.Fatalf("Failed to connect to server %v", err)
+	}
+	client := grpcsrv.NewRonDBRestServerClient(conn)
+
+	// Create Request
+	statRequest := ds.StatRequest{}
+
+	reqProto := grpcsrv.ConvertStatRequest(&statRequest)
+
+	expectedStatus := http.StatusOK
+	respCode := 200
+	var errStr string
+	respProto, err := client.Stat(context.Background(), reqProto)
+	if err != nil {
+		respCode = tu.GetStatusCodeFromError(t, err)
+		errStr = fmt.Sprintf("%v", err)
+	}
+
+	if respCode != expectedStatus {
+		t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
+	}
+
+	return grpcsrv.ConvertStatResponseProto(respProto)
 }

@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type RonDBRestServerClient interface {
 	PKRead(ctx context.Context, in *PKReadRequestProto, opts ...grpc.CallOption) (*PKReadResponseProto, error)
 	Batch(ctx context.Context, in *BatchRequestProto, opts ...grpc.CallOption) (*BatchResponseProto, error)
+	Stat(ctx context.Context, in *StatRequestProto, opts ...grpc.CallOption) (*StatResponseProto, error)
 }
 
 type ronDBRestServerClient struct {
@@ -52,12 +53,22 @@ func (c *ronDBRestServerClient) Batch(ctx context.Context, in *BatchRequestProto
 	return out, nil
 }
 
+func (c *ronDBRestServerClient) Stat(ctx context.Context, in *StatRequestProto, opts ...grpc.CallOption) (*StatResponseProto, error) {
+	out := new(StatResponseProto)
+	err := c.cc.Invoke(ctx, "/RonDBRestServer/Stat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RonDBRestServerServer is the server API for RonDBRestServer service.
 // All implementations must embed UnimplementedRonDBRestServerServer
 // for forward compatibility
 type RonDBRestServerServer interface {
 	PKRead(context.Context, *PKReadRequestProto) (*PKReadResponseProto, error)
 	Batch(context.Context, *BatchRequestProto) (*BatchResponseProto, error)
+	Stat(context.Context, *StatRequestProto) (*StatResponseProto, error)
 	mustEmbedUnimplementedRonDBRestServerServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedRonDBRestServerServer) PKRead(context.Context, *PKReadRequest
 }
 func (UnimplementedRonDBRestServerServer) Batch(context.Context, *BatchRequestProto) (*BatchResponseProto, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Batch not implemented")
+}
+func (UnimplementedRonDBRestServerServer) Stat(context.Context, *StatRequestProto) (*StatResponseProto, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stat not implemented")
 }
 func (UnimplementedRonDBRestServerServer) mustEmbedUnimplementedRonDBRestServerServer() {}
 
@@ -120,6 +134,24 @@ func _RonDBRestServer_Batch_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RonDBRestServer_Stat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatRequestProto)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RonDBRestServerServer).Stat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/RonDBRestServer/Stat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RonDBRestServerServer).Stat(ctx, req.(*StatRequestProto))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RonDBRestServer_ServiceDesc is the grpc.ServiceDesc for RonDBRestServer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var RonDBRestServer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Batch",
 			Handler:    _RonDBRestServer_Batch_Handler,
+		},
+		{
+			MethodName: "Stat",
+			Handler:    _RonDBRestServer_Stat_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

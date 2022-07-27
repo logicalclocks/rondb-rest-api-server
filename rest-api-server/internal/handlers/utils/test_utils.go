@@ -525,7 +525,7 @@ func sendGRPCPKReadRequest(t *testing.T, testInfo ds.PKTestInfo) (int, *ds.PKRea
 	var errStr string
 	respProto, err := client.PKRead(context.Background(), reqProto)
 	if err != nil {
-		respCode = getErrorCode(t, err)
+		respCode = GetStatusCodeFromError(t, err)
 		errStr = fmt.Sprintf("%v", err)
 	}
 
@@ -545,7 +545,7 @@ func sendGRPCPKReadRequest(t *testing.T, testInfo ds.PKTestInfo) (int, *ds.PKRea
 	}
 }
 
-func getErrorCode(t *testing.T, errGot error) int {
+func GetStatusCodeFromError(t *testing.T, errGot error) int {
 	errStr := fmt.Sprintf("%v", errGot)
 	// error code is sandwiched b/w these two substrings
 	subStr1 := "Error code: "
@@ -645,7 +645,7 @@ func sendGRPCBatchRequest(t *testing.T, testInfo ds.BatchOperationTestInfo) (int
 	var errStr string
 	respProto, err := client.Batch(context.Background(), batchRequestProto)
 	if err != nil {
-		respCode = getErrorCode(t, err)
+		respCode = GetStatusCodeFromError(t, err)
 		errStr = fmt.Sprintf("%v", err)
 	}
 

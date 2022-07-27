@@ -79,15 +79,15 @@ func (b *Batch) BatchOpsHttpHandler(c *gin.Context) {
 	var response ds.BatchOpResponse = (ds.BatchOpResponse)(&ds.BatchResponseJSON{})
 	response.Init()
 
-	status, err := batch.BathOpsHandler(&pkOperations, getAPIKey(c), response)
+	status, err := batch.BatchOpsHandler(&pkOperations, getAPIKey(c), response)
 	if err != nil {
 		common.SetResponseBodyError(c, status, err)
 	}
 
-	common.SetResponseBody(c, status, response)
+	common.SetResponseBody(c, status, &response)
 }
 
-func (b *Batch) BathOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error) {
+func (b *Batch) BatchOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error) {
 
 	err := checkAPIKey(pkOperations, apiKey)
 	if err != nil {

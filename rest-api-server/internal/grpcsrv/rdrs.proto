@@ -19,7 +19,7 @@ syntax = "proto2";
 
 option go_package = "./../grpcsrv";
 
-//__________________  PK Read Request __________________
+//__________________  PK Read Operation __________________
 message FilterProto {
   required string Column = 1;
   required string Value = 2;
@@ -39,7 +39,6 @@ message PKReadRequestProto {
   optional string OperationID = 6;
 }
 
-//__________________  PK Read Response __________________
 message ColumnValueProto {
   optional string Name = 1;
 }
@@ -50,19 +49,43 @@ message PKReadResponseProto {
   map<string, ColumnValueProto> Data = 3;
 }
 
-//__________________  Batch Request __________________
+//__________________  Batch Operation ________________________
 message BatchRequestProto {
   optional string APIKey = 1;
   repeated PKReadRequestProto operations = 2;
 }
 
-//__________________  Batch Response __________________
 message BatchResponseProto {
   repeated PKReadResponseProto responses = 1;
 }
 
+//__________________  Stat Operation _________________________
+
+message MemoryStatsProto {
+  required int64 AllocationsCount = 1;
+  required int64 DeallocationsCount = 2;
+  required int64 BuffersCount = 3;
+  required int64 FreeBuffers = 4;
+}
+
+message RonDBStatsProto {
+  required int64 NdbObjectsCreationCount = 1;
+  required int64 NdbObjectsDeletionCount = 2;
+  required int64 NdbObjectsTotalCount = 3;
+  required int64 NdbObjectsFreeCount = 4;
+}
+
+message StatRequestProto {}
+
+message StatResponseProto {
+  required MemoryStatsProto MemoryStats = 1;
+  required RonDBStatsProto RonDBStats = 2;
+}
+
+//__________________  Service ______________________________
 service RonDBRestServer {
   rpc PKRead(PKReadRequestProto) returns (PKReadResponseProto);
   rpc Batch(BatchRequestProto) returns (BatchResponseProto);
+  rpc Stat(StatRequestProto) returns (StatResponseProto);
 }
 

@@ -79,7 +79,7 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, api
 		return
 	}
 
-	common.SetResponseBody(c, status, response)
+	common.SetResponseBody(c, status, &response)
 }
 
 func (p *PKRead) PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error) {

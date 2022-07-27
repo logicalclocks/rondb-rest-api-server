@@ -24,35 +24,44 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/dal"
 	ds "hopsworks.ai/rdrs/internal/datastructs"
+	"hopsworks.ai/rdrs/internal/grpcsrv"
+	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/version"
 )
 
 const PATH = "/stat"
 
+type Stat struct{}
+
+var stat Stat
+
+var _ handlers.Stater = (*Stat)(nil)
+
 func RegisterStatTestHandler(engine *gin.Engine) {
-	engine.GET("/"+version.API_VERSION+"/"+ds.STAT_OPERATION, StatHandler)
+	engine.GET("/"+version.API_VERSION+"/"+ds.STAT_OPERATION, stat.StatOpsHttpHandler)
+	grpcsrv.GetGRPCServer().RegisterStatOpHandler(&stat)
 }
 
-func StatHandler(c *gin.Context) {
-	stats, err := Stats()
+func (s *Stat) StatOpsHttpHandler(c *gin.Context) {
+	statResp := ds.StatResponse{}
+	stats, err := stat.StatOpsHandler(&statResp)
 	if err != nil {
 		common.SetResponseBodyError(c, http.StatusInternalServerError, err)
 		return
 	}
-	c.JSON(200, stats)
+	common.SetResponseBody(c, stats, &statResp)
 }
 
-func Stats() (*ds.StatInfo, error) {
-	var stats ds.StatInfo
+func (s *Stat) StatOpsHandler(statResp *ds.StatResponse) (int, error) {
 
 	rondbStats, err := dal.GetRonDBStats()
 	if err != nil {
-		return nil, err
+		return http.StatusInternalServerError, err
 	}
 
 	nativeBuffersStats := dal.GetNativeBuffersStats()
-	stats.NativeBufferStats = nativeBuffersStats
-	stats.RonDBStats = *rondbStats
+	statResp.MemoryStats = nativeBuffersStats
+	statResp.RonDBStats = *rondbStats
 
-	return &stats, nil
+	return http.StatusOK, nil
 }

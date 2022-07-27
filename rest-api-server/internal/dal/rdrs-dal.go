@@ -46,10 +46,10 @@ func (e *DalError) Error() string {
 }
 
 type RonDBStats struct {
-	NdbObjectsCreationCount uint64
-	NdbObjectsDeletionCount uint64
-	NdbObjectsTotalCount    uint64
-	NdbObjectsFreeCount     uint64
+	NdbObjectsCreationCount int64
+	NdbObjectsDeletionCount int64
+	NdbObjectsTotalCount    int64
+	NdbObjectsFreeCount     int64
 }
 
 func InitRonDBConnection(connStr string, find_available_node_id bool) *DalError {
@@ -136,10 +136,10 @@ func GetRonDBStats() (*RonDBStats, *DalError) {
 		return nil, cToGoRet(&ret)
 	}
 	var rstats RonDBStats
-	rstats.NdbObjectsCreationCount = uint64(p.ndb_objects_created)
-	rstats.NdbObjectsDeletionCount = uint64(p.ndb_objects_deleted)
-	rstats.NdbObjectsTotalCount = uint64(p.ndb_objects_count)
-	rstats.NdbObjectsFreeCount = uint64(p.ndb_objects_available)
+	rstats.NdbObjectsCreationCount = int64(p.ndb_objects_created)
+	rstats.NdbObjectsDeletionCount = int64(p.ndb_objects_deleted)
+	rstats.NdbObjectsTotalCount = int64(p.ndb_objects_count)
+	rstats.NdbObjectsFreeCount = int64(p.ndb_objects_available)
 
 	return &rstats, nil
 }

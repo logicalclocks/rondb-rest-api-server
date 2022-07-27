@@ -37,15 +37,15 @@ type NativeBuffer struct {
 	Buffer unsafe.Pointer
 }
 
-type NativeBufferStats struct {
-	AllocationsCount   uint64
-	DeallocationsCount uint64
-	BuffersCount       uint64
-	FreeBuffers        uint64
+type MemoryStats struct {
+	AllocationsCount   int64
+	DeallocationsCount int64
+	BuffersCount       int64
+	FreeBuffers        int64
 }
 
 var buffers []*NativeBuffer
-var buffersStats NativeBufferStats
+var buffersStats MemoryStats
 var initialized bool
 var mutex sync.Mutex
 
@@ -69,7 +69,7 @@ func InitializeBuffers() {
 		buffers = append(buffers, __allocateBuffer())
 	}
 
-	buffersStats.AllocationsCount = uint64(config.Configuration().RestServer.PreAllocatedBuffers)
+	buffersStats.AllocationsCount = int64(config.Configuration().RestServer.PreAllocatedBuffers)
 	buffersStats.BuffersCount = buffersStats.AllocationsCount
 	buffersStats.DeallocationsCount = 0
 
@@ -88,7 +88,7 @@ func ReleaseAllBuffers() {
 		C.free(buffer.Buffer)
 	}
 	buffers = make([]*NativeBuffer, 0)
-	buffersStats = NativeBufferStats{}
+	buffersStats = MemoryStats{}
 	initialized = false
 }
 
@@ -136,14 +136,14 @@ func ReturnBuffer(buffer *NativeBuffer) {
 	buffers = append(buffers, buffer)
 }
 
-func GetNativeBuffersStats() NativeBufferStats {
+func GetNativeBuffersStats() MemoryStats {
 	if !initialized {
 		panic(fmt.Sprintf("Native buffers are not initialized"))
 	}
 	//update the free buffers cound
 	mutex.Lock()
 	defer mutex.Unlock()
-	buffersStats.FreeBuffers = uint64(len(buffers))
+	buffersStats.FreeBuffers = int64(len(buffers))
 	return buffersStats
 }
 

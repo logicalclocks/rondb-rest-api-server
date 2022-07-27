@@ -21,7 +21,10 @@ import "hopsworks.ai/rdrs/internal/dal"
 const STAT_OPERATION = "stat"
 const STAT_HTTP_VERB = "GET"
 
-type StatInfo struct {
-	NativeBufferStats dal.NativeBufferStats
-	RonDBStats        dal.RonDBStats
+type StatRequest struct {
+}
+
+type StatResponse struct {
+	MemoryStats dal.MemoryStats
+	RonDBStats  dal.RonDBStats
 }
