@@ -25,20 +25,20 @@ import (
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/handlers"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 func TestBatchSimple(t *testing.T) {
 
-	tests := map[string]ds.BatchOperationTestInfo{
+	tests := map[string]api.BatchOperationTestInfo{
 		"simple1": { //single operation batch
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+			Operations: []api.BatchSubOperationTestInfo{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -54,12 +54,12 @@ func TestBatchSimple(t *testing.T) {
 		},
 		"simple2": { //small batch operation
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+			Operations: []api.BatchSubOperationTestInfo{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -70,11 +70,11 @@ func TestBatchSimple(t *testing.T) {
 					HttpCode: http.StatusOK,
 					RespKVs:  []interface{}{"col0", "col1"},
 				},
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB005/bigint_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -90,12 +90,12 @@ func TestBatchSimple(t *testing.T) {
 		},
 		"simple3": { // bigger batch of numbers table
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+			Operations: []api.BatchSubOperationTestInfo{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -106,11 +106,11 @@ func TestBatchSimple(t *testing.T) {
 					HttpCode: http.StatusOK,
 					RespKVs:  []interface{}{"col0", "col1"},
 				},
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB005/bigint_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -121,11 +121,11 @@ func TestBatchSimple(t *testing.T) {
 					HttpCode: http.StatusOK,
 					RespKVs:  []interface{}{"col0", "col1"},
 				},
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB006/tinyint_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", -128, "id1", 0),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -136,11 +136,11 @@ func TestBatchSimple(t *testing.T) {
 					HttpCode: http.StatusOK,
 					RespKVs:  []interface{}{"col0", "col1"},
 				},
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB007/smallint_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 32767, "id1", 65535),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -151,11 +151,11 @@ func TestBatchSimple(t *testing.T) {
 					HttpCode: http.StatusOK,
 					RespKVs:  []interface{}{"col0", "col1"},
 				},
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB007/smallint_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 1, "id1", 1),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -171,12 +171,12 @@ func TestBatchSimple(t *testing.T) {
 		},
 		"notfound": { // a batch operation with operations throwing 404
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+			Operations: []api.BatchSubOperationTestInfo{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB004/int_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 100, "id1", 100),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -187,11 +187,11 @@ func TestBatchSimple(t *testing.T) {
 					HttpCode: http.StatusNotFound,
 					RespKVs:  []interface{}{"col0", "col1"},
 				},
-				ds.BatchSubOperationTestInfo{
-					SubOperation: ds.BatchSubOp{
+				api.BatchSubOperationTestInfo{
+					SubOperation: api.BatchSubOp{
 						Method:      &[]string{config.PK_HTTP_VERB}[0],
 						RelativeURL: &[]string{string("DB005/bigint_table/" + config.PK_DB_OPERATION)}[0],
-						Body: &ds.PKReadBody{
+						Body: &api.PKReadBody{
 							Filters:     tu.NewFiltersKVs("id0", 100, "id1", 100),
 							ReadColumns: tu.NewReadColumns("col", 2),
 							OperationID: tu.NewOperationID(64),
@@ -212,10 +212,10 @@ func TestBatchSimple(t *testing.T) {
 
 func TestBatchDate(t *testing.T) {
 
-	tests := map[string]ds.BatchOperationTestInfo{
+	tests := map[string]api.BatchOperationTestInfo{
 		"date": { //single operation batch
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				createSubOperation(t, "date_table", "DB019", "1111-11-11", http.StatusOK),
 				createSubOperation(t, "date_table", "DB019", "1111-11-11 00:00:00", http.StatusOK),
 				createSubOperation(t, "date_table", "DB019", "1111-11-12", http.StatusOK),
@@ -223,7 +223,7 @@ func TestBatchDate(t *testing.T) {
 		},
 		"wrong_sub_op": { //single operation batch
 			HttpCode: http.StatusBadRequest,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				createSubOperation(t, "date_table", "DB019", "1111-11-11", http.StatusOK),
 				createSubOperation(t, "date_table", "DB019", "1111-11-11 00:00:00", http.StatusOK),
 				createSubOperation(t, "date_table", "DB019", "1111-11-12", http.StatusOK),
@@ -237,10 +237,10 @@ func TestBatchDate(t *testing.T) {
 
 func TestBatchDateTime(t *testing.T) {
 
-	tests := map[string]ds.BatchOperationTestInfo{
+	tests := map[string]api.BatchOperationTestInfo{
 		"date": { //single operation batch
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				createSubOperation(t, "date_table0", "DB020", "1111-11-11 11:11:11", http.StatusOK),
 				createSubOperation(t, "date_table3", "DB020", "1111-11-11 11:11:11.123", http.StatusOK),
 				createSubOperation(t, "date_table6", "DB020", "1111-11-11 11:11:11.123456", http.StatusOK),
@@ -255,7 +255,7 @@ func TestBatchDateTime(t *testing.T) {
 		},
 		"wrong_sub_op": { //single operation batch
 			HttpCode: http.StatusBadRequest,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				createSubOperation(t, "date_table0", "DB020", "1111-11-11 11:11:11", http.StatusOK),
 				createSubOperation(t, "date_table3", "DB020", "1111-11-11 11:11:11.123", http.StatusOK),
 				createSubOperation(t, "date_table6", "DB020", "1111-11-11 11:11:11.123456", http.StatusOK),
@@ -276,10 +276,10 @@ func TestBatchDateTime(t *testing.T) {
 
 func TestBatchTime(t *testing.T) {
 
-	tests := map[string]ds.BatchOperationTestInfo{
+	tests := map[string]api.BatchOperationTestInfo{
 		"date": { //single operation batch
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				createSubOperation(t, "time_table0", "DB021", "11:11:11", http.StatusOK),
 				createSubOperation(t, "time_table3", "DB021", "11:11:11.123", http.StatusOK),
 				createSubOperation(t, "time_table6", "DB021", "11:11:11.123456", http.StatusOK),
@@ -293,7 +293,7 @@ func TestBatchTime(t *testing.T) {
 		},
 		"wrong_sub_op": { //single operation batch
 			HttpCode: http.StatusBadRequest,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				createSubOperation(t, "time_table0", "DB021", "11:11:11", http.StatusOK),
 				createSubOperation(t, "time_table3", "DB021", "11:11:11.123", http.StatusOK),
 				createSubOperation(t, "time_table6", "DB021", "11:11:11.123456", http.StatusOK),
@@ -311,13 +311,13 @@ func TestBatchTime(t *testing.T) {
 	tu.BatchTest(t, tests, false, RegisterBatchHandler)
 }
 
-func createSubOperation(t *testing.T, table string, database string, pk string, expectedStatus int) ds.BatchSubOperationTestInfo {
+func createSubOperation(t *testing.T, table string, database string, pk string, expectedStatus int) api.BatchSubOperationTestInfo {
 	respKVs := []interface{}{"col0"}
-	return ds.BatchSubOperationTestInfo{
-		SubOperation: ds.BatchSubOp{
+	return api.BatchSubOperationTestInfo{
+		SubOperation: api.BatchSubOp{
 			Method:      &[]string{config.PK_HTTP_VERB}[0],
 			RelativeURL: &[]string{string(database + "/" + table + "/" + config.PK_DB_OPERATION)}[0],
-			Body: &ds.PKReadBody{
+			Body: &api.PKReadBody{
 				Filters:     tu.NewFiltersKVs("id0", pk),
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
@@ -356,10 +356,10 @@ func TestBatchArrayTableLongVarbinary(t *testing.T) {
 
 func ArrayColumnBatchTest(t *testing.T, table string, database string, isBinary bool, colWidth int, padding bool) {
 
-	tests := map[string]ds.BatchOperationTestInfo{
+	tests := map[string]api.BatchOperationTestInfo{
 		"simple1": { // bigger batch of array column table
 			HttpCode: http.StatusOK,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, "-1", http.StatusNotFound),
 				arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, "1", http.StatusOK),
 				arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, "2", http.StatusOK),
@@ -386,10 +386,10 @@ func TestBatchBadSubOp(t *testing.T) {
 	padding := false
 	colWidth := 256
 
-	tests := map[string]ds.BatchOperationTestInfo{
+	tests := map[string]api.BatchOperationTestInfo{
 		"simple1": { // bigger batch of array column table
 			HttpCode: http.StatusBadRequest,
-			Operations: []ds.BatchSubOperationTestInfo{
+			Operations: []api.BatchSubOperationTestInfo{
 				arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, "-1", http.StatusNotFound),
 				//This is bad operation. data is longer than the column width
 				arrayColumnBatchTestSubOp(t, table, database, isBinary, colWidth, padding, *tu.NewOperationID(colWidth*4 + 1), http.StatusNotFound),
@@ -404,13 +404,13 @@ func TestBatchBadSubOp(t *testing.T) {
 	tu.BatchTest(t, tests, isBinary, RegisterBatchHandler)
 }
 
-func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBinary bool, colWidth int, padding bool, pk string, expectedStatus int) ds.BatchSubOperationTestInfo {
+func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBinary bool, colWidth int, padding bool, pk string, expectedStatus int) api.BatchSubOperationTestInfo {
 	respKVs := []interface{}{"col0"}
-	return ds.BatchSubOperationTestInfo{
-		SubOperation: ds.BatchSubOp{
+	return api.BatchSubOperationTestInfo{
+		SubOperation: api.BatchSubOp{
 			Method:      &[]string{config.PK_HTTP_VERB}[0],
 			RelativeURL: &[]string{string(database + "/" + table + "/" + config.PK_DB_OPERATION)}[0],
-			Body: &ds.PKReadBody{
+			Body: &api.PKReadBody{
 				Filters:     tu.NewFiltersKVs("id0", tu.Encode(pk, isBinary, colWidth, padding)),
 				ReadColumns: tu.NewReadColumns("col", 1),
 				OperationID: tu.NewOperationID(5),
@@ -430,7 +430,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			// Test missing method
 			operations := NewOperationsTBD(t, 3)
 			operations[1].Method = nil
-			operationsWrapper := ds.BatchOpRequest{Operations: &operations}
+			operationsWrapper := api.BatchOpRequest{Operations: &operations}
 			body, _ := json.Marshal(operationsWrapper)
 			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Method' failed ")
@@ -438,7 +438,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			// Test missing relative URL
 			operations = NewOperationsTBD(t, 3)
 			operations[1].RelativeURL = nil
-			operationsWrapper = ds.BatchOpRequest{Operations: &operations}
+			operationsWrapper = api.BatchOpRequest{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
 			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'RelativeURL' failed ")
@@ -446,7 +446,7 @@ func TestBatchMissingReqField(t *testing.T) {
 			// Test missing body
 			operations = NewOperationsTBD(t, 3)
 			operations[1].Body = nil
-			operationsWrapper = ds.BatchOpRequest{Operations: &operations}
+			operationsWrapper = api.BatchOpRequest{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
 			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Body' failed ")
@@ -454,27 +454,27 @@ func TestBatchMissingReqField(t *testing.T) {
 			// Test missing filter in an operation
 			operations = NewOperationsTBD(t, 3)
 			*&operations[1].Body.Filters = nil
-			operationsWrapper = ds.BatchOpRequest{Operations: &operations}
+			operationsWrapper = api.BatchOpRequest{Operations: &operations}
 			body, _ = json.Marshal(operationsWrapper)
 			tu.SendHttpRequest(t, tc, config.BATCH_HTTP_VERB, url, string(body), http.StatusBadRequest,
 				"Error:Field validation for 'Filters' failed")
 		})
 }
 
-func NewOperationsTBD(t *testing.T, numOps int) []ds.BatchSubOp {
-	operations := make([]ds.BatchSubOp, numOps)
+func NewOperationsTBD(t *testing.T, numOps int) []api.BatchSubOp {
+	operations := make([]api.BatchSubOp, numOps)
 	for i := 0; i < numOps; i++ {
 		operations[i] = NewOperationTBD(t)
 	}
 	return operations
 }
 
-func NewOperationTBD(t *testing.T) ds.BatchSubOp {
+func NewOperationTBD(t *testing.T) api.BatchSubOp {
 	pkOp := tu.NewPKReadReqBodyTBD()
 	method := "POST"
 	relativeURL := tu.NewPKReadURL("db", "table")
 
-	op := ds.BatchSubOp{
+	op := api.BatchSubOp{
 		Method:      &method,
 		RelativeURL: &relativeURL,
 		Body:        &pkOp,

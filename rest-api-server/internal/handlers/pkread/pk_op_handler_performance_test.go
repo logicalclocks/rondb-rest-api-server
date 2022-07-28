@@ -30,7 +30,7 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers/stat"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
 	"hopsworks.ai/rdrs/internal/log"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 // go test  -test.bench BenchmarkSimple -test.run=thisexpressionwontmatchanytest  ./internal/router/handler/pkread/
@@ -78,7 +78,7 @@ func createReq(maxRows, opCount int, operationId string) string {
 	rowId := opCount % maxRows
 	//fmt.Printf("Operation ID: %s, Reading row %d\n", operationId, rowId)
 	col := "id0"
-	param := ds.PKReadBody{
+	param := api.PKReadBody{
 		Filters:     tu.NewFilter(&col, rowId),
 		ReadColumns: tu.NewReadColumns("col_", 1),
 		OperationID: &operationId,
@@ -137,7 +137,7 @@ func consumer1(b testing.TB, tc common.TestContext, id int, db string, table str
 		rowId := opId % maxRowID
 		url := tu.NewPKReadURL(db, table)
 		col := "id0"
-		param := ds.PKReadBody{
+		param := api.PKReadBody{
 			Filters:     tu.NewFilter(&col, rowId),
 			ReadColumns: tu.NewReadColumns("col_", 1),
 			OperationID: tu.NewOperationID(5),

@@ -30,7 +30,7 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 func TestStat(t *testing.T) {
@@ -65,7 +65,7 @@ func TestStat(t *testing.T) {
 		})
 }
 
-func compare(t *testing.T, stats *ds.StatResponse, expectedAllocations int64, numOps int64) {
+func compare(t *testing.T, stats *api.StatResponse, expectedAllocations int64, numOps int64) {
 	if stats.MemoryStats.AllocationsCount != expectedAllocations ||
 		stats.MemoryStats.BuffersCount != expectedAllocations ||
 		stats.MemoryStats.FreeBuffers != expectedAllocations {
@@ -80,7 +80,7 @@ func compare(t *testing.T, stats *ds.StatResponse, expectedAllocations int64, nu
 }
 
 func performPkOp(t *testing.T, tc common.TestContext, db string, table string, ch chan int) {
-	param := ds.PKReadBody{
+	param := api.PKReadBody{
 		Filters:     tu.NewFiltersKVs("id0", 0, "id1", 0),
 		ReadColumns: tu.NewReadColumn("col0"),
 	}
@@ -92,12 +92,12 @@ func performPkOp(t *testing.T, tc common.TestContext, db string, table string, c
 	ch <- 0
 }
 
-func getStatsHttp(t *testing.T, tc common.TestContext) *ds.StatResponse {
+func getStatsHttp(t *testing.T, tc common.TestContext) *api.StatResponse {
 	body := ""
 	url := tu.NewStatURL()
 	_, respBody := tu.SendHttpRequest(t, tc, config.STAT_HTTP_VERB, url, string(body), http.StatusOK, "")
 
-	var stats ds.StatResponse
+	var stats api.StatResponse
 	err := json.Unmarshal([]byte(respBody), &stats)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -105,12 +105,12 @@ func getStatsHttp(t *testing.T, tc common.TestContext) *ds.StatResponse {
 	return &stats
 }
 
-func getStatsGRPC(t *testing.T, tc common.TestContext) *ds.StatResponse {
+func getStatsGRPC(t *testing.T, tc common.TestContext) *api.StatResponse {
 	stats := sendGRPCStatRequest(t)
 	return stats
 }
 
-func sendGRPCStatRequest(t *testing.T) *ds.StatResponse {
+func sendGRPCStatRequest(t *testing.T) *api.StatResponse {
 	// Create gRPC client
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d",
 		config.Configuration().RestServer.GRPCServerIP,
@@ -121,12 +121,12 @@ func sendGRPCStatRequest(t *testing.T) *ds.StatResponse {
 	if err != nil {
 		t.Fatalf("Failed to connect to server %v", err)
 	}
-	client := ds.NewRonDBRestServerClient(conn)
+	client := api.NewRonDBRESTClient(conn)
 
 	// Create Request
-	statRequest := ds.StatRequest{}
+	statRequest := api.StatRequest{}
 
-	reqProto := ds.ConvertStatRequest(&statRequest)
+	reqProto := api.ConvertStatRequest(&statRequest)
 
 	expectedStatus := http.StatusOK
 	respCode := 200
@@ -141,5 +141,5 @@ func sendGRPCStatRequest(t *testing.T) *ds.StatResponse {
 		t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
 	}
 
-	return ds.ConvertStatResponseProto(respProto)
+	return api.ConvertStatResponseProto(respProto)
 }

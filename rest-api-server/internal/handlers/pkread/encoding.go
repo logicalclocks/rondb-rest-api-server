@@ -32,7 +32,7 @@ import (
 
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 // Also checkout internal/router/handler/pkread/encoding-scheme.png
@@ -71,7 +71,7 @@ import (
 //    null terminated  operation Id
 //
 
-func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.NativeBuffer, error) {
+func CreateNativeRequest(pkrParams *api.PKReadParams) (*dal.NativeBuffer, *dal.NativeBuffer, error) {
 	response := dal.GetBuffer()
 	request := dal.GetBuffer()
 	iBuf := unsafe.Slice((*uint32)(request.Buffer), request.Size/C.ADDRESS_SIZE)
@@ -185,7 +185,7 @@ func CreateNativeRequest(pkrParams *ds.PKReadParams) (*dal.NativeBuffer, *dal.Na
 	//xxd.Print(0, bBuf[:])
 	return request, response, nil
 }
-func ProcessPKReadResponse(respBuff *dal.NativeBuffer, response ds.PKReadResponse) (int32, error) {
+func ProcessPKReadResponse(respBuff *dal.NativeBuffer, response api.PKReadResponse) (int32, error) {
 
 	iBuf := unsafe.Slice((*uint32)(respBuff.Buffer), respBuff.Size)
 
@@ -254,7 +254,7 @@ func convertToJsonRaw(dataType uint32, value *string) *json.RawMessage {
 }
 
 func dataReturnType(drt *string) (uint32, error) {
-	if *drt == ds.DRT_DEFAULT {
+	if *drt == api.DRT_DEFAULT {
 		return C.DEFAULT_DRT, nil
 	} else {
 		return math.MaxUint32, fmt.Errorf("Return data type is not supported. Data type: " + *drt)

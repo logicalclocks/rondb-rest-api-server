@@ -32,7 +32,7 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 type PKRead struct{}
@@ -52,7 +52,7 @@ func GetPKReader() handlers.PKReader {
 }
 
 func (p *PKRead) PkReadHttpHandler(c *gin.Context) {
-	pkReadParams := ds.PKReadParams{}
+	pkReadParams := api.PKReadParams{}
 
 	err := parseRequest(c, &pkReadParams)
 	if err != nil {
@@ -68,8 +68,8 @@ func (p *PKRead) PkReadHttpHandler(c *gin.Context) {
 	processRequestNSetStatus(c, &pkReadParams, apiKey)
 }
 
-func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, apiKey *string) {
-	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseJSON{})
+func processRequestNSetStatus(c *gin.Context, pkReadParams *api.PKReadParams, apiKey *string) {
+	var response api.PKReadResponse = (api.PKReadResponse)(&api.PKReadResponseJSON{})
 	response.Init()
 
 	status, err := pkRead.PkReadHandler(pkReadParams, apiKey, response)
@@ -82,7 +82,7 @@ func processRequestNSetStatus(c *gin.Context, pkReadParams *ds.PKReadParams, api
 	common.SetResponseBody(c, status, &response)
 }
 
-func (p *PKRead) PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error) {
+func (p *PKRead) PkReadHandler(pkReadParams *api.PKReadParams, apiKey *string, response api.PKReadResponse) (int, error) {
 	err := checkAPIKey(apiKey, pkReadParams.DB)
 	if err != nil {
 		return http.StatusUnauthorized, err
@@ -108,10 +108,10 @@ func (p *PKRead) PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, re
 	return int(status), nil
 }
 
-func parseRequest(c *gin.Context, pkReadParams *ds.PKReadParams) error {
+func parseRequest(c *gin.Context, pkReadParams *api.PKReadParams) error {
 
-	body := ds.PKReadBody{}
-	pp := ds.PKReadPP{}
+	body := api.PKReadBody{}
+	pp := api.PKReadPP{}
 
 	if err := parseURI(c, &pp); err != nil {
 		return err
@@ -135,7 +135,7 @@ func parseRequest(c *gin.Context, pkReadParams *ds.PKReadParams) error {
 	return nil
 }
 
-func ParseBody(req *http.Request, params *ds.PKReadBody) error {
+func ParseBody(req *http.Request, params *api.PKReadBody) error {
 
 	b := binding.JSON
 	err := b.Bind(req, &params)
@@ -145,7 +145,7 @@ func ParseBody(req *http.Request, params *ds.PKReadBody) error {
 	return nil
 }
 
-func ValidateBody(params *ds.PKReadParams) error {
+func ValidateBody(params *api.PKReadParams) error {
 
 	for _, filter := range *params.Filters {
 		// make sure filter columns are valid
@@ -193,7 +193,7 @@ func ValidateBody(params *ds.PKReadParams) error {
 	return nil
 }
 
-func parseURI(c *gin.Context, resource *ds.PKReadPP) error {
+func parseURI(c *gin.Context, resource *api.PKReadPP) error {
 	err := c.ShouldBindUri(&resource)
 	if err != nil {
 		return err
@@ -231,7 +231,7 @@ func checkAPIKey(apiKey *string, db *string) error {
 	return nil
 }
 
-func ValidatePKReadRequest(req *ds.PKReadParams) error {
+func ValidatePKReadRequest(req *api.PKReadParams) error {
 
 	if err := validateDBIdentifier(*req.DB); err != nil {
 		return err

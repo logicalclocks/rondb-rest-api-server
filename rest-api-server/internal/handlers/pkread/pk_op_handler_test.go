@@ -28,7 +28,7 @@ import (
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/handlers"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 func TestPKReadOmitRequired(t *testing.T) {
@@ -37,7 +37,7 @@ func TestPKReadOmitRequired(t *testing.T) {
 		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
 
 			// Test. Omitting filter should result in 400 error
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     nil,
 				ReadColumns: tu.NewReadColumns("read_col_", 5),
 				OperationID: tu.NewOperationID(64),
@@ -73,7 +73,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 			// Test. Large filter column names.
 			col := tu.RandString(65)
 			val := "val"
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     tu.NewFilter(&col, val),
 				ReadColumns: tu.NewReadColumns("read_col_", 5),
 				OperationID: tu.NewOperationID(64),
@@ -84,7 +84,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 				http.StatusBadRequest, "Field validation for 'Column' failed on the 'max' tag")
 
 			// Test. Large read column names.
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     tu.NewFilters("filter_col_", 3),
 				ReadColumns: tu.NewReadColumns(tu.RandString(65), 5),
 				OperationID: tu.NewOperationID(64),
@@ -94,7 +94,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 				url, string(body), http.StatusBadRequest, "field length validation failed")
 
 			// Test. Large db and table names
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     tu.NewFilters("filter_col_", 3),
 				ReadColumns: tu.NewReadColumns("read_col_", 5),
 				OperationID: tu.NewOperationID(64),
@@ -123,7 +123,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 			// Test. invalid filter
 			col := "col" + string(rune(0x0000))
 			val := "val"
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     tu.NewFilter(&col, val),
 				ReadColumns: tu.NewReadColumn("read_col"),
 				OperationID: tu.NewOperationID(64),
@@ -136,7 +136,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 			// Test. invalid read col
 			col = "col"
 			val = "val"
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     tu.NewFilter(&col, val),
 				ReadColumns: tu.NewReadColumn("col" + string(rune(0x10000))),
 				OperationID: tu.NewOperationID(64),
@@ -146,7 +146,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 				fmt.Sprintf("field validation failed. Invalid character '%U'", rune(0x10000)))
 
 			// Test. Invalid path parameteres
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     tu.NewFilter(&col, val),
 				ReadColumns: tu.NewReadColumn("col"),
 				OperationID: tu.NewOperationID(64),
@@ -166,11 +166,11 @@ func TestPKUniqueParams(t *testing.T) {
 	tu.WithDBs(t, []string{"DB000"},
 		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
 			// Test. unique read columns
-			readColumns := make([]ds.ReadColumn, 2)
+			readColumns := make([]api.ReadColumn, 2)
 			col := "col1"
 			readColumns[0].Column = &col
 			readColumns[1].Column = &col
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     tu.NewFilters("col", 1),
 				ReadColumns: &readColumns,
 				OperationID: tu.NewOperationID(64),
@@ -183,11 +183,11 @@ func TestPKUniqueParams(t *testing.T) {
 			// Test. unique filter columns
 			col = "col"
 			val := "val"
-			filters := make([]ds.Filter, 2)
+			filters := make([]api.Filter, 2)
 			filters[0] = (*(tu.NewFilter(&col, val)))[0]
 			filters[1] = (*(tu.NewFilter(&col, val)))[0]
 
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     &filters,
 				ReadColumns: tu.NewReadColumns("read_col_", 5),
 				OperationID: tu.NewOperationID(64),
@@ -197,7 +197,7 @@ func TestPKUniqueParams(t *testing.T) {
 				"field validation for filter failed on the 'unique' tag")
 
 			//Test that filter and read columns do not contain overlapping columns
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     tu.NewFilter(&col, val),
 				ReadColumns: tu.NewReadColumn(col),
 				OperationID: tu.NewOperationID(64),
@@ -215,7 +215,7 @@ func TestPKERROR_011(t *testing.T) {
 		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
 			pkCol := "id0"
 			pkVal := "1"
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     tu.NewFilter(&pkCol, pkVal),
 				ReadColumns: tu.NewReadColumn("col_0"),
 				OperationID: tu.NewOperationID(64),
@@ -238,7 +238,7 @@ func TestPKERROR_012(t *testing.T) {
 		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
 			pkCol := "id0"
 			pkVal := "1"
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     tu.NewFilter(&pkCol, pkVal),
 				ReadColumns: tu.NewReadColumn("col_0_XXX"),
 				OperationID: tu.NewOperationID(64),
@@ -258,7 +258,7 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
 			// send an other request with one column missing from def
 			// //		// one PK col is missing
-			param := ds.PKReadBody{
+			param := api.PKReadBody{
 				Filters:     tu.NewFilters("id", 1), // PK has two cols. should thow an exception as we have define only one col in PK
 				ReadColumns: tu.NewReadColumn("col_0"),
 				OperationID: tu.NewOperationID(64),
@@ -268,7 +268,7 @@ func TestPKERROR_013_ERROR_014(t *testing.T) {
 			tu.SendHttpRequest(t, tc, config.PK_HTTP_VERB, url, string(body), http.StatusBadRequest, common.ERROR_013())
 
 			// send an other request with two pk cols but wrong names
-			param = ds.PKReadBody{
+			param = api.PKReadBody{
 				Filters:     tu.NewFilters("idx", 2),
 				ReadColumns: tu.NewReadColumn("col_0"),
 				OperationID: tu.NewOperationID(64),

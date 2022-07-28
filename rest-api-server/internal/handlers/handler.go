@@ -19,22 +19,22 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 type RegisterTestHandler func(*gin.Engine)
 
 type PKReader interface {
 	PkReadHttpHandler(c *gin.Context)
-	PkReadHandler(pkReadParams *ds.PKReadParams, apiKey *string, response ds.PKReadResponse) (int, error)
+	PkReadHandler(pkReadParams *api.PKReadParams, apiKey *string, response api.PKReadResponse) (int, error)
 }
 
 type Batcher interface {
 	BatchOpsHttpHandler(c *gin.Context)
-	BatchOpsHandler(pkOperations *[]*ds.PKReadParams, apiKey *string, response ds.BatchOpResponse) (int, error)
+	BatchOpsHandler(pkOperations *[]*api.PKReadParams, apiKey *string, response api.BatchOpResponse) (int, error)
 }
 
 type Stater interface {
 	StatOpsHttpHandler(c *gin.Context)
-	StatOpsHandler(response *ds.StatResponse) (int, error)
+	StatOpsHandler(response *api.StatResponse) (int, error)
 }

@@ -26,7 +26,7 @@ import (
 	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 	"hopsworks.ai/rdrs/version"
 )
 
@@ -44,7 +44,7 @@ func RegisterStatTestHandler(engine *gin.Engine) {
 }
 
 func (s *Stat) StatOpsHttpHandler(c *gin.Context) {
-	statResp := ds.StatResponse{}
+	statResp := api.StatResponse{}
 	stats, err := stat.StatOpsHandler(&statResp)
 	if err != nil {
 		common.SetResponseBodyError(c, http.StatusInternalServerError, err)
@@ -53,7 +53,7 @@ func (s *Stat) StatOpsHttpHandler(c *gin.Context) {
 	common.SetResponseBody(c, stats, &statResp)
 }
 
-func (s *Stat) StatOpsHandler(statResp *ds.StatResponse) (int, error) {
+func (s *Stat) StatOpsHandler(statResp *api.StatResponse) (int, error) {
 
 	rondbStats, err := dal.GetRonDBStats()
 	if err != nil {

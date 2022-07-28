@@ -34,7 +34,7 @@ import (
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
-	"hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 	"hopsworks.ai/rdrs/version"
 	// _ "github.com/ianlancetaylor/cgosymbolizer" // enable this for stack trace of c layer
 )
@@ -131,7 +131,7 @@ func (rc *RouterConext) StartRouter() error {
 		}
 		rc.GRPCServer = grpc.NewServer()
 		GRPCServer := grpcsrv.GetGRPCServer()
-		operations.RegisterRonDBRestServerServer(rc.GRPCServer, GRPCServer)
+		api.RegisterRonDBRESTServer(rc.GRPCServer, GRPCServer)
 		rc.GRPCServer.Serve(lis)
 	}()
 

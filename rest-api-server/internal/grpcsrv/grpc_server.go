@@ -23,14 +23,14 @@ import (
 	"fmt"
 
 	"hopsworks.ai/rdrs/internal/handlers"
-	ds "hopsworks.ai/rdrs/pkg/operations"
+	"hopsworks.ai/rdrs/pkg/api"
 )
 
 type GRPCServer struct {
-	ds.UnimplementedRonDBRestServerServer
+	api.UnimplementedRonDBRESTServer
 }
 
-var _ ds.RonDBRestServerServer = (*GRPCServer)(nil)
+var _ api.RonDBRESTServer = (*GRPCServer)(nil)
 
 var server GRPCServer
 
@@ -55,10 +55,10 @@ func (s *GRPCServer) RegisterStatOpHandler(handler handlers.Stater) {
 	statOpHandler = handler
 }
 
-func (s *GRPCServer) PKRead(c context.Context, reqProto *ds.PKReadRequestProto) (*ds.PKReadResponseProto, error) {
-	req, apiKey := ds.ConvertPKReadRequestProto(reqProto)
+func (s *GRPCServer) PKRead(c context.Context, reqProto *api.PKReadRequestProto) (*api.PKReadResponseProto, error) {
+	req, apiKey := api.ConvertPKReadRequestProto(reqProto)
 
-	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseGRPC{})
+	var response api.PKReadResponse = (api.PKReadResponse)(&api.PKReadResponseGRPC{})
 	response.Init()
 
 	status, err := pkReadHandler.PkReadHandler(req, &apiKey, response)
@@ -70,14 +70,14 @@ func (s *GRPCServer) PKRead(c context.Context, reqProto *ds.PKReadRequestProto) 
 		return nil, mkError(status, nil)
 	}
 
-	respProto := ds.ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))
+	respProto := api.ConvertPKReadResponse(response.(*api.PKReadResponseGRPC))
 	return respProto, nil
 }
 
-func (s *GRPCServer) Batch(c context.Context, reqProto *ds.BatchRequestProto) (*ds.BatchResponseProto, error) {
-	req, apikey := ds.ConvertBatchRequestProto(reqProto)
+func (s *GRPCServer) Batch(c context.Context, reqProto *api.BatchRequestProto) (*api.BatchResponseProto, error) {
+	req, apikey := api.ConvertBatchRequestProto(reqProto)
 
-	var response ds.BatchOpResponse = (ds.BatchOpResponse)(&ds.BatchResponseGRPC{})
+	var response api.BatchOpResponse = (api.BatchOpResponse)(&api.BatchResponseGRPC{})
 	response.Init()
 
 	status, err := batchOpHandler.BatchOpsHandler(req, &apikey, response)
@@ -89,13 +89,13 @@ func (s *GRPCServer) Batch(c context.Context, reqProto *ds.BatchRequestProto) (*
 		return nil, mkError(status, nil)
 	}
 
-	respProto := ds.ConvertBatchOpResponse(response.(*ds.BatchResponseGRPC))
+	respProto := api.ConvertBatchOpResponse(response.(*api.BatchResponseGRPC))
 	return respProto, nil
 }
 
-func (s *GRPCServer) Stat(ctx context.Context, reqProto *ds.StatRequestProto) (*ds.StatResponseProto, error) {
+func (s *GRPCServer) Stat(ctx context.Context, reqProto *api.StatRequestProto) (*api.StatResponseProto, error) {
 
-	response := &ds.StatResponse{}
+	response := &api.StatResponse{}
 	status, err := statOpHandler.StatOpsHandler(response)
 	if err != nil {
 		return nil, mkError(status, err)
@@ -105,7 +105,7 @@ func (s *GRPCServer) Stat(ctx context.Context, reqProto *ds.StatRequestProto) (*
 		return nil, mkError(status, nil)
 	}
 
-	respProto := ds.ConvertStatResponse(response)
+	respProto := api.ConvertStatResponse(response)
 	return respProto, nil
 }
 

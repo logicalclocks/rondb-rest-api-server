@@ -17,7 +17,7 @@
 
 syntax = "proto2";
 
-option go_package = "./pkg/operations";
+option go_package = "./pkg/api";
 
 //__________________  PK Read Operation __________________
 message FilterProto {
@@ -83,7 +83,7 @@ message StatResponseProto {
 }
 
 //__________________  Service ______________________________
-service RonDBRestServer {
+service RonDBREST {
   rpc PKRead(PKReadRequestProto) returns (PKReadResponseProto);
   rpc Batch(BatchRequestProto) returns (BatchResponseProto);
   rpc Stat(StatRequestProto) returns (StatResponseProto);
