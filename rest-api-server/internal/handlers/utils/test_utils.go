@@ -39,8 +39,8 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
+	"hopsworks.ai/rdrs/internal/server"
 	"hopsworks.ai/rdrs/pkg/api"
-	"hopsworks.ai/rdrs/pkg/server/router"
 	"hopsworks.ai/rdrs/version"
 )
 
@@ -444,7 +444,7 @@ func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterTes
 	common.CreateDatabases(t, dbs...)
 	defer common.DropDatabases(t, dbs...)
 
-	routerCtx := router.CreateRouterContext()
+	routerCtx := server.CreateRouterContext()
 	routerCtx.SetupRouter(registerHandlers)
 
 	err := routerCtx.StartRouter()
@@ -468,7 +468,7 @@ func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterTes
 	}
 }
 
-func shutDownRouter(t testing.TB, router router.Router) error {
+func shutDownRouter(t testing.TB, router server.Router) error {
 	t.Helper()
 	return router.StopRouter()
 }

@@ -31,7 +31,7 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	"hopsworks.ai/rdrs/internal/handlers/stat"
 	"hopsworks.ai/rdrs/internal/log"
-	"hopsworks.ai/rdrs/pkg/server/router"
+	"hopsworks.ai/rdrs/internal/server"
 	"hopsworks.ai/rdrs/version"
 )
 
@@ -58,7 +58,7 @@ func main() {
 
 	runtime.GOMAXPROCS(config.Configuration().RestServer.GOMAXPROCS)
 
-	router := router.CreateRouterContext()
+	router := server.CreateRouterContext()
 
 	handlers := []handlers.RegisterTestHandler{pkread.RegisterPKHandler,
 		stat.RegisterStatTestHandler,
