@@ -15,17 +15,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package grpcsrv
+package operations
 
 import (
 	"encoding/json"
 
 	"hopsworks.ai/rdrs/internal/dal"
-	ds "hopsworks.ai/rdrs/pkg/operations"
 )
 
 // Converters for PK Read Request
-func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) *PKReadRequestProto {
+func ConvertPKReadParams(req *PKReadParams, apiKey *string) *PKReadRequestProto {
 
 	pkReadRequestProto := PKReadRequestProto{}
 
@@ -69,17 +68,17 @@ func ConvertPKReadParams(req *ds.PKReadParams, apiKey *string) *PKReadRequestPro
 	return &pkReadRequestProto
 }
 
-func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) (*ds.PKReadParams, string) {
-	pkReadParams := ds.PKReadParams{}
+func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) (*PKReadParams, string) {
+	pkReadParams := PKReadParams{}
 
 	pkReadParams.DB = reqProto.DB
 	pkReadParams.Table = reqProto.Table
 	pkReadParams.OperationID = reqProto.OperationID
 
-	var readColumns []ds.ReadColumn
+	var readColumns []ReadColumn
 	for _, readColumnProto := range reqProto.GetReadColumns() {
 		if readColumnProto != nil {
-			readColumn := ds.ReadColumn{}
+			readColumn := ReadColumn{}
 
 			readColumn.Column = readColumnProto.Column
 			readColumn.DataReturnType = readColumnProto.DataReturnType
@@ -93,10 +92,10 @@ func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) (*ds.PKReadParams, 
 		pkReadParams.ReadColumns = nil
 	}
 
-	var filters []ds.Filter
+	var filters []Filter
 	for _, filterProto := range reqProto.Filters {
 		if filterProto != nil {
-			filter := ds.Filter{}
+			filter := Filter{}
 
 			filter.Column = filterProto.Column
 			rawMsg := json.RawMessage([]byte(*filterProto.Value))
@@ -115,8 +114,8 @@ func ConvertPKReadRequestProto(reqProto *PKReadRequestProto) (*ds.PKReadParams, 
 }
 
 // Converters for PK Read Response
-func ConvertPKReadResponseProto(respProto *PKReadResponseProto) *ds.PKReadResponseGRPC {
-	resp := ds.PKReadResponseGRPC{}
+func ConvertPKReadResponseProto(respProto *PKReadResponseProto) *PKReadResponseGRPC {
+	resp := PKReadResponseGRPC{}
 
 	data := make(map[string]*string)
 	if respProto.Data != nil {
@@ -138,7 +137,7 @@ func ConvertPKReadResponseProto(respProto *PKReadResponseProto) *ds.PKReadRespon
 	return &resp
 }
 
-func ConvertPKReadResponse(resp *ds.PKReadResponseGRPC) *PKReadResponseProto {
+func ConvertPKReadResponse(resp *PKReadResponseGRPC) *PKReadResponseProto {
 	respProto := PKReadResponseProto{}
 	respProto.Data = make(map[string]*ColumnValueProto)
 	if resp.Data != nil {
@@ -155,15 +154,15 @@ func ConvertPKReadResponse(resp *ds.PKReadResponseGRPC) *PKReadResponseProto {
 	return &respProto
 }
 
-func ConvertBatchRequestProto(reqProto *BatchRequestProto) (*[]*ds.PKReadParams, string) {
-	operations := make([]*ds.PKReadParams, len(reqProto.Operations))
+func ConvertBatchRequestProto(reqProto *BatchRequestProto) (*[]*PKReadParams, string) {
+	operations := make([]*PKReadParams, len(reqProto.Operations))
 	for i, operation := range reqProto.Operations {
 		operations[i], _ = ConvertPKReadRequestProto(operation)
 	}
 	return &operations, reqProto.GetAPIKey()
 }
 
-func ConvertBatchOpRequest(readParams []*ds.PKReadParams, apiKey *string) *BatchRequestProto {
+func ConvertBatchOpRequest(readParams []*PKReadParams, apiKey *string) *BatchRequestProto {
 	readParamsProto := make([]*PKReadRequestProto, len(readParams))
 
 	for i, readParam := range readParams {
@@ -177,16 +176,16 @@ func ConvertBatchOpRequest(readParams []*ds.PKReadParams, apiKey *string) *Batch
 	return &batchRequestProto
 }
 
-func ConvertBatchResponseProto(responsesProto *BatchResponseProto) *ds.BatchResponseGRPC {
-	pkResponsesWCode := make([]*ds.PKReadResponseWithCodeGRPC, len(responsesProto.Responses))
+func ConvertBatchResponseProto(responsesProto *BatchResponseProto) *BatchResponseGRPC {
+	pkResponsesWCode := make([]*PKReadResponseWithCodeGRPC, len(responsesProto.Responses))
 	for i, respProto := range responsesProto.Responses {
-		pkResponsesWCode[i] = &ds.PKReadResponseWithCodeGRPC{Code: respProto.Code, Body: ConvertPKReadResponseProto(respProto)}
+		pkResponsesWCode[i] = &PKReadResponseWithCodeGRPC{Code: respProto.Code, Body: ConvertPKReadResponseProto(respProto)}
 	}
-	batchResponse := ds.BatchResponseGRPC{Result: &pkResponsesWCode}
+	batchResponse := BatchResponseGRPC{Result: &pkResponsesWCode}
 	return &batchResponse
 }
 
-func ConvertBatchOpResponse(responses *ds.BatchResponseGRPC) *BatchResponseProto {
+func ConvertBatchOpResponse(responses *BatchResponseGRPC) *BatchResponseProto {
 	var batchResponse BatchResponseProto
 	if responses.Result != nil {
 		pkReadResponsesProto := make([]*PKReadResponseProto, len(*responses.Result))
@@ -200,14 +199,14 @@ func ConvertBatchOpResponse(responses *ds.BatchResponseGRPC) *BatchResponseProto
 	return &batchResponse
 }
 
-func ConvertStatRequest(req *ds.StatRequest) *StatRequestProto {
+func ConvertStatRequest(req *StatRequest) *StatRequestProto {
 	return &StatRequestProto{}
 }
-func ConvertStatRequestProto(reqProto *StatRequestProto) *ds.StatRequest {
-	return &ds.StatRequest{}
+func ConvertStatRequestProto(reqProto *StatRequestProto) *StatRequest {
+	return &StatRequest{}
 }
 
-func ConvertStatResponse(resp *ds.StatResponse) *StatResponseProto {
+func ConvertStatResponse(resp *StatResponse) *StatResponseProto {
 	respProto := StatResponseProto{}
 	memStatsProto := MemoryStatsProto{}
 	rondbStatsProto := RonDBStatsProto{}
@@ -227,8 +226,8 @@ func ConvertStatResponse(resp *ds.StatResponse) *StatResponseProto {
 	return &respProto
 }
 
-func ConvertStatResponseProto(resp *StatResponseProto) *ds.StatResponse {
-	statResponse := ds.StatResponse{}
+func ConvertStatResponseProto(resp *StatResponseProto) *StatResponse {
+	statResponse := StatResponse{}
 	memoryStats := dal.MemoryStats{}
 	ronDBStats := dal.RonDBStats{}
 

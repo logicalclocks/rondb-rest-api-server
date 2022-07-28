@@ -27,7 +27,6 @@ import (
 	"google.golang.org/grpc"
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
-	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	tu "hopsworks.ai/rdrs/internal/handlers/utils"
@@ -122,12 +121,12 @@ func sendGRPCStatRequest(t *testing.T) *ds.StatResponse {
 	if err != nil {
 		t.Fatalf("Failed to connect to server %v", err)
 	}
-	client := grpcsrv.NewRonDBRestServerClient(conn)
+	client := ds.NewRonDBRestServerClient(conn)
 
 	// Create Request
 	statRequest := ds.StatRequest{}
 
-	reqProto := grpcsrv.ConvertStatRequest(&statRequest)
+	reqProto := ds.ConvertStatRequest(&statRequest)
 
 	expectedStatus := http.StatusOK
 	respCode := 200
@@ -142,5 +141,5 @@ func sendGRPCStatRequest(t *testing.T) *ds.StatResponse {
 		t.Fatalf("Test failed. Expected: %d, Got: %d. Complete Error Message: %v ", expectedStatus, respCode, errStr)
 	}
 
-	return grpcsrv.ConvertStatResponseProto(respProto)
+	return ds.ConvertStatResponseProto(respProto)
 }

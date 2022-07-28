@@ -36,7 +36,6 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/tlsutils"
@@ -507,7 +506,7 @@ func sendGRPCPKReadRequest(t *testing.T, testInfo ds.PKTestInfo) (int, *ds.PKRea
 	if err != nil {
 		t.Fatalf("Failed to connect to server %v", err)
 	}
-	client := grpcsrv.NewRonDBRestServerClient(conn)
+	client := ds.NewRonDBRestServerClient(conn)
 
 	// Create Request
 	pkReadParams := ds.PKReadParams{}
@@ -518,7 +517,7 @@ func sendGRPCPKReadRequest(t *testing.T, testInfo ds.PKTestInfo) (int, *ds.PKRea
 	pkReadParams.ReadColumns = testInfo.PkReq.ReadColumns
 
 	apiKey := common.HOPSWORKS_TEST_API_KEY
-	reqProto := grpcsrv.ConvertPKReadParams(&pkReadParams, &apiKey)
+	reqProto := ds.ConvertPKReadParams(&pkReadParams, &apiKey)
 
 	expectedStatus := testInfo.HttpCode
 	respCode := 200
@@ -538,7 +537,7 @@ func sendGRPCPKReadRequest(t *testing.T, testInfo ds.PKTestInfo) (int, *ds.PKRea
 	}
 
 	if respCode == http.StatusOK {
-		resp := grpcsrv.ConvertPKReadResponseProto(respProto)
+		resp := ds.ConvertPKReadResponseProto(respProto)
 		return respCode, resp
 	} else {
 		return respCode, nil
@@ -622,7 +621,7 @@ func sendGRPCBatchRequest(t *testing.T, testInfo ds.BatchOperationTestInfo) (int
 	if err != nil {
 		t.Fatalf("Failed to connect to server %v", err)
 	}
-	client := grpcsrv.NewRonDBRestServerClient(conn)
+	client := ds.NewRonDBRestServerClient(conn)
 
 	// Create Request
 	batchOpRequest := make([]*ds.PKReadParams, len(testInfo.Operations))
@@ -638,7 +637,7 @@ func sendGRPCBatchRequest(t *testing.T, testInfo ds.BatchOperationTestInfo) (int
 	}
 
 	apiKey := common.HOPSWORKS_TEST_API_KEY
-	batchRequestProto := grpcsrv.ConvertBatchOpRequest(batchOpRequest, &apiKey)
+	batchRequestProto := ds.ConvertBatchOpRequest(batchOpRequest, &apiKey)
 
 	expectedStatus := testInfo.HttpCode
 	respCode := 200
@@ -658,7 +657,7 @@ func sendGRPCBatchRequest(t *testing.T, testInfo ds.BatchOperationTestInfo) (int
 	}
 
 	if respCode == http.StatusOK {
-		resp := grpcsrv.ConvertBatchResponseProto(respProto)
+		resp := ds.ConvertBatchResponseProto(respProto)
 		return respCode, resp
 	} else {
 		return respCode, nil

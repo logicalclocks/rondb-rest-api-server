@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.2
-// source: internal/grpcsrv/rdrs.proto
+// source: api/rdrs.proto
 
-package grpcsrv
+package operations
 
 import (
 	context "context"
@@ -173,5 +173,5 @@ var RonDBRestServer_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/grpcsrv/rdrs.proto",
+	Metadata: "api/rdrs.proto",
 }

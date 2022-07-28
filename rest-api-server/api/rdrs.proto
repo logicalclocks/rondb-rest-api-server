@@ -17,7 +17,7 @@
 
 syntax = "proto2";
 
-option go_package = "./../grpcsrv";
+option go_package = "./pkg/operations";
 
 //__________________  PK Read Operation __________________
 message FilterProto {

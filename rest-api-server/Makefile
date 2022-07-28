@@ -39,7 +39,7 @@ clean:
 	rm -rf ./bin/*
 
 build_proto:
-	protoc --go_out=./internal/grpcsrv/ --go-grpc_out=./internal/grpcsrv ./internal/grpcsrv/rdrs.proto
+	protoc --go_out=. --go-grpc_out=. ./api/rdrs.proto
 
 test: 
 	go test -v -p 1 ./... -coverprofile coverage.out 

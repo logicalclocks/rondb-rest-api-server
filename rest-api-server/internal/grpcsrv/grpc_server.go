@@ -27,9 +27,10 @@ import (
 )
 
 type GRPCServer struct {
+	ds.UnimplementedRonDBRestServerServer
 }
 
-var _ RonDBRestServerServer = (*GRPCServer)(nil)
+var _ ds.RonDBRestServerServer = (*GRPCServer)(nil)
 
 var server GRPCServer
 
@@ -54,8 +55,8 @@ func (s *GRPCServer) RegisterStatOpHandler(handler handlers.Stater) {
 	statOpHandler = handler
 }
 
-func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*PKReadResponseProto, error) {
-	req, apiKey := ConvertPKReadRequestProto(reqProto)
+func (s *GRPCServer) PKRead(c context.Context, reqProto *ds.PKReadRequestProto) (*ds.PKReadResponseProto, error) {
+	req, apiKey := ds.ConvertPKReadRequestProto(reqProto)
 
 	var response ds.PKReadResponse = (ds.PKReadResponse)(&ds.PKReadResponseGRPC{})
 	response.Init()
@@ -69,12 +70,12 @@ func (s *GRPCServer) PKRead(c context.Context, reqProto *PKReadRequestProto) (*P
 		return nil, mkError(status, nil)
 	}
 
-	respProto := ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))
+	respProto := ds.ConvertPKReadResponse(response.(*ds.PKReadResponseGRPC))
 	return respProto, nil
 }
 
-func (s *GRPCServer) Batch(c context.Context, reqProto *BatchRequestProto) (*BatchResponseProto, error) {
-	req, apikey := ConvertBatchRequestProto(reqProto)
+func (s *GRPCServer) Batch(c context.Context, reqProto *ds.BatchRequestProto) (*ds.BatchResponseProto, error) {
+	req, apikey := ds.ConvertBatchRequestProto(reqProto)
 
 	var response ds.BatchOpResponse = (ds.BatchOpResponse)(&ds.BatchResponseGRPC{})
 	response.Init()
@@ -88,11 +89,11 @@ func (s *GRPCServer) Batch(c context.Context, reqProto *BatchRequestProto) (*Bat
 		return nil, mkError(status, nil)
 	}
 
-	respProto := ConvertBatchOpResponse(response.(*ds.BatchResponseGRPC))
+	respProto := ds.ConvertBatchOpResponse(response.(*ds.BatchResponseGRPC))
 	return respProto, nil
 }
 
-func (s *GRPCServer) Stat(ctx context.Context, reqProto *StatRequestProto) (*StatResponseProto, error) {
+func (s *GRPCServer) Stat(ctx context.Context, reqProto *ds.StatRequestProto) (*ds.StatResponseProto, error) {
 
 	response := &ds.StatResponse{}
 	status, err := statOpHandler.StatOpsHandler(response)
@@ -104,7 +105,7 @@ func (s *GRPCServer) Stat(ctx context.Context, reqProto *StatRequestProto) (*Sta
 		return nil, mkError(status, nil)
 	}
 
-	respProto := ConvertStatResponse(response)
+	respProto := ds.ConvertStatResponse(response)
 	return respProto, nil
 }
 
