@@ -31,21 +31,13 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
-	"hopsworks.ai/rdrs/internal/server/grpcsrv"
 	"hopsworks.ai/rdrs/pkg/api"
 )
 
 type PKRead struct{}
 
 var _ handlers.PKReader = (*PKRead)(nil)
-
 var pkRead PKRead
-
-func RegisterPKHandlers(e *gin.Engine) {
-	group := e.Group(config.DB_OPS_EP_GROUP)
-	group.POST(config.PK_DB_OPERATION, pkRead.PkReadHttpHandler)
-	grpcsrv.GetGRPCServer().RegisterPKReadHandler(&pkRead)
-}
 
 func GetPKReader() handlers.PKReader {
 	return &pkRead

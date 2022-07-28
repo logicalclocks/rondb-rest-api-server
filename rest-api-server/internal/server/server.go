@@ -40,7 +40,7 @@ import (
 )
 
 type Router interface {
-	SetupRouter(registerHandlers []handlers.RegisterHandlers) error
+	SetupRouter(handlers *handlers.AllHandlers) error
 	StartRouter() error
 	StopRouter() error
 	GetServer() (*http.Server, *grpc.Server)
@@ -62,17 +62,18 @@ type RouterConext struct {
 	//server
 	HttpServer *http.Server
 	GRPCServer *grpc.Server
+
+	//Handlers
+	handlers *handlers.AllHandlers
 }
 
 var _ Router = (*RouterConext)(nil)
 
-func (rc *RouterConext) SetupRouter(handlers []handlers.RegisterHandlers) error {
+func (rc *RouterConext) SetupRouter(handlers *handlers.AllHandlers) error {
 	gin.SetMode(gin.ReleaseMode)
 	rc.Engine = gin.New()
 
-	for _, handler := range handlers {
-		handler(rc.Engine)
-	}
+	rc.registerHandlers(handlers)
 
 	// connect to RonDB
 	dal.InitializeBuffers()
@@ -87,6 +88,33 @@ func (rc *RouterConext) SetupRouter(handlers []handlers.RegisterHandlers) error 
 		Handler: rc.Engine,
 	}
 
+	return nil
+}
+
+func (rc *RouterConext) registerHandlers(handlers *handlers.AllHandlers) error {
+	// register handlers
+	// pk
+	if handlers.PKReader != nil {
+		group := rc.Engine.Group(config.DB_OPS_EP_GROUP)
+		group.POST(config.PK_DB_OPERATION, handlers.PKReader.PkReadHttpHandler)
+	}
+
+	// batch
+	if handlers.Batcher != nil {
+		rc.Engine.POST("/"+version.API_VERSION+"/"+config.BATCH_OPERATION,
+			handlers.Batcher.BatchOpsHttpHandler)
+	}
+
+	// stat
+	if handlers.Stater != nil {
+		rc.Engine.GET("/"+version.API_VERSION+"/"+config.STAT_OPERATION,
+			handlers.Stater.StatOpsHttpHandler)
+	}
+
+	// GRPC
+	grpcsrv.GetGRPCServer().RegisterAllHandlers(handlers)
+
+	rc.handlers = handlers
 	return nil
 }
 

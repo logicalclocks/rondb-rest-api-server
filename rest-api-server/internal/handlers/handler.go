@@ -38,3 +38,9 @@ type Stater interface {
 	StatOpsHttpHandler(c *gin.Context)
 	StatOpsHandler(response *api.StatResponse) (int, error)
 }
+
+type AllHandlers struct {
+	PKReader PKReader
+	Batcher  Batcher
+	Stater   Stater
+}

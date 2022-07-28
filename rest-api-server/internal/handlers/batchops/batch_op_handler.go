@@ -31,9 +31,7 @@ import (
 	"hopsworks.ai/rdrs/internal/handlers/pkread"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
-	"hopsworks.ai/rdrs/internal/server/grpcsrv"
 	"hopsworks.ai/rdrs/pkg/api"
-	"hopsworks.ai/rdrs/version"
 )
 
 type Batch struct{}
@@ -43,11 +41,6 @@ var batch Batch
 
 func GetBatcher() handlers.Batcher {
 	return &batch
-}
-
-func RegisterBatchHandlers(engine *gin.Engine) {
-	engine.POST("/"+version.API_VERSION+"/"+config.BATCH_OPERATION, batch.BatchOpsHttpHandler)
-	grpcsrv.GetGRPCServer().RegisterBatchOpHandler(&batch)
 }
 
 func (b *Batch) BatchOpsHttpHandler(c *gin.Context) {

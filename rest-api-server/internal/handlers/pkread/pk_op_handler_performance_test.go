@@ -45,8 +45,7 @@ func BenchmarkSimple(t *testing.B) {
 	maxRows := 1000
 	opCount := 0
 	threadId := 0
-	tu.WithDBs(t, []string{db}, []handlers.RegisterHandlers{RegisterPKHandlers,
-		stat.RegisterStatHandlers}, func(tc common.TestContext) {
+	tu.WithDBs(t, []string{db}, getPKNStatHandlers(), func(tc common.TestContext) {
 
 		t.ResetTimer()
 		start := time.Now()
@@ -94,35 +93,34 @@ func BenchmarkMT(b *testing.B) {
 	db := "bench"
 	table := "table_1"
 	maxRows := 1000
-	tu.WithDBs(b, []string{db},
-		[]handlers.RegisterHandlers{RegisterPKHandlers, stat.RegisterStatHandlers}, func(tc common.TestContext) {
+	tu.WithDBs(b, []string{db}, getPKNStatHandlers(), func(tc common.TestContext) {
 
-			b.ResetTimer()
-			threads := 1
-			link := make(chan int, threads)
-			donearr := make([]chan bool, threads)
-			for i := 0; i < threads; i++ {
-				donearr[i] = make(chan bool)
-			}
-			numOps := b.N
+		b.ResetTimer()
+		threads := 1
+		link := make(chan int, threads)
+		donearr := make([]chan bool, threads)
+		for i := 0; i < threads; i++ {
+			donearr[i] = make(chan bool)
+		}
+		numOps := b.N
 
-			go producer1(b, numOps, link)
+		go producer1(b, numOps, link)
 
-			for i := 0; i < threads; i++ {
-				go consumer1(b, tc, i, db, table, maxRows, link, donearr[i])
-			}
+		for i := 0; i < threads; i++ {
+			go consumer1(b, tc, i, db, table, maxRows, link, donearr[i])
+		}
 
-			for i := 0; i < threads; i++ {
-				<-donearr[i]
-			}
+		for i := 0; i < threads; i++ {
+			<-donearr[i]
+		}
 
-			b.StopTimer()
+		b.StopTimer()
 
-			speed := float64(numOps) / time.Since(start).Seconds()
-			ns := float64(time.Since(start).Nanoseconds()) / float64(b.N)
-			fmt.Printf("Speed %f\n", speed)
-			fmt.Printf("Speed %f ns/op\n", ns)
-		})
+		speed := float64(numOps) / time.Since(start).Seconds()
+		ns := float64(time.Since(start).Nanoseconds()) / float64(b.N)
+		fmt.Printf("Speed %f\n", speed)
+		fmt.Printf("Speed %f ns/op\n", ns)
+	})
 }
 
 func producer1(b testing.TB, numOps int, link chan int) {
@@ -149,4 +147,12 @@ func consumer1(b testing.TB, tc common.TestContext, id int, db string, table str
 		// fmt.Printf("Thread %d, Stats: %v\n", id, *stats)
 	}
 	done <- true
+}
+
+func getPKNStatHandlers() *handlers.AllHandlers {
+	return &handlers.AllHandlers{
+		Stater:   stat.GetStater(),
+		Batcher:  nil,
+		PKReader: GetPKReader(),
+	}
 }

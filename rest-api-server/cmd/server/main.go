@@ -60,9 +60,11 @@ func main() {
 
 	router := server.CreateRouterContext()
 
-	handlers := []handlers.RegisterHandlers{pkread.RegisterPKHandlers,
-		stat.RegisterStatHandlers,
-		batchops.RegisterBatchHandlers}
+	handlers := &handlers.AllHandlers{
+		PKReader: pkread.GetPKReader(),
+		Stater:   stat.GetStater(),
+		Batcher:  batchops.GetBatcher(),
+	}
 
 	err := router.SetupRouter(handlers)
 	if err != nil {

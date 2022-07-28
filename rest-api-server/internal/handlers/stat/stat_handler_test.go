@@ -48,7 +48,7 @@ func TestStat(t *testing.T) {
 	}
 
 	tu.WithDBs(t, []string{db},
-		[]handlers.RegisterHandlers{pkread.RegisterPKHandlers, RegisterStatHandlers}, func(tc common.TestContext) {
+		getStatHandlers(), func(tc common.TestContext) {
 			for i := uint32(0); i < numOps; i++ {
 				go performPkOp(t, tc, db, table, ch)
 			}
@@ -142,4 +142,12 @@ func sendGRPCStatRequest(t *testing.T) *api.StatResponse {
 	}
 
 	return api.ConvertStatResponseProto(respProto)
+}
+
+func getStatHandlers() *handlers.AllHandlers {
+	return &handlers.AllHandlers{
+		Stater:   GetStater(),
+		Batcher:  nil,
+		PKReader: pkread.GetPKReader(),
+	}
 }

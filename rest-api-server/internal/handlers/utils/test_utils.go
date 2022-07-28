@@ -426,7 +426,7 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterHandlers,
+func WithDBs(t testing.TB, dbs []string, handlers *handlers.AllHandlers,
 	fn func(tc common.TestContext)) {
 	t.Helper()
 
@@ -445,7 +445,8 @@ func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterHan
 	defer common.DropDatabases(t, dbs...)
 
 	routerCtx := server.CreateRouterContext()
-	routerCtx.SetupRouter(registerHandlers)
+
+	routerCtx.SetupRouter(handlers)
 
 	err := routerCtx.StartRouter()
 	if err != nil {
@@ -473,13 +474,13 @@ func shutDownRouter(t testing.TB, router server.Router) error {
 	return router.StopRouter()
 }
 
-func PkTest(t *testing.T, tests map[string]api.PKTestInfo, isBinaryData bool, registerHandler ...handlers.RegisterHandlers) {
+func PkTest(t *testing.T, tests map[string]api.PKTestInfo, isBinaryData bool, handlers *handlers.AllHandlers) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
 			dbs := []string{}
 			dbs = append(dbs, testInfo.Db)
 
-			WithDBs(t, dbs, registerHandler, func(tc common.TestContext) {
+			WithDBs(t, dbs, handlers, func(tc common.TestContext) {
 				pkRESTTest(t, testInfo, tc, isBinaryData)
 				pkGRPCTest(t, testInfo, tc, isBinaryData)
 			})
@@ -578,7 +579,7 @@ func pkRESTTest(t *testing.T, testInfo api.PKTestInfo, tc common.TestContext, is
 }
 
 func BatchTest(t *testing.T, tests map[string]api.BatchOperationTestInfo, isBinaryData bool,
-	registerHandlers ...handlers.RegisterHandlers) {
+	handlers *handlers.AllHandlers) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
 
@@ -595,7 +596,7 @@ func BatchTest(t *testing.T, tests map[string]api.BatchOperationTestInfo, isBina
 				dbNamesArr = append(dbNamesArr, k)
 			}
 
-			WithDBs(t, dbNamesArr, registerHandlers, func(tc common.TestContext) {
+			WithDBs(t, dbNamesArr, handlers, func(tc common.TestContext) {
 				batchRESTTest(t, testInfo, tc, isBinaryData)
 				batchGRPCTest(t, testInfo, tc, isBinaryData)
 			})
