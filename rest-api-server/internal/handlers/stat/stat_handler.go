@@ -25,7 +25,7 @@ import (
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
 	"hopsworks.ai/rdrs/internal/handlers"
-	"hopsworks.ai/rdrs/internal/server"
+	"hopsworks.ai/rdrs/internal/server/grpcsrv"
 	"hopsworks.ai/rdrs/pkg/api"
 	"hopsworks.ai/rdrs/version"
 )
@@ -44,7 +44,7 @@ func GetStater() handlers.Stater {
 
 func RegisterStatHandlers(engine *gin.Engine) {
 	engine.GET("/"+version.API_VERSION+"/"+config.STAT_OPERATION, stat.StatOpsHttpHandler)
-	server.GetGRPCServer().RegisterStatOpHandler(&stat)
+	grpcsrv.GetGRPCServer().RegisterStatOpHandler(&stat)
 }
 
 func (s *Stat) StatOpsHttpHandler(c *gin.Context) {
