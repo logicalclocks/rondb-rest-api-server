@@ -207,7 +207,7 @@ func TestBatchSimple(t *testing.T) {
 		},
 	}
 
-	tu.BatchTest(t, tests, false, RegisterBatchHandler)
+	tu.BatchTest(t, tests, false, RegisterBatchHandlers)
 }
 
 func TestBatchDate(t *testing.T) {
@@ -232,7 +232,7 @@ func TestBatchDate(t *testing.T) {
 		},
 	}
 
-	tu.BatchTest(t, tests, false, RegisterBatchHandler)
+	tu.BatchTest(t, tests, false, RegisterBatchHandlers)
 }
 
 func TestBatchDateTime(t *testing.T) {
@@ -271,7 +271,7 @@ func TestBatchDateTime(t *testing.T) {
 		},
 	}
 
-	tu.BatchTest(t, tests, false, RegisterBatchHandler)
+	tu.BatchTest(t, tests, false, RegisterBatchHandlers)
 }
 
 func TestBatchTime(t *testing.T) {
@@ -308,7 +308,7 @@ func TestBatchTime(t *testing.T) {
 		},
 	}
 
-	tu.BatchTest(t, tests, false, RegisterBatchHandler)
+	tu.BatchTest(t, tests, false, RegisterBatchHandlers)
 }
 
 func createSubOperation(t *testing.T, table string, database string, pk string, expectedStatus int) api.BatchSubOperationTestInfo {
@@ -373,7 +373,7 @@ func ArrayColumnBatchTest(t *testing.T, table string, database string, isBinary 
 		},
 	}
 
-	tu.BatchTest(t, tests, isBinary, RegisterBatchHandler)
+	tu.BatchTest(t, tests, isBinary, RegisterBatchHandlers)
 }
 
 /*
@@ -401,7 +401,7 @@ func TestBatchBadSubOp(t *testing.T) {
 		},
 	}
 
-	tu.BatchTest(t, tests, isBinary, RegisterBatchHandler)
+	tu.BatchTest(t, tests, isBinary, RegisterBatchHandlers)
 }
 
 func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBinary bool, colWidth int, padding bool, pk string, expectedStatus int) api.BatchSubOperationTestInfo {
@@ -425,7 +425,7 @@ func arrayColumnBatchTestSubOp(t *testing.T, table string, database string, isBi
 
 func TestBatchMissingReqField(t *testing.T) {
 	tu.WithDBs(t, []string{"DB000"},
-		[]handlers.RegisterTestHandler{RegisterBatchHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterBatchHandlers}, func(tc common.TestContext) {
 			url := tu.NewBatchReadURL()
 			// Test missing method
 			operations := NewOperationsTBD(t, 3)

@@ -22,7 +22,7 @@ import (
 	"hopsworks.ai/rdrs/pkg/api"
 )
 
-type RegisterTestHandler func(*gin.Engine)
+type RegisterHandlers func(*gin.Engine)
 
 type PKReader interface {
 	PkReadHttpHandler(c *gin.Context)

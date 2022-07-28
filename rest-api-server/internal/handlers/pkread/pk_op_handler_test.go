@@ -34,7 +34,7 @@ import (
 func TestPKReadOmitRequired(t *testing.T) {
 
 	tu.WithDBs(t, []string{"DB000"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 
 			// Test. Omitting filter should result in 400 error
 			param := api.PKReadBody{
@@ -68,7 +68,7 @@ func TestPKReadOmitRequired(t *testing.T) {
 
 func TestPKReadLargeColumns(t *testing.T) {
 	tu.WithDBs(t, []string{"DB000"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 
 			// Test. Large filter column names.
 			col := tu.RandString(65)
@@ -118,7 +118,7 @@ func TestPKReadLargeColumns(t *testing.T) {
 func TestPKInvalidIdentifier(t *testing.T) {
 
 	tu.WithDBs(t, []string{"DB000"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 			//Valid chars [ U+0001 .. U+007F] and [ U+0080 .. U+FFFF]
 			// Test. invalid filter
 			col := "col" + string(rune(0x0000))
@@ -164,7 +164,7 @@ func TestPKInvalidIdentifier(t *testing.T) {
 func TestPKUniqueParams(t *testing.T) {
 
 	tu.WithDBs(t, []string{"DB000"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 			// Test. unique read columns
 			readColumns := make([]api.ReadColumn, 2)
 			col := "col1"
@@ -212,7 +212,7 @@ func TestPKUniqueParams(t *testing.T) {
 func TestPKERROR_011(t *testing.T) {
 
 	tu.WithDBs(t, []string{"DB001"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 			pkCol := "id0"
 			pkVal := "1"
 			param := api.PKReadBody{
@@ -235,7 +235,7 @@ func TestPKERROR_011(t *testing.T) {
 func TestPKERROR_012(t *testing.T) {
 
 	tu.WithDBs(t, []string{"DB001"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 			pkCol := "id0"
 			pkVal := "1"
 			param := api.PKReadBody{
@@ -255,7 +255,7 @@ func TestPKERROR_012(t *testing.T) {
 func TestPKERROR_013_ERROR_014(t *testing.T) {
 
 	tu.WithDBs(t, []string{"DB002"},
-		[]handlers.RegisterTestHandler{RegisterPKHandler}, func(tc common.TestContext) {
+		[]handlers.RegisterHandlers{RegisterPKHandlers}, func(tc common.TestContext) {
 			// send an other request with one column missing from def
 			// //		// one PK col is missing
 			param := api.PKReadBody{

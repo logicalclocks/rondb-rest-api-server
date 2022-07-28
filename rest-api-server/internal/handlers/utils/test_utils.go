@@ -426,7 +426,7 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterTestHandler,
+func WithDBs(t testing.TB, dbs []string, registerHandlers []handlers.RegisterHandlers,
 	fn func(tc common.TestContext)) {
 	t.Helper()
 
@@ -473,7 +473,7 @@ func shutDownRouter(t testing.TB, router server.Router) error {
 	return router.StopRouter()
 }
 
-func PkTest(t *testing.T, tests map[string]api.PKTestInfo, isBinaryData bool, registerHandler ...handlers.RegisterTestHandler) {
+func PkTest(t *testing.T, tests map[string]api.PKTestInfo, isBinaryData bool, registerHandler ...handlers.RegisterHandlers) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
 			dbs := []string{}
@@ -578,7 +578,7 @@ func pkRESTTest(t *testing.T, testInfo api.PKTestInfo, tc common.TestContext, is
 }
 
 func BatchTest(t *testing.T, tests map[string]api.BatchOperationTestInfo, isBinaryData bool,
-	registerHandlers ...handlers.RegisterTestHandler) {
+	registerHandlers ...handlers.RegisterHandlers) {
 	for name, testInfo := range tests {
 		t.Run(name, func(t *testing.T) {
 

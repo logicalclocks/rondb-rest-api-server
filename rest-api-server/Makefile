@@ -42,5 +42,6 @@ build_proto:
 	protoc --go_out=. --go-grpc_out=. ./api/rdrs.proto
 
 test: 
+	go clean -testcache
 	go test -v -p 1 ./... -coverprofile coverage.out 
 	go tool cover -html=coverage.out -o coverage.html && xdg-open coverage.html

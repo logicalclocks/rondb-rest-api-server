@@ -28,10 +28,10 @@ import (
 	"hopsworks.ai/rdrs/internal/common"
 	"hopsworks.ai/rdrs/internal/config"
 	"hopsworks.ai/rdrs/internal/dal"
-	"hopsworks.ai/rdrs/internal/grpcsrv"
 	"hopsworks.ai/rdrs/internal/handlers"
 	"hopsworks.ai/rdrs/internal/log"
 	"hopsworks.ai/rdrs/internal/security/apikey"
+	"hopsworks.ai/rdrs/internal/server"
 	"hopsworks.ai/rdrs/pkg/api"
 )
 
@@ -41,10 +41,10 @@ var _ handlers.PKReader = (*PKRead)(nil)
 
 var pkRead PKRead
 
-func RegisterPKHandler(e *gin.Engine) {
+func RegisterPKHandlers(e *gin.Engine) {
 	group := e.Group(config.DB_OPS_EP_GROUP)
 	group.POST(config.PK_DB_OPERATION, pkRead.PkReadHttpHandler)
-	grpcsrv.GetGRPCServer().RegisterPKReadHandler(&pkRead)
+	server.GetGRPCServer().RegisterPKReadHandler(&pkRead)
 }
 
 func GetPKReader() handlers.PKReader {
@@ -54,7 +54,7 @@ func GetPKReader() handlers.PKReader {
 func (p *PKRead) PkReadHttpHandler(c *gin.Context) {
 	pkReadParams := api.PKReadParams{}
 
-	err := parseRequest(c, &pkReadParams)
+	err := ParseRequest(c, &pkReadParams)
 	if err != nil {
 		if log.IsDebug() {
 			body, _ := ioutil.ReadAll(c.Request.Body)
@@ -108,7 +108,7 @@ func (p *PKRead) PkReadHandler(pkReadParams *api.PKReadParams, apiKey *string, r
 	return int(status), nil
 }
 
-func parseRequest(c *gin.Context, pkReadParams *api.PKReadParams) error {
+func ParseRequest(c *gin.Context, pkReadParams *api.PKReadParams) error {
 
 	body := api.PKReadBody{}
 	pp := api.PKReadPP{}
