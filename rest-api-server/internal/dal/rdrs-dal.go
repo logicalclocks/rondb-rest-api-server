@@ -20,7 +20,6 @@ package dal
 
 /*
 #cgo CFLAGS: -g -Wall
-#cgo LDFLAGS: -L./../../../data-access-rondb/build/ -lrdrclient
 #include <stdlib.h>
 #include <stdbool.h>
 #include "./../../../data-access-rondb/src/rdrs-dal.h"

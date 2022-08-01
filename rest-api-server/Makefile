@@ -1,15 +1,15 @@
 # This file is part of the RonDB REST API Server
 # Copyright (c) 2022 Hopsworks AB
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
-# 
+#
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -23,16 +23,25 @@ DIRS = $(shell find . -type d)
 FILES = $(shell find . -type f -iname '*.go')
 
 all: rdrs
-
-#static linking https://ragoragino.github.io/softwareengineering/miscellaneous/2021/03/23/cgo-static.html 
+#CGO_LDFLAGS="-g -O2 -L./../data-access-rondb/build/ -lrdrclient"
+#static linking https://ragoragino.github.io/softwareengineering/miscellaneous/2021/03/23/cgo-static.html
 #-tags osusergo,netgo
-rdrs: $(DIRS) $(FILES)
-	go build  -ldflags="-w \
-		-X hopsworks.ai/rdrs/version.GITCOMMIT=${GITCOMMIT} \
-		-X hopsworks.ai/rdrs/version.BUILDTIME=${BUILDTIME} \
-		-X hopsworks.ai/rdrs/version.HOSTNAME=${HOSTNAME} \
-		-X hopsworks.ai/rdrs/version.BRANCH=${BRANCH}" \
-		-o ./bin/server/$(SERVER_BIN) ./cmd/server/main.go 
+
+BUILD_COMMAND=go build  -ldflags="-w \
+     -X hopsworks.ai/rdrs/version.GITCOMMIT=${GITCOMMIT} \
+     -X hopsworks.ai/rdrs/version.BUILDTIME=${BUILDTIME} \
+     -X hopsworks.ai/rdrs/version.HOSTNAME=${HOSTNAME} \
+     -X hopsworks.ai/rdrs/version.BRANCH=${BRANCH}" \
+     -o ./bin/server/$(SERVER_BIN) ./cmd/server/main.go
+
+LINK_COMMAND=CGO_LDFLAGS="-g -O2 -L./../data-access-rondb/ -lrdrclient"
+
+rdrs:
+ifndef RDRS_LIB_DIR
+  CGO_LDFLAGS="-g -O2 -L./../data-access-rondb/build/ -lrdrclient" ${BUILD_COMMAND}
+else
+  CGO_LDFLAGS="-g -O2 -L${RDRS_LIB_DIR} -lrdrclient" ${BUILD_COMMAND}
+endif
 
 clean:
 	go clean -cache
@@ -41,7 +50,8 @@ clean:
 build_proto:
 	protoc --go_out=. --go-grpc_out=. ./api/rdrs.proto
 
-test: 
+test:
 	go clean -testcache
-	go test -v -p 1 ./... -coverprofile coverage.out 
+	go test -v -p 1 ./... -coverprofile coverage.out
 	go tool cover -html=coverage.out -o coverage.html && xdg-open coverage.html
+
